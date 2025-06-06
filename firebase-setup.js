@@ -301,3 +301,13 @@ window.testFunction = function() {
     .catch(error => console.error('🧪 Test function error:', error));
 };
 console.log('🧪 Run window.testFunction() to test basic function connectivity');
+
+// Add environment variable test
+window.testEnv = function() {
+  console.log('🔧 Testing environment variables...');
+  fetch('/.netlify/functions/env-test')
+    .then(response => response.json())
+    .then(data => console.log('🔧 Environment check:', data))
+    .catch(error => console.error('🔧 Environment test error:', error));
+};
+console.log('🔧 Run window.testEnv() to check environment variables');
