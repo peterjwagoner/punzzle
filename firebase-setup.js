@@ -382,3 +382,23 @@ window.testEnv = function() {
     .catch(error => console.error('🔧 Environment test error:', error));
 };
 console.log('🔧 Run window.testEnv() to check environment variables');
+
+// Add simple function test
+window.testFunction = function() {
+  console.log('🧪 Testing simple function...');
+  fetch('/.netlify/functions/test')
+    .then(response => response.text())
+    .then(text => console.log('🧪 Test function response:', text))
+    .catch(error => console.error('🧪 Test function error:', error));
+};
+console.log('🧪 Run window.testFunction() to test basic function connectivity');
+
+// Add environment variable test
+window.testEnv = function() {
+  console.log('🔧 Testing environment variables...');
+  fetch('/.netlify/functions/env-test')
+    .then(response => response.json())
+    .then(data => console.log('🔧 Environment check:', data))
+    .catch(error => console.error('🔧 Environment test error:', error));
+};
+console.log('🔧 Run window.testEnv() to check environment variables');
