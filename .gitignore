@@ -1,0 +1,7 @@
+# Remove from git but keep the file locally
+git rm --cached .DS_Store
+
+# Commit the removal
+git add .gitignore
+git commit -m "Add .gitignore and remove .DS_Store"
+git push
