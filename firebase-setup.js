@@ -291,3 +291,13 @@ window.checkDatabase = function() {
 // Log when ready
 console.log('🚀 Punzzle API initialized');
 console.log('🔧 Run window.checkDatabase() to test API connection');
+
+// Add simple function test
+window.testFunction = function() {
+  console.log('🧪 Testing simple function...');
+  fetch('/.netlify/functions/test')
+    .then(response => response.text())
+    .then(text => console.log('🧪 Test function response:', text))
+    .catch(error => console.error('🧪 Test function error:', error));
+};
+console.log('🧪 Run window.testFunction() to test basic function connectivity');
