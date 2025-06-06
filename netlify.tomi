@@ -1,0 +1,6 @@
+# Force build change - June 6, 2025
+[build]
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
