@@ -35,19 +35,39 @@ const PuzzleDB = {
     try {
       const dateStr = date.toISOString().split('T')[0];
       console.log(`🌐 Fetching puzzle via API for date: ${dateStr}`);
+      console.log(`🔗 API URL: ${API_BASE}?type=daily&date=${dateStr}`);
       
       const response = await fetch(`${API_BASE}?type=daily&date=${dateStr}`);
       
-      if (response.ok) {
-        const data = await response.json();
-        console.log(`✅ API puzzle loaded successfully: ${data.categories}`);
-        return data;
+      console.log(`📡 Response status: ${response.status}`);
+      console.log(`📡 Response headers:`, response.headers);
+      
+      // Log the raw response text for debugging
+      const responseText = await response.text();
+      console.log(`📡 Raw response:`, responseText);
+      
+      if (response.ok && responseText.trim()) {
+        try {
+          const data = JSON.parse(responseText);
+          console.log(`✅ API puzzle loaded successfully: ${data.categories}`);
+          return data;
+        } catch (parseError) {
+          console.error('❌ Error parsing JSON response:', parseError);
+          throw new Error(`Invalid JSON response: ${responseText}`);
+        }
       } else if (response.status === 404) {
         console.log(`📅 No puzzle found for ${dateStr}`);
         return null;
       } else {
-        throw new Error(`API error: ${response.status}`);
+        throw new Error(`API error: ${response.status} - ${responseText}`);
       }
+    } catch (error) {
+      console.error('❌ Error getting daily puzzle via API:', error);
+      console.error('❌ Error details:', error.message, error.stack);
+      return null;
+    }
+  },
+
     } catch (error) {
       console.error('❌ Error getting daily puzzle via API:', error);
       return null;
@@ -58,19 +78,34 @@ const PuzzleDB = {
   async getBonusPuzzle(bonusId) {
     try {
       console.log(`🌐 Fetching bonus puzzle via API: ${bonusId}`);
+      console.log(`🔗 API URL: ${API_BASE}?type=bonus&bonusId=${bonusId}`);
       
       const response = await fetch(`${API_BASE}?type=bonus&bonusId=${bonusId}`);
       
-      if (response.ok) {
-        const data = await response.json();
-        console.log(`✅ Bonus puzzle loaded: ${data.categories}`);
-        return data;
+      console.log(`📡 Response status: ${response.status}`);
+      const responseText = await response.text();
+      console.log(`📡 Raw response:`, responseText);
+      
+      if (response.ok && responseText.trim()) {
+        try {
+          const data = JSON.parse(responseText);
+          console.log(`✅ Bonus puzzle loaded: ${data.categories}`);
+          return data;
+        } catch (parseError) {
+          console.error('❌ Error parsing JSON response:', parseError);
+          throw new Error(`Invalid JSON response: ${responseText}`);
+        }
       } else {
         console.log(`📅 Bonus puzzle not found: ${bonusId}`);
         return null;
       }
     } catch (error) {
       console.error('❌ Error getting bonus puzzle via API:', error);
+      console.error('❌ Error details:', error.message, error.stack);
+      return null;
+    }
+  },
+
       return null;
     }
   },
@@ -236,6 +271,7 @@ const AnalyticsDB = {
 async function saveCustomPuzzle(puzzleData) {
   try {
     console.log('🌐 Saving custom puzzle via API:', puzzleData);
+    console.log(`🔗 API URL: ${API_BASE}?type=custom`);
     
     const response = await fetch(`${API_BASE}?type=custom`, {
       method: 'POST',
@@ -245,11 +281,29 @@ async function saveCustomPuzzle(puzzleData) {
       body: JSON.stringify(puzzleData)
     });
     
-    if (response.ok) {
-      const result = await response.json();
-      console.log('✅ Custom puzzle saved via API:', result.id);
-      return result.id;
+    console.log(`📡 Response status: ${response.status}`);
+    const responseText = await response.text();
+    console.log(`📡 Raw response:`, responseText);
+    
+    if (response.ok && responseText.trim()) {
+      try {
+        const result = JSON.parse(responseText);
+        console.log('✅ Custom puzzle saved via API:', result.id);
+        return result.id;
+      } catch (parseError) {
+        console.error('❌ Error parsing JSON response:', parseError);
+        throw new Error(`Invalid JSON response: ${responseText}`);
+      }
     } else {
+      throw new Error(`API error: ${response.status} - ${responseText}`);
+    }
+  } catch (error) {
+    console.error('❌ Error saving custom puzzle via API:', error);
+    console.error('❌ Error details:', error.message, error.stack);
+    return null;
+  }
+}
+
       throw new Error(`API error: ${response.status}`);
     }
   } catch (error) {
@@ -266,18 +320,35 @@ window.AnalyticsDB = AnalyticsDB;
 // Simple debug function
 window.checkDatabase = function() {
   console.log('🌐 Testing API connection...');
-  fetch(`${API_BASE}?type=daily&date=${new Date().toISOString().split('T')[0]}`)
+  const testUrl = `${API_BASE}?type=daily&date=${new Date().toISOString().split('T')[0]}`;
+  console.log('🔗 Testing URL:', testUrl);
+  
+  fetch(testUrl)
     .then(response => {
-      if (response.ok) {
+      console.log('📡 Test response status:', response.status);
+      return response.text().then(text => ({ status: response.status, text, ok: response.ok }));
+    })
+    .then(({ status, text, ok }) => {
+      console.log('📡 Test response text:', text);
+      if (ok && text.trim()) {
         console.log('✅ API connection successful');
-        return response.json();
-      } else if (response.status === 404) {
+        return JSON.parse(text);
+      } else if (status === 404) {
         console.log('🔍 API working, but no puzzle found for today');
         console.log('💡 Add puzzles to your Firebase database');
       } else {
-        throw new Error(`API error: ${response.status}`);
+        throw new Error(`API error: ${status} - ${text}`);
       }
     })
+    .then(data => {
+      if (data) {
+        console.log('📋 Today\'s puzzle:', data.categories);
+      }
+    })
+    .catch(error => {
+      console.error('❌ API connection failed:', error);
+    });
+};
     .then(data => {
       if (data) {
         console.log('📋 Today\'s puzzle:', data.categories);
