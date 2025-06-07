@@ -19,9 +19,11 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
   
   <style>
     * {
+
 
     * {
       box-sizing: border-box;
@@ -446,9 +448,34 @@
       transform: translateY(-2px);
     }
     
+    .puzzle-item.sortable-ghost {
+      opacity: 0.4;
+      background: #e3f2fd;
+    }
+    
+    .puzzle-item.sortable-drag {
+      opacity: 0.8;
+      cursor: move;
+    }
+    
+    .drag-handle {
+      cursor: move;
+      padding: 5px 10px;
+      color: #999;
+      font-size: 1.2rem;
+      margin-right: 10px;
+      display: flex;
+      align-items: center;
+    }
+    
+    .drag-handle:hover {
+      color: #326891;
+    }
+    
     .puzzle-info {
       flex: 1;
     }
+
     
     .puzzle-date {
       font-weight: 700;
@@ -758,9 +785,32 @@
       background: #dee2e6;
     }
     
+    /* Reorder controls */
+    .reorder-controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      padding: 15px;
+      background: #f8fafc;
+      border: 1px solid #e1e5e9;
+      border-radius: 8px;
+      align-items: center;
+    }
+    
+    .reorder-info {
+      flex: 1;
+      font-size: 0.9rem;
+      color: #666;
+    }
+    
+    .reorder-controls.active {
+      background: #e3f2fd;
+      border-color: #326891;
+    }
+    
     @media (max-width: 768px) {
       .container {
-        padding: 10px;
+
       }
       
       .card {
@@ -1017,9 +1067,20 @@ TV SHOWS + BEVERAGES | GAME OF SCONES TEA" required></textarea>
             <button class="btn btn-success" onclick="exportPuzzles()">Export All</button>
           </div>
 
+          <div class="reorder-controls" id="reorderControls" style="display: none;">
+            <span class="reorder-info">
+              <strong>Reorder Mode:</strong> Drag puzzles to reorder them. Changes will be saved automatically.
+            </span>
+            <button class="btn btn-primary" onclick="saveReorder()">Save Order</button>
+            <button class="btn btn-secondary" onclick="cancelReorder()">Cancel</button>
+          </div>
+
+          <button class="btn btn-secondary" id="toggleReorderBtn" onclick="toggleReorderMode()" style="margin-bottom: 20px;">Enable Reorder Mode</button>
+
           <div class="puzzle-list" id="puzzleList">
             <p style="text-align: center; color: #666;">Click "Show All" to load puzzles</p>
           </div>
+
         </div>
       </div>
 
@@ -1255,9 +1316,14 @@ service cloud.firestore {
       customPuzzleStats: {}
     };
 
+    // Sortable instance
+    let sortableInstance = null;
+    let reorderMode = false;
+
     // Simple authentication
     const VALID_USERNAME = 'peterjwagoner';
     const VALID_PASSWORD = '**molosisi99EUP';
+
 
     // Initialize Firebase
     async function initFirebase() {
@@ -1660,6 +1726,7 @@ SUPERHEROES + FRUITS | WONDER WOMAN GO | A tropical justice warrior`;
       
       container.innerHTML = puzzleList.map(p => `
         <div class="puzzle-item">
+          ${reorderMode ? '<div class="drag-handle">☰</div>' : ''}
           <div class="puzzle-info">
             <div class="puzzle-date">${p.date}</div>
             <div class="puzzle-categories">${p.categories}</div>
@@ -1669,13 +1736,164 @@ SUPERHEROES + FRUITS | WONDER WOMAN GO | A tropical justice warrior`;
           <div class="puzzle-actions">
             <button class="btn btn-secondary" onclick="editPuzzle('${p.date}')">Edit</button>
             <button class="btn btn-danger" onclick="deletePuzzle('${p.date}')">Delete</button>
+
+            <button class="btn btn-danger" onclick="deletePuzzle('${p.date}')">Delete</button>
           </div>
         </div>
       `).join('');
+      
+      // Initialize sortable if in reorder mode
+      if (reorderMode) {
+        initializeSortable();
+      }
+    }
+
+    // Toggle reorder mode
+    function toggleReorderMode() {
+      reorderMode = !reorderMode;
+      const reorderControls = document.getElementById('reorderControls');
+      const toggleBtn = document.getElementById('toggleReorderBtn');
+      
+      if (reorderMode) {
+        reorderControls.style.display = 'flex';
+        toggleBtn.textContent = 'Disable Reorder Mode';
+        toggleBtn.classList.remove('btn-secondary');
+        toggleBtn.classList.add('btn-primary');
+        displayPuzzles(puzzles);
+      } else {
+        reorderControls.style.display = 'none';
+        toggleBtn.textContent = 'Enable Reorder Mode';
+        toggleBtn.classList.remove('btn-primary');
+        toggleBtn.classList.add('btn-secondary');
+        if (sortableInstance) {
+          sortableInstance.destroy();
+          sortableInstance = null;
+        }
+        displayPuzzles(puzzles);
+      }
+    }
+
+    // Initialize sortable
+    function initializeSortable() {
+      const container = document.getElementById('puzzleList');
+      
+      if (sortableInstance) {
+        sortableInstance.destroy();
+      }
+      
+      sortableInstance = Sortable.create(container, {
+        handle: '.drag-handle',
+        animation: 150,
+        ghostClass: 'sortable-ghost',
+        dragClass: 'sortable-drag',
+        onEnd: function(evt) {
+          // Update the puzzles array order
+          const item = puzzles.splice(evt.oldIndex, 1)[0];
+          puzzles.splice(evt.newIndex, 0, item);
+        }
+      });
+    }
+
+    // Save reordered puzzles
+    async function saveReorder() {
+      if (!isConnected) {
+        showMessage('Not connected to Firebase', 'error');
+        return;
+      }
+      
+      if (!confirm('This will update all puzzle dates based on the new order. Continue?')) {
+        return;
+      }
+      
+      try {
+        showMessage('Saving new order...', 'success');
+        
+        // Get the first date from the reordered list
+        const startDate = new Date(puzzles[0].date);
+        
+        // Create a batch to update all puzzles
+        const batch = db.batch();
+        
+        // First, delete all existing puzzles
+        puzzles.forEach(puzzle => {
+          const docRef = db.collection('puzzles').doc(puzzle.date);
+          batch.delete(docRef);
+        });
+        
+        // Then create new ones with updated dates
+        puzzles.forEach((puzzle, index) => {
+          const newDate = new Date(startDate);
+          newDate.setDate(newDate.getDate() + index);
+          const newDateStr = newDate.toISOString().split('T')[0];
+          
+          const updatedPuzzle = {
+            ...puzzle,
+            date: newDateStr,
+            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+          };
+          
+          const docRef = db.collection('puzzles').doc(newDateStr);
+          batch.set(docRef, updatedPuzzle);
+          
+          // Update local array
+          puzzle.date = newDateStr;
+        });
+        
+        await batch.commit();
+        
+        showMessage('✅ Puzzle order saved successfully!', 'success');
+        toggleReorderMode();
+        loadPuzzles();
+        
+      } catch (error) {
+        console.error('Error saving reorder:', error);
+        showMessage('Error saving new order: ' + error.message, 'error');
+      }
+    }
+
+    // Cancel reorder
+    function cancelReorder() {
+      toggleReorderMode();
+      loadPuzzles(); // Reload to reset any changes
+    }
+
+    // Auto-shift dates when deleting
+    async function shiftPuzzleDates(deletedDate) {
+      const deletedDateObj = new Date(deletedDate);
+      const followingPuzzles = puzzles
+        .filter(p => new Date(p.date) > deletedDateObj)
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
+      
+      if (followingPuzzles.length === 0) {
+        return; // No puzzles to shift
+      }
+      
+      const batch = db.batch();
+      
+      followingPuzzles.forEach((puzzle, index) => {
+        const oldDate = puzzle.date;
+        const newDate = new Date(deletedDateObj);
+        newDate.setDate(newDate.getDate() + index);
+        const newDateStr = newDate.toISOString().split('T')[0];
+        
+        // Delete old document
+        batch.delete(db.collection('puzzles').doc(oldDate));
+        
+        // Create new document with shifted date
+        const updatedPuzzle = {
+          ...puzzle,
+          date: newDateStr,
+          lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        
+        batch.set(db.collection('puzzles').doc(newDateStr), updatedPuzzle);
+      });
+      
+      await batch.commit();
     }
 
     // Edit puzzle
-    function editPuzzle(date) {
+
       const puzzle = puzzles.find(p => p.date === date);
       if (!puzzle) return;
       
@@ -1701,18 +1919,28 @@ SUPERHEROES + FRUITS | WONDER WOMAN GO | A tropical justice warrior`;
 
     // Delete puzzle
     async function deletePuzzle(date) {
-      if (!confirm(`Delete puzzle for ${date}?`)) return;
+      const shiftDates = confirm(`Delete puzzle for ${date}?\n\nClick OK to delete and shift all following puzzles forward by one day.\nClick Cancel to abort.`);
+      
+      if (!shiftDates) {
+        return;
+      }
       
       try {
         await db.collection('puzzles').doc(date).delete();
+
         showMessage(`✅ Deleted puzzle for ${date}`, 'success');
         
         // Remove from local array
         puzzles = puzzles.filter(p => p.date !== date);
         
+        // Shift dates of following puzzles
+        await shiftPuzzleDates(date);
+        
+        showMessage('✅ Puzzle deleted and dates shifted', 'success');
         loadPuzzles(); // Refresh list
       } catch (error) {
         console.error('❌ Delete failed:', error);
+
         showMessage('Delete failed: ' + error.message, 'error');
       }
     }
@@ -2462,7 +2690,12 @@ SUPERHEROES + FRUITS | WONDER WOMAN GO | A tropical justice warrior`;
     window.loadCustomPuzzles = loadCustomPuzzles;
     window.deleteCustomPuzzle = deleteCustomPuzzle;
     window.copyToClipboard = copyToClipboard;
+    window.toggleReorderMode = toggleReorderMode;
+    window.saveReorder = saveReorder;
+    window.cancelReorder = cancelReorder;
     window.previewBonus = previewBonus;
+    window.loadBonusPuzzles = loadBonusPuzzles;
+    window.loadAnalytics = loadAnalytics;
     window.loadBonusPuzzles = loadBonusPuzzles;
     window.loadAnalytics = loadAnalytics;
     window.testConnection = testConnection;
