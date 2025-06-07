@@ -104,6 +104,19 @@ const PuzzleDB = {
       console.error('❌ Error details:', error.message, error.stack);
       return null;
     }
+  }
+          console.error('❌ Error parsing JSON response:', parseError);
+          throw new Error(`Invalid JSON response: ${responseText}`);
+        }
+      } else {
+        console.log(`📅 Bonus puzzle not found: ${bonusId}`);
+        return null;
+      }
+    } catch (error) {
+      console.error('❌ Error getting bonus puzzle via API:', error);
+      console.error('❌ Error details:', error.message, error.stack);
+      return null;
+    }
   },
 
       return null;
