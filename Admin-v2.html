@@ -18,8 +18,11 @@
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   
   <style>
+    * {
+
     * {
       box-sizing: border-box;
       margin: 0;
@@ -107,11 +110,31 @@
       font-size: 1rem;
       font-weight: 600;
       cursor: pointer;
-      transition: background-color 0.3s;
     }
     
-    .login-btn:hover {
-      background-color: #2c5a7a;
+    .download-preview-btn {
+      padding: 6px 12px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      margin-left: 5px;
+    }
+    
+    .download-preview-btn:hover {
+      background: #218838;
+    }
+    
+    .download-preview-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    
+    /* Bonus Puzzle Styles */
+    .bonus-item {
+
     }
     
     .login-btn:disabled {
@@ -775,9 +798,74 @@
         margin-top: 10px;
       }
     }
+    
+    /* Hidden canvas for preview generation */
+    #previewCanvas {
+      position: fixed;
+      left: -9999px;
+      top: -9999px;
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      width: 600px;
+      font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    }
+    
+    .canvas-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    .canvas-logo {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 15px;
+      display: block;
+    }
+    
+    .canvas-title {
+      font-family: 'Headland One', serif;
+      font-size: 3rem;
+      color: #326891;
+      margin: 0 0 10px 0;
+    }
+    
+    .canvas-categories {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #326891;
+      padding: 15px 25px;
+      background-color: rgba(50, 104, 145, 0.1);
+      border: 2px solid rgba(50, 104, 145, 0.2);
+      border-radius: 8px;
+      text-transform: uppercase;
+      margin: 0 auto 30px;
+      display: inline-block;
+    }
+    
+    .canvas-puzzle {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .canvas-word {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .canvas-tile {
+      width: 50px;
+      height: 50px;
+      border: 3px solid #d3d6da;
+      border-radius: 6px;
+      background-color: #f8fafc;
+    }
   </style>
 </head>
 <body>
+
   <!-- Login Screen -->
   <div class="login-container" id="loginContainer">
     <div class="login-card">
@@ -1138,9 +1226,29 @@ service cloud.firestore {
   </div>
 
   <script>
+    // Add Headland One font for canvas
+    var link = document.createElement('link');
+    link.href = 'https://fonts.googleapis.com/css2?family=Headland+One&display=swap';
+    link.rel = 'stylesheet';
+    document.head.appendChild(link);
+    
+    // Create hidden canvas container
+    var canvasContainer = document.createElement('div');
+    canvasContainer.id = 'previewCanvas';
+    canvasContainer.innerHTML = `
+      <div class="canvas-header">
+        <img src="https://punzzle.com/images/foxholefox.png" alt="Punzzle Fox" class="canvas-logo">
+        <h1 class="canvas-title">Punzzle</h1>
+      </div>
+      <div class="canvas-categories" id="canvasCategories"></div>
+      <div class="canvas-puzzle" id="canvasPuzzle"></div>
+    `;
+    document.body.appendChild(canvasContainer);
+    
     // Firebase Configuration
     const firebaseConfig = {
       apiKey: "AIzaSyDD6fIiRCLLQFUUyUrq-AnipZdomJoVgB8",
+
       authDomain: "punzzle.firebaseapp.com",
       projectId: "punzzle",
       storageBucket: "punzzle.firebasestorage.app",
@@ -1806,9 +1914,11 @@ SUPERHEROES + FRUITS | WONDER WOMAN GO | A tropical justice warrior`;
                 <span class="link-label">URL:</span>
                 <input type="text" class="link-input" value="${playUrl}" readonly>
                 <button class="copy-btn" onclick="copyToClipboard('${playUrl}')">Copy</button>
+                <button class="download-preview-btn" onclick="downloadPuzzlePreview('${p.id}', '${p.categories}', '${p.answer}')">Download Preview</button>
               </div>
               <div class="help-text">Created: ${new Date(p.created).toLocaleString()}</div>
             </div>
+
           </div>
         `;
       }).join('');
@@ -1832,9 +1942,92 @@ SUPERHEROES + FRUITS | WONDER WOMAN GO | A tropical justice warrior`;
       }
     }
 
+    // Download puzzle preview as PNG
+    async function downloadPuzzlePreview(puzzleId, categories, answer) {
+      try {
+        // Show loading on button
+        const buttons = document.querySelectorAll('.download-preview-btn');
+        let targetButton = null;
+        buttons.forEach(btn => {
+          if (btn.getAttribute('onclick').includes(puzzleId)) {
+            targetButton = btn;
+            btn.disabled = true;
+            btn.textContent = 'Generating...';
+          }
+        });
+        
+        // Set up canvas content
+        document.getElementById('canvasCategories').textContent = categories;
+        
+        // Parse words from answer
+        const words = answer.split(' ').filter(w => w);
+        const canvasPuzzle = document.getElementById('canvasPuzzle');
+        canvasPuzzle.innerHTML = '';
+        
+        // Create puzzle tiles
+        words.forEach(word => {
+          const wordDiv = document.createElement('div');
+          wordDiv.className = 'canvas-word';
+          
+          for (let i = 0; i < word.length; i++) {
+            const tile = document.createElement('div');
+            tile.className = 'canvas-tile';
+            wordDiv.appendChild(tile);
+          }
+          
+          canvasPuzzle.appendChild(wordDiv);
+        });
+        
+        // Make canvas visible temporarily
+        const canvas = document.getElementById('previewCanvas');
+        canvas.style.left = '0';
+        canvas.style.top = '0';
+        
+        // Wait for font to load
+        await document.fonts.ready;
+        
+        // Generate image
+        const canvasElement = await html2canvas(canvas, {
+          backgroundColor: '#ffffff',
+          scale: 2,
+          logging: false,
+          width: 600,
+          height: canvas.scrollHeight
+        });
+        
+        // Hide canvas again
+        canvas.style.left = '-9999px';
+        canvas.style.top = '-9999px';
+        
+        // Download image
+        const link = document.createElement('a');
+        link.download = `punzzle-preview-${puzzleId}.png`;
+        link.href = canvasElement.toDataURL();
+        link.click();
+        
+        // Reset button
+        if (targetButton) {
+          targetButton.disabled = false;
+          targetButton.textContent = 'Download Preview';
+        }
+        
+      } catch (error) {
+        console.error('Error generating preview:', error);
+        alert('Failed to generate preview. Please try again.');
+        
+        // Reset all buttons
+        const buttons = document.querySelectorAll('.download-preview-btn');
+        buttons.forEach(btn => {
+          btn.disabled = false;
+          btn.textContent = 'Download Preview';
+        });
+      }
+    }
+
     // Copy to clipboard function
     function copyToClipboard(text) {
       navigator.clipboard.writeText(text).then(() => {
+
         showMessage('Copied to clipboard!', 'success');
       }).catch(err => {
         console.error('Failed to copy:', err);
@@ -2294,6 +2487,9 @@ SUPERHEROES + FRUITS | WONDER WOMAN GO | A tropical justice warrior`;
     window.loadBonusPuzzles = loadBonusPuzzles;
     window.loadAnalytics = loadAnalytics;
     window.testConnection = testConnection;
+    window.downloadPuzzlePreview = downloadPuzzlePreview;
+    window.exportAllData = exportAllData;
+    window.importData = importData;
     window.exportAllData = exportAllData;
     window.importData = importData;
     window.handleImport = handleImport;
