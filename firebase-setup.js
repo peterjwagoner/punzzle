@@ -40,9 +40,6 @@ const PuzzleDB = {
       const response = await fetch(`${API_BASE}?type=daily&date=${dateStr}`);
       
       console.log(`📡 Response status: ${response.status}`);
-      console.log(`📡 Response headers:`, response.headers);
-      
-      // Log the raw response text for debugging
       const responseText = await response.text();
       console.log(`📡 Raw response:`, responseText);
       
@@ -64,12 +61,6 @@ const PuzzleDB = {
     } catch (error) {
       console.error('❌ Error getting daily puzzle via API:', error);
       console.error('❌ Error details:', error.message, error.stack);
-      return null;
-    }
-  },
-
-    } catch (error) {
-      console.error('❌ Error getting daily puzzle via API:', error);
       return null;
     }
   },
@@ -102,23 +93,6 @@ const PuzzleDB = {
     } catch (error) {
       console.error('❌ Error getting bonus puzzle via API:', error);
       console.error('❌ Error details:', error.message, error.stack);
-      return null;
-    }
-  }
-          console.error('❌ Error parsing JSON response:', parseError);
-          throw new Error(`Invalid JSON response: ${responseText}`);
-        }
-      } else {
-        console.log(`📅 Bonus puzzle not found: ${bonusId}`);
-        return null;
-      }
-    } catch (error) {
-      console.error('❌ Error getting bonus puzzle via API:', error);
-      console.error('❌ Error details:', error.message, error.stack);
-      return null;
-    }
-  },
-
       return null;
     }
   },
@@ -315,7 +289,6 @@ async function saveCustomPuzzle(puzzleData) {
     console.error('❌ Error details:', error.message, error.stack);
     return null;
   }
-},
 }
 
 // Make everything globally available
@@ -355,39 +328,10 @@ window.checkDatabase = function() {
       console.error('❌ API connection failed:', error);
     });
 };
-    .then(data => {
-      if (data) {
-        console.log('📋 Today\'s puzzle:', data.categories);
-      }
-    })
-    .catch(error => {
-      console.error('❌ API connection failed:', error);
-    });
-};
 
 // Log when ready
 console.log('🚀 Punzzle API initialized');
 console.log('🔧 Run window.checkDatabase() to test API connection');
-
-// Add simple function test
-window.testFunction = function() {
-  console.log('🧪 Testing simple function...');
-  fetch('/.netlify/functions/test')
-    .then(response => response.text())
-    .then(text => console.log('🧪 Test function response:', text))
-    .catch(error => console.error('🧪 Test function error:', error));
-};
-console.log('🧪 Run window.testFunction() to test basic function connectivity');
-
-// Add environment variable test
-window.testEnv = function() {
-  console.log('🔧 Testing environment variables...');
-  fetch('/.netlify/functions/env-test')
-    .then(response => response.json())
-    .then(data => console.log('🔧 Environment check:', data))
-    .catch(error => console.error('🔧 Environment test error:', error));
-};
-console.log('🔧 Run window.testEnv() to check environment variables');
 
 // Add simple function test
 window.testFunction = function() {
