@@ -446,24 +446,9 @@
       transform: translateY(-2px);
     }
     
-    .puzzle-item.dragging {
-      opacity: 0.5;
-      cursor: grabbing;
-    }
-    
-    .puzzle-item.drag-over {
-      background: #e3f2fd;
-      border-color: #326891;
-    }
-    
-    .drag-handle {
-      cursor: grab;
-    }
-    
     .puzzle-info {
       flex: 1;
     }
-
     
     .puzzle-date {
       font-weight: 700;
@@ -1025,27 +1010,14 @@ TV SHOWS + BEVERAGES | GAME OF SCONES TEA" required></textarea>
           <h2>Daily Puzzles</h2>
           
           <div class="filter-controls">
-            <select id="puzzleOrderBy">
-              <option value="date-desc">Date (Newest First)</option>
-              <option value="date-asc">Date (Oldest First)</option>
-            </select>
             <input type="date" id="filterStartDate" placeholder="Start date">
             <input type="date" id="filterEndDate" placeholder="End date">
             <button class="btn btn-secondary" onclick="filterPuzzles()">Filter</button>
             <button class="btn btn-secondary" onclick="loadPuzzles()">Show All</button>
             <button class="btn btn-success" onclick="exportPuzzles()">Export All</button>
-            <button class="btn btn-primary" onclick="savePuzzleOrder()" id="saveOrderBtn" style="display: none;">Save Order</button>
-          </div>
-          
-          <div class="help-text" style="margin: 10px 0;">
-            <strong>Tip:</strong> Drag and drop puzzles to reorder them. When you delete a puzzle, subsequent puzzles will automatically shift dates to fill the gap.
-            <span id="reorderingMessage" style="display: none; color: #326891; font-weight: 600; margin-left: 10px;">
-              ⚠️ You have unsaved changes to the puzzle order. Click "Save Order" to apply changes.
-            </span>
           </div>
 
           <div class="puzzle-list" id="puzzleList">
-
             <p style="text-align: center; color: #666;">Click "Show All" to load puzzles</p>
           </div>
         </div>
@@ -1281,24 +1253,14 @@ service cloud.firestore {
       linkClicks: {},
       puzzleStats: {},
       customPuzzleStats: {}
-
-      shareRate: 0,
-      linkClicks: {},
-      puzzleStats: {},
-      customPuzzleStats: {}
     };
 
     // Simple authentication
     const VALID_USERNAME = 'peterjwagoner';
     const VALID_PASSWORD = '**molosisi99EUP';
-    
-    // Track if puzzle order has been modified
-    let puzzleOrderModified = false;
-    let originalPuzzleOrder = [];
 
     // Initialize Firebase
     async function initFirebase() {
-
       try {
         console.log('🚀 Initializing Firebase...');
         
@@ -1666,16 +1628,12 @@ SUPERHEROES + FRUITS | WONDER WOMAN GO | A tropical justice warrior`;
       try {
         console.log('📚 Loading puzzles...');
         
-        const orderBy = document.getElementById('puzzleOrderBy').value;
-        const [field, direction] = orderBy.split('-');
-        
         const snapshot = await db.collection('puzzles')
-          .orderBy(field, direction)
-          .limit(100)
+          .orderBy('date', 'desc')
+          .limit(50)
           .get();
         
         puzzles = [];
-
         snapshot.forEach(doc => {
           const data = doc.data();
           if (data && data.date) {
@@ -1684,14 +1642,9 @@ SUPERHEROES + FRUITS | WONDER WOMAN GO | A tropical justice warrior`;
         });
         
         displayPuzzles(puzzles);
-        
-        // Store original order for comparison
-        originalPuzzleOrder = puzzles.map(p => p.date);
-        puzzleOrderModified = false;
         console.log(`✅ Loaded ${puzzles.length} puzzles`);
         
       } catch (error) {
-
         console.error('❌ Error loading puzzles:', error);
         showMessage('Error loading puzzles: ' + error.message, 'error');
       }
@@ -1706,13 +1659,11 @@ SUPERHEROES + FRUITS | WONDER WOMAN GO | A tropical justice warrior`;
       }
       
       container.innerHTML = puzzleList.map(p => `
-        <div class="puzzle-item" draggable="true" data-date="${p.date}">
+        <div class="puzzle-item">
           <div class="puzzle-info">
-            <span class="drag-handle" style="margin-right: 10px; font-size: 1.2rem;">☰</span>
             <div class="puzzle-date">${p.date}</div>
             <div class="puzzle-categories">${p.categories}</div>
             <div class="puzzle-answer">Answer: ${p.answer}</div>
-
             ${p.hint ? `<div class="help-text">Hint: ${p.hint}</div>` : '<div class="help-text">No hint</div>'}
           </div>
           <div class="puzzle-actions">
@@ -1721,94 +1672,10 @@ SUPERHEROES + FRUITS | WONDER WOMAN GO | A tropical justice warrior`;
           </div>
         </div>
       `).join('');
-      
-      // Add drag and drop event listeners
-      setupDragAndDrop();
-    }
-    
-    // Setup drag and drop functionality
-    function setupDragAndDrop() {
-      const puzzleItems = document.querySelectorAll('.puzzle-item');
-      let draggedElement = null;
-      
-      puzzleItems.forEach(item => {
-        item.addEventListener('dragstart', function(e) {
-          draggedElement = this;
-          this.classList.add('dragging');
-          e.dataTransfer.effectAllowed = 'move';
-          e.dataTransfer.setData('text/html', this.innerHTML);
-        });
-        
-        item.addEventListener('dragend', function(e) {
-          this.classList.remove('dragging');
-        });
-        
-        item.addEventListener('dragover', function(e) {
-          if (e.preventDefault) {
-            e.preventDefault();
-          }
-          e.dataTransfer.dropEffect = 'move';
-          this.classList.add('drag-over');
-          return false;
-        });
-        
-        item.addEventListener('dragleave', function(e) {
-          this.classList.remove('drag-over');
-        });
-        
-        item.addEventListener('drop', function(e) {
-          if (e.stopPropagation) {
-            e.stopPropagation();
-          }
-          
-          this.classList.remove('drag-over');
-          
-          if (draggedElement !== this) {
-            // Get the container
-            const container = document.getElementById('puzzleList');
-            
-            // Get all puzzle items
-            const allItems = Array.from(container.querySelectorAll('.puzzle-item'));
-            
-            // Find indices
-            const draggedIndex = allItems.indexOf(draggedElement);
-            const targetIndex = allItems.indexOf(this);
-            
-            // Reorder in DOM
-            if (draggedIndex < targetIndex) {
-              this.parentNode.insertBefore(draggedElement, this.nextSibling);
-            } else {
-              this.parentNode.insertBefore(draggedElement, this);
-            }
-            
-            // Update puzzles array to match new order
-            updatePuzzleOrder();
-          }
-          
-          return false;
-        });
-      });
-    }
-    
-    // Update puzzle order after drag and drop
-    function updatePuzzleOrder() {
-      const puzzleItems = document.querySelectorAll('.puzzle-item');
-      const newOrder = Array.from(puzzleItems).map(item => item.dataset.date);
-      
-      // Check if order has changed
-      puzzleOrderModified = !arraysEqual(newOrder, originalPuzzleOrder);
-      
-      // Show/hide save button and message
-      document.getElementById('saveOrderBtn').style.display = puzzleOrderModified ? 'inline-block' : 'none';
-      document.getElementById('reorderingMessage').style.display = puzzleOrderModified ? 'inline' : 'none';
-    }
-    
-    function arraysEqual(a, b) {
-      return a.length === b.length && a.every((val, index) => val === b[index]);
     }
 
     // Edit puzzle
-
+    function editPuzzle(date) {
       const puzzle = puzzles.find(p => p.date === date);
       if (!puzzle) return;
       
@@ -1834,117 +1701,24 @@ SUPERHEROES + FRUITS | WONDER WOMAN GO | A tropical justice warrior`;
 
     // Delete puzzle
     async function deletePuzzle(date) {
-      if (!confirm(`Delete puzzle for ${date}?\n\nThis will automatically shift subsequent puzzles to fill the gap.`)) return;
+      if (!confirm(`Delete puzzle for ${date}?`)) return;
       
       try {
-        // First, delete the puzzle
         await db.collection('puzzles').doc(date).delete();
+        showMessage(`✅ Deleted puzzle for ${date}`, 'success');
         
-        // Find the deleted puzzle's position
-        const deletedIndex = puzzles.findIndex(p => p.date === date);
+        // Remove from local array
         puzzles = puzzles.filter(p => p.date !== date);
         
-        // Get all puzzles after the deleted date
-        const deletedDate = new Date(date);
-        const puzzlesToShift = puzzles.filter(p => new Date(p.date) > deletedDate)
-          .sort((a, b) => new Date(a.date) - new Date(b.date));
-        
-        if (puzzlesToShift.length > 0) {
-          showMessage(`Shifting ${puzzlesToShift.length} puzzles to fill the gap...`, 'success');
-          
-          // Shift each puzzle back by one day
-          for (const puzzle of puzzlesToShift) {
-            const oldDate = puzzle.date;
-            const newDate = new Date(puzzle.date);
-            newDate.setDate(newDate.getDate() - 1);
-            const newDateStr = newDate.toISOString().split('T')[0];
-            
-            // Update in Firebase
-            await db.collection('puzzles').doc(newDateStr).set({
-              ...puzzle,
-              date: newDateStr,
-              lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            
-            // Delete old document
-            await db.collection('puzzles').doc(oldDate).delete();
-            
-            // Update local copy
-            puzzle.date = newDateStr;
-          }
-        }
-        
-        showMessage(`✅ Deleted puzzle for ${date} and shifted subsequent puzzles`, 'success');
-        loadPuzzles(); // Reload to ensure consistency
-        
+        loadPuzzles(); // Refresh list
       } catch (error) {
         console.error('❌ Delete failed:', error);
         showMessage('Delete failed: ' + error.message, 'error');
       }
     }
-    
-    // Save reordered puzzles
-    async function savePuzzleOrder() {
-      if (!puzzleOrderModified) return;
-      
-      if (!confirm('Save the new puzzle order? This will reassign dates to maintain the sequence.')) return;
-      
-      try {
-        showMessage('Saving new puzzle order...', 'success');
-        
-        // Get current order from DOM
-        const puzzleItems = document.querySelectorAll('.puzzle-item');
-        const orderedDates = Array.from(puzzleItems).map(item => item.dataset.date);
-        
-        // Get the first date to use as starting point
-        const sortedDates = orderedDates.slice().sort();
-        const startDate = new Date(sortedDates[0]);
-        
-        // Create a mapping of old dates to new dates
-        const dateMapping = {};
-        orderedDates.forEach((oldDate, index) => {
-          const newDate = new Date(startDate);
-          newDate.setDate(newDate.getDate() + index);
-          dateMapping[oldDate] = newDate.toISOString().split('T')[0];
-        });
-        
-        // Update puzzles with new dates
-        for (const oldDate of orderedDates) {
-          const newDate = dateMapping[oldDate];
-          const puzzle = puzzles.find(p => p.date === oldDate);
-          
-          if (puzzle && oldDate !== newDate) {
-            // Save with new date
-            await db.collection('puzzles').doc(newDate).set({
-              ...puzzle,
-              date: newDate,
-              lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            
-            // Delete old document
-            await db.collection('puzzles').doc(oldDate).delete();
-            
-            // Update local copy
-            puzzle.date = newDate;
-          }
-        }
-        
-        puzzleOrderModified = false;
-        document.getElementById('saveOrderBtn').style.display = 'none';
-        document.getElementById('reorderingMessage').style.display = 'none';
-        
-        showMessage('✅ Puzzle order saved successfully!', 'success');
-        loadPuzzles(); // Reload to show new dates
-        
-      } catch (error) {
-        console.error('Error saving puzzle order:', error);
-        showMessage('Error saving puzzle order: ' + error.message, 'error');
-      }
-    }
 
     // Filter puzzles
     function filterPuzzles() {
-
       const startDate = document.getElementById('filterStartDate').value;
       const endDate = document.getElementById('filterEndDate').value;
       
@@ -2683,10 +2457,8 @@ SUPERHEROES + FRUITS | WONDER WOMAN GO | A tropical justice warrior`;
     window.loadPuzzles = loadPuzzles;
     window.editPuzzle = editPuzzle;
     window.deletePuzzle = deletePuzzle;
-    window.savePuzzleOrder = savePuzzleOrder;
     window.filterPuzzles = filterPuzzles;
     window.exportPuzzles = exportPuzzles;
-    window.loadCustomPuzzles = loadCustomPuzzles;
     window.loadCustomPuzzles = loadCustomPuzzles;
     window.deleteCustomPuzzle = deleteCustomPuzzle;
     window.copyToClipboard = copyToClipboard;
