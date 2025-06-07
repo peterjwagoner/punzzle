@@ -4,30 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Punzzle - Word Puzzle Game</title>
- <!-- Favicon and App Icons -->
-<link rel="icon" type="image/x-icon" href="/favicon.ico">
-<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-
-<!-- Apple Touch Icons -->
-<link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-
-<!-- Android Chrome Icons -->
-<link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png">
-<link rel="icon" type="image/png" sizes="512x512" href="/android-chrome-512x512.png">
-
-<!-- Web App Manifest -->
-<link rel="manifest" href="/site.webmanifest">
-
-<!-- Theme colors for mobile browsers -->
-<meta name="theme-color" content="#326891">
-<meta name="msapplication-TileColor" content="#326891">
-
-<!-- Additional Apple-specific meta tags -->
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Punzzle">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://punzzle.com/images/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="https://punzzle.com/images/favicon-16x16.png">
   <link href="https://fonts.googleapis.com/css2?family=Headland+One&display=swap" rel="stylesheet">
   <link rel="apple-touch-icon" sizes="180x180" href="https://punzzle.com/images/apple-touch-icon.png">
@@ -1786,54 +1763,9 @@
     }
   </style>
   
-  <style>
-    /* Confetti Animation Styles */
-    .confetti {
-      position: fixed;
-      width: 10px;
-      height: 10px;
-      background-color: #326891;
-      z-index: 9998;
-      pointer-events: none;
-      animation: confetti-fall 3s linear forwards;
-    }
-    
-    .confetti:nth-child(odd) {
-      background-color: #f79009;
-      animation-duration: 2.5s;
-    }
-    
-    .confetti:nth-child(3n) {
-      background-color: #00875a;
-      animation-duration: 3.5s;
-    }
-    
-    .confetti:nth-child(4n) {
-      background-color: #c9372c;
-      animation-duration: 2.8s;
-    }
-    
-    .confetti:nth-child(5n) {
-      background-color: #9333ea;
-      animation-duration: 3.2s;
-    }
-    
-    @keyframes confetti-fall {
-      0% {
-        transform: translateY(-100vh) rotate(0deg);
-        opacity: 1;
-      }
-      100% {
-        transform: translateY(100vh) rotate(720deg);
-        opacity: 0;
-      }
-    }
-  </style>
-  
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       let keyPopup = null;
-
       let activeKey = null;
       
       // Only cleanup if we're sure content is ready
@@ -1892,37 +1824,9 @@
       });
     });
   </script>
-  
-  <script>
-    // Confetti function
-    function createConfetti() {
-      var colors = ['#326891', '#f79009', '#00875a', '#c9372c', '#9333ea', '#fbbf24'];
-      var confettiCount = 50;
-      
-      for (var i = 0; i < confettiCount; i++) {
-        setTimeout(function() {
-          var confetti = document.createElement('div');
-          confetti.className = 'confetti';
-          confetti.style.left = Math.random() * 100 + 'vw';
-          confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-          confetti.style.animationDelay = Math.random() * 0.5 + 's';
-          confetti.style.animationDuration = (Math.random() * 1 + 2) + 's';
-          
-          document.body.appendChild(confetti);
-          
-          setTimeout(function() {
-            if (confetti.parentNode) {
-              confetti.parentNode.removeChild(confetti);
-            }
-          }, 4000);
-        }, Math.random() * 500);
-      }
-    }
-  </script>
 </head>
 <body>
   <!-- Hamburger Menu -->
-
   <div id="hamburgerMenu" class="hamburger-menu">
     <button id="hamburgerButton" class="hamburger-button" onclick="toggleHamburgerMenu()">
       <span class="hamburger-line"></span>
@@ -1953,31 +1857,23 @@
         <div class="example-section">
           <div class="example-content">
             <div class="example-categories">
-              <strong>POP STARS + CONDIMENTS</strong>
+              <strong>HBO SHOWS + PASTRIES</strong>
             </div>
             
             <div class="example-puzzle">
               <div class="example-word">
-                <div class="example-tile">C</div>
+                <div class="example-tile">G</div>
+                <div class="example-tile">A</div>
+                <div class="example-tile">M</div>
                 <div class="example-tile">E</div>
-                <div class="example-tile">L</div>
-                <div class="example-tile">I</div>
-                <div class="example-tile">N</div>
-                <div class="example-tile">E</div>
+                <div style="width: 14px;"></div>
+                <div class="example-tile">O</div>
+                <div class="example-tile">F</div>
               </div>
               <div class="example-word">
-                <div class="example-tile">D</div>
-                <div class="example-tile">I</div>
-                <div class="example-tile">J</div>
+                <div class="example-tile">S</div>
+                <div class="example-tile">C</div>
                 <div class="example-tile">O</div>
-                <div class="example-tile">N</div>
-              </div>
-            </div>
-          </div>
-                <div class="example-tile">N</div>
-              </div>
-            </div>
-          </div>
                 <div class="example-tile">N</div>
                 <div class="example-tile">E</div>
                 <div class="example-tile">S</div>
@@ -3421,9 +3317,6 @@
         
         if (userAnswer === correctAnswer) {
           updateMessage('Excellent! You solved the puzzle.', 'success');
-          
-          // Trigger confetti celebration
-          createConfetti();
           
           gameState.letterTiles.forEach(function(tile, index) {
             setTimeout(function() {
