@@ -138,26 +138,6 @@
     /* Bonus Puzzle Styles */
     .bonus-item {
 
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 0.85rem;
-      margin-left: 5px;
-    }
-    
-    .download-preview-btn:hover {
-      background: #218838;
-    }
-    
-    .download-preview-btn:disabled {
-      background: #ccc;
-      cursor: not-allowed;
-    }
-    
-    /* Bonus Puzzle Styles */
-    .bonus-item {
-
     }
     
     .login-btn:disabled {
@@ -647,7 +627,11 @@
       align-items: center;
       margin-top: 10px;
       gap: 10px;
+      flex-wrap: wrap;
     }
+    
+    .link-label {
+
     
     .link-label {
       font-weight: 600;
@@ -672,11 +656,30 @@
       border: none;
       border-radius: 4px;
       cursor: pointer;
+    }
+    
+    .download-preview-btn {
+      padding: 6px 12px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
       font-size: 0.85rem;
     }
     
-    .copy-btn:hover {
-      background: #2c5a7a;
+    .download-preview-btn:hover {
+      background: #218838;
+    }
+    
+    .download-preview-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    
+    /* Bonus Puzzle Styles */
+    .bonus-item {
+
     }
     
     /* Bonus Puzzle Styles */
@@ -736,9 +739,16 @@
       color: #721c24;
     }
     
+    .button-group {
+      display: flex;
+      gap: 5px;
+      margin-top: 10px;
+    }
+    
     /* Analytics Table */
     .analytics-table {
       width: 100%;
+
       border-collapse: collapse;
       margin-top: 20px;
     }
@@ -1986,6 +1996,8 @@ SUPERHEROES + FRUITS | WONDER WOMAN GO | A tropical justice warrior`;
                 <span class="link-label">URL:</span>
                 <input type="text" class="link-input" value="${playUrl}" readonly>
                 <button class="copy-btn" onclick="copyToClipboard('${playUrl}')">Copy</button>
+              </div>
+              <div class="button-group">
                 <button class="download-preview-btn" onclick="downloadPuzzlePreview('${p.id}', '${p.categories}', '${p.answer}')">Download Preview</button>
               </div>
               <div class="help-text">Created: ${new Date(p.created).toLocaleString()}</div>
@@ -2314,19 +2326,19 @@ SUPERHEROES + FRUITS | WONDER WOMAN GO | A tropical justice warrior`;
                 <span class="link-label">Play URL:</span>
                 <input type="text" class="link-input" value="${p.playUrl}" readonly>
                 <button class="copy-btn" onclick="copyToClipboard('${p.playUrl}')">Copy</button>
-                <button class="download-preview-btn" onclick="downloadPuzzlePreview('bonus-${p.id}', '${p.categories}', '${p.answer}')">Download Preview</button>
               </div>
               <div class="link-row">
                 <span class="link-label">Preview URL:</span>
                 <input type="text" class="link-input" value="${p.previewUrl}" readonly>
                 <button class="copy-btn" onclick="copyToClipboard('${p.previewUrl}')">Copy</button>
-
-                <input type="text" class="link-input" value="${p.previewUrl}" readonly>
-                <button class="copy-btn" onclick="copyToClipboard('${p.previewUrl}')">Copy</button>
+              </div>
+              <div class="button-group">
+                <button class="download-preview-btn" onclick="downloadPuzzlePreview('bonus-${p.id}', '${p.categories}', '${p.answer}')">Download Preview</button>
               </div>
             </div>
           </div>
         `;
+
       }).join('');
     }
 
