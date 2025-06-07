@@ -1343,11 +1343,15 @@ service cloud.firestore {
       const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
       
+      console.log('Login attempt:', { username, passwordLength: password.length });
+      
       if (username === VALID_USERNAME && password === VALID_PASSWORD) {
+        console.log('Login successful');
         document.getElementById('loginContainer').style.display = 'none';
         document.getElementById('appContainer').style.display = 'block';
         initFirebase();
       } else {
+        console.log('Login failed');
         const errorDiv = document.getElementById('loginError');
         errorDiv.textContent = 'Invalid username or password';
         errorDiv.style.display = 'block';
