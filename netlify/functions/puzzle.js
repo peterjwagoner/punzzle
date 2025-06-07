@@ -3,26 +3,50 @@ const admin = require('firebase-admin');
 // Initialize Firebase Admin (singleton pattern)
 if (!admin.apps.length) {
   try {
-    console.log('🔧 Initializing Firebase Admin with service account...');
+    console.log('🔧 Initializing Firebase Admin with individual variables...');
     
-    // Use the entire service account JSON (base64 encoded)
-    const serviceAccountBase64 = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+    const projectId = process.env.FIREBASE_PROJECT_ID;
+    const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+    let privateKey = process.env.FIREBASE_PRIVATE_KEY;
     
-    if (!serviceAccountBase64) {
-      throw new Error('FIREBASE_SERVICE_ACCOUNT_KEY environment variable is missing');
+    if (!projectId || !clientEmail || !privateKey) {
+      throw new Error('Missing required Firebase environment variables');
     }
     
-    // Decode the base64 service account
-    const serviceAccountJson = Buffer.from(serviceAccountBase64, 'base64').toString('utf8');
-    const serviceAccount = JSON.parse(serviceAccountJson);
+    console.log('🔧 Project ID:', projectId);
+    console.log('🔧 Client email:', clientEmail);
+    console.log('🔧 Private key length:', privateKey.length);
     
-    console.log('✅ Service account decoded successfully');
-    console.log('🔧 Project ID:', serviceAccount.project_id);
-    console.log('🔧 Client email:', serviceAccount.client_email);
+    // Clean up the private key format
+    privateKey = privateKey.replace(/\\n/g, '\n');
+    
+    // Ensure proper PEM format
+    if (!privateKey.startsWith('-----BEGIN PRIVATE KEY-----')) {
+      privateKey = '-----BEGIN PRIVATE KEY-----\n' + privateKey;
+    }
+    if (!privateKey.endsWith('-----END PRIVATE KEY-----')) {
+      privateKey = privateKey + '\n-----END PRIVATE KEY-----';
+    }
+    
+    console.log('🔧 Private key starts correctly:', privateKey.startsWith('-----BEGIN PRIVATE KEY-----'));
+    console.log('🔧 Private key ends correctly:', privateKey.endsWith('-----END PRIVATE KEY-----'));
+
+    const serviceAccount = {
+      type: "service_account",
+      project_id: projectId,
+      private_key_id: "dummy",
+      private_key: privateKey,
+      client_email: clientEmail,
+      client_id: "dummy",
+      auth_uri: "https://accounts.google.com/o/oauth2/auth",
+      token_uri: "https://oauth2.googleapis.com/token",
+      auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
+      client_x509_cert_url: `https://www.googleapis.com/robot/v1/metadata/x509/${encodeURIComponent(clientEmail)}`
+    };
 
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
-      databaseURL: `https://${serviceAccount.project_id}-default-rtdb.firebaseio.com`
+      databaseURL: `https://${projectId}-default-rtdb.firebaseio.com`
     });
     
     console.log('✅ Firebase Admin initialized successfully');
