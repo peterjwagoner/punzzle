@@ -3,61 +3,26 @@ const admin = require('firebase-admin');
 // Initialize Firebase Admin (singleton pattern)
 if (!admin.apps.length) {
   try {
-    console.log('🔧 Initializing Firebase Admin...');
+    console.log('🔧 Initializing Firebase Admin with service account...');
     
-    // Handle the private key with multiple decoding strategies
-    let privateKey = process.env.FIREBASE_PRIVATE_KEY;
+    // Use the entire service account JSON (base64 encoded)
+    const serviceAccountBase64 = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
     
-    if (!privateKey) {
-      throw new Error('FIREBASE_PRIVATE_KEY environment variable is missing');
+    if (!serviceAccountBase64) {
+      throw new Error('FIREBASE_SERVICE_ACCOUNT_KEY environment variable is missing');
     }
     
-    console.log('🔧 Private key length (raw):', privateKey.length);
-    console.log('🔧 Private key preview:', privateKey.substring(0, 50) + '...');
+    // Decode the base64 service account
+    const serviceAccountJson = Buffer.from(serviceAccountBase64, 'base64').toString('utf8');
+    const serviceAccount = JSON.parse(serviceAccountJson);
     
-    // Strategy 1: Try base64 decoding first
-    try {
-      const decoded = Buffer.from(privateKey, 'base64').toString('utf8');
-      if (decoded.includes('-----BEGIN PRIVATE KEY-----')) {
-        privateKey = decoded;
-        console.log('✅ Successfully decoded base64 private key');
-      }
-    } catch (e) {
-      console.log('ℹ️ Not base64 encoded, using as-is');
-    }
-    
-    // Strategy 2: Replace escaped newlines with actual newlines
-    privateKey = privateKey.replace(/\\n/g, '\n');
-    
-    // Strategy 3: Ensure proper PEM format
-    if (!privateKey.startsWith('-----BEGIN PRIVATE KEY-----')) {
-      throw new Error('Private key does not start with -----BEGIN PRIVATE KEY-----');
-    }
-    
-    if (!privateKey.endsWith('-----END PRIVATE KEY-----')) {
-      throw new Error('Private key does not end with -----END PRIVATE KEY-----');
-    }
-    
-    console.log('🔧 Final private key length:', privateKey.length);
-    console.log('🔧 Private key starts correctly:', privateKey.startsWith('-----BEGIN PRIVATE KEY-----'));
-    console.log('🔧 Private key ends correctly:', privateKey.endsWith('-----END PRIVATE KEY-----'));
-    
-    const serviceAccount = {
-      type: "service_account",
-      project_id: process.env.FIREBASE_PROJECT_ID,
-      private_key_id: "dummy",
-      private_key: privateKey,
-      client_email: process.env.FIREBASE_CLIENT_EMAIL,
-      client_id: "dummy",
-      auth_uri: "https://accounts.google.com/o/oauth2/auth",
-      token_uri: "https://oauth2.googleapis.com/token",
-      auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
-      client_x509_cert_url: `https://www.googleapis.com/robot/v1/metadata/x509/${encodeURIComponent(process.env.FIREBASE_CLIENT_EMAIL)}`
-    };
+    console.log('✅ Service account decoded successfully');
+    console.log('🔧 Project ID:', serviceAccount.project_id);
+    console.log('🔧 Client email:', serviceAccount.client_email);
 
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
-      databaseURL: `https://${process.env.FIREBASE_PROJECT_ID}-default-rtdb.firebaseio.com`
+      databaseURL: `https://${serviceAccount.project_id}-default-rtdb.firebaseio.com`
     });
     
     console.log('✅ Firebase Admin initialized successfully');
