@@ -2457,7 +2457,7 @@
       console.log('Updating UI elements...');
       categoryElement.textContent = gameState.categoryText;
       
-      // Format date for display
+      // Format date for display with navigation
       var dateString = date.toLocaleDateString('en-US', { 
         year: 'numeric', 
         month: 'long', 
@@ -2468,11 +2468,45 @@
       prevDate.setDate(prevDate.getDate() - 1);
       var prevDateParam = prevDate.toISOString().split('T')[0];
       
-      var dateDisplayText = dateString;
+      var nextDate = new Date(date);
+      nextDate.setDate(nextDate.getDate() + 1);
+      var nextDateParam = nextDate.toISOString().split('T')[0];
+      
+      var today = new Date();
+      var isToday = date.toDateString() === today.toDateString();
+      var isFuture = date > today;
+      
+      var dateDisplayText = '';
+      
+      // Previous link (always show unless it's very old)
+      dateDisplayText += '<a href="?date=' + prevDateParam + '&skipIntro=true">← Previous</a> · ';
+      
+      // Current date
+      dateDisplayText += dateString;
       if (usesFallback) {
-        // Only show (Demo) if not in private browsing
         if (typeof window.isPrivateBrowsing !== 'undefined' && window.isPrivateBrowsing) {
           // In private browsing, don't add (Demo) label for better UX
+        } else {
+          dateDisplayText += ' (Demo)';
+        }
+      }
+      
+      // Next link (only if not today and not future)
+      if (!isToday && !isFuture) {
+        dateDisplayText += ' · <a href="?date=' + nextDateParam + '&skipIntro=true">Next →</a>';
+      } else if (isToday) {
+        dateDisplayText += ' · Today';
+      }
+      
+      // Today link (if viewing archive)
+      if (!isToday) {
+        dateDisplayText += ' · <a href="?skipIntro=true">Today</a>';
+      }
+      
+      dateDisplayElement.innerHTML = dateDisplayText;
+      
+      console.log('✓ UI updated successfully');
+      console.log('=== loadPuzzleByDate() completed successfully');
         } else {
           dateDisplayText += ' (Demo)';
         }
