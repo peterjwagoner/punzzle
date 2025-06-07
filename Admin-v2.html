@@ -23,6 +23,9 @@
   <style>
     * {
 
+  <style>
+    * {
+
     * {
       box-sizing: border-box;
       margin: 0;
@@ -115,6 +118,26 @@
     .download-preview-btn {
       padding: 6px 12px;
       background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      margin-left: 5px;
+    }
+    
+    .download-preview-btn:hover {
+      background: #218838;
+    }
+    
+    .download-preview-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    
+    /* Bonus Puzzle Styles */
+    .bonus-item {
+
       color: white;
       border: none;
       border-radius: 4px;
@@ -858,6 +881,63 @@
 </head>
 <body>
 
+      position: fixed;
+      left: -9999px;
+      top: -9999px;
+      background: #f0f4f8;
+      padding: 60px;
+      width: 800px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .canvas-categories {
+      font-size: 24px;
+      font-weight: 600;
+      color: #326891;
+      background-color: #e1e9f0;
+      border-radius: 16px;
+      text-transform: uppercase;
+      padding: 20px 50px;
+      margin-bottom: 50px;
+      letter-spacing: 0.5px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    
+    .canvas-puzzle {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+    
+    .canvas-word {
+      display: flex;
+      gap: 12px;
+    }
+    
+    .canvas-tile {
+      width: 70px;
+      height: 70px;
+      border: 3px solid #c0c8d0;
+      border-radius: 12px;
+      background-color: #ffffff;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    }
+    
+    @media (max-width: 768px) {
+      #previewCanvas {
+        width: 600px;
+        padding: 40px;
+      }
+    }
+  </style>
+</head>
+<body>
+
   <!-- Login Screen -->
   <div class="login-container" id="loginContainer">
     <div class="login-card">
@@ -1221,6 +1301,16 @@ service cloud.firestore {
     // Create hidden canvas container
     var canvasContainer = document.createElement('div');
     canvasContainer.id = 'previewCanvas';
+    canvasContainer.innerHTML = `
+      <div class="canvas-categories" id="canvasCategories"></div>
+      <div class="canvas-puzzle" id="canvasPuzzle"></div>
+    `;
+    document.body.appendChild(canvasContainer);
+    
+    // Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDD6fIiRCLLQFUUyUrq-AnipZdomJoVgB8",
+
     canvasContainer.innerHTML = `
       <div class="canvas-categories" id="canvasCategories"></div>
       <div class="canvas-puzzle" id="canvasPuzzle"></div>
@@ -1901,6 +1991,8 @@ SUPERHEROES + FRUITS | WONDER WOMAN GO | A tropical justice warrior`;
               <div class="help-text">Created: ${new Date(p.created).toLocaleString()}</div>
             </div>
 
+            </div>
+
           </div>
         `;
       }).join('');
@@ -2003,9 +2095,89 @@ SUPERHEROES + FRUITS | WONDER WOMAN GO | A tropical justice warrior`;
       }
     }
 
+    // Download puzzle preview as PNG
+    async function downloadPuzzlePreview(puzzleId, categories, answer) {
+      try {
+        // Show loading on button
+        const buttons = document.querySelectorAll('.download-preview-btn');
+        let targetButton = null;
+        buttons.forEach(btn => {
+          if (btn.getAttribute('onclick').includes(puzzleId)) {
+            targetButton = btn;
+            btn.disabled = true;
+            btn.textContent = 'Generating...';
+          }
+        });
+        
+        // Set up canvas content
+        document.getElementById('canvasCategories').textContent = categories;
+        
+        // Parse words from answer
+        const words = answer.split(' ').filter(w => w);
+        const canvasPuzzle = document.getElementById('canvasPuzzle');
+        canvasPuzzle.innerHTML = '';
+        
+        // Create puzzle tiles
+        words.forEach(word => {
+          const wordDiv = document.createElement('div');
+          wordDiv.className = 'canvas-word';
+          
+          for (let i = 0; i < word.length; i++) {
+            const tile = document.createElement('div');
+            tile.className = 'canvas-tile';
+            wordDiv.appendChild(tile);
+          }
+          
+          canvasPuzzle.appendChild(wordDiv);
+        });
+        
+        // Make canvas visible temporarily
+        const canvas = document.getElementById('previewCanvas');
+        canvas.style.left = '0';
+        canvas.style.top = '0';
+        
+        // Generate image
+        const canvasElement = await html2canvas(canvas, {
+          backgroundColor: '#f0f4f8',
+          scale: 2,
+          logging: false,
+          width: 800,
+          height: canvas.scrollHeight
+        });
+        
+        // Hide canvas again
+        canvas.style.left = '-9999px';
+        canvas.style.top = '-9999px';
+        
+        // Download image
+        const link = document.createElement('a');
+        link.download = `punzzle-${categories.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}.png`;
+        link.href = canvasElement.toDataURL();
+        link.click();
+        
+        // Reset button
+        if (targetButton) {
+          targetButton.disabled = false;
+          targetButton.textContent = 'Download Preview';
+        }
+        
+      } catch (error) {
+        console.error('Error generating preview:', error);
+        alert('Failed to generate preview. Please try again.');
+        
+        // Reset all buttons
+        const buttons = document.querySelectorAll('.download-preview-btn');
+        buttons.forEach(btn => {
+          btn.disabled = false;
+          btn.textContent = 'Download Preview';
+        });
+      }
+    }
+
     // Copy to clipboard function
     function copyToClipboard(text) {
       navigator.clipboard.writeText(text).then(() => {
+
 
         showMessage('Copied to clipboard!', 'success');
       }).catch(err => {
@@ -2142,9 +2314,13 @@ SUPERHEROES + FRUITS | WONDER WOMAN GO | A tropical justice warrior`;
                 <span class="link-label">Play URL:</span>
                 <input type="text" class="link-input" value="${p.playUrl}" readonly>
                 <button class="copy-btn" onclick="copyToClipboard('${p.playUrl}')">Copy</button>
+                <button class="download-preview-btn" onclick="downloadPuzzlePreview('bonus-${p.id}', '${p.categories}', '${p.answer}')">Download Preview</button>
               </div>
               <div class="link-row">
                 <span class="link-label">Preview URL:</span>
+                <input type="text" class="link-input" value="${p.previewUrl}" readonly>
+                <button class="copy-btn" onclick="copyToClipboard('${p.previewUrl}')">Copy</button>
+
                 <input type="text" class="link-input" value="${p.previewUrl}" readonly>
                 <button class="copy-btn" onclick="copyToClipboard('${p.previewUrl}')">Copy</button>
               </div>
@@ -2466,6 +2642,9 @@ SUPERHEROES + FRUITS | WONDER WOMAN GO | A tropical justice warrior`;
     window.loadBonusPuzzles = loadBonusPuzzles;
     window.loadAnalytics = loadAnalytics;
     window.testConnection = testConnection;
+    window.downloadPuzzlePreview = downloadPuzzlePreview;
+    window.exportAllData = exportAllData;
+    window.importData = importData;
     window.downloadPuzzlePreview = downloadPuzzlePreview;
     window.exportAllData = exportAllData;
     window.importData = importData;
