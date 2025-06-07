@@ -315,14 +315,7 @@ async function saveCustomPuzzle(puzzleData) {
     console.error('❌ Error details:', error.message, error.stack);
     return null;
   }
-}
-
-      throw new Error(`API error: ${response.status}`);
-    }
-  } catch (error) {
-    console.error('❌ Error saving custom puzzle via API:', error);
-    return null;
-  }
+},
 }
 
 // Make everything globally available
