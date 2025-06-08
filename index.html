@@ -22,9 +22,297 @@
   <meta property="og:image:alt" content="Punzzle - Daily Word Puzzle Game">
   <meta property="og:site_name" content="Punzzle">
 
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@punzzle">
+  <meta name="twitter:creator" content="@punzzle">
+  <meta name="twitter:url" content="https://punzzle.com/">
+  <meta name="twitter:title" content="Punzzle - Daily Word Puzzle Game">
+  <meta name="twitter:description" content="Find the pun that connects the categories! A new word puzzle every day where you solve clever puns by filling in missing letters.">
+  <meta name="twitter:image" content="https://punzzle.com/images/punzzle-preview.png">
+  <meta name="twitter:image:alt" content="Punzzle - Daily Word Puzzle Game">
+
+  <!-- Additional SEO meta tags -->
+  <meta name="description" content="Find the pun that connects the categories! A new word puzzle every day where you solve clever puns by filling in missing letters.">
+  <meta name="keywords" content="word puzzle, pun game, daily puzzle, word game, crossword, brain teaser">
+  <meta name="author" content="Punzzle">
+  <link rel="canonical" href="https://punzzle.com/">
+  
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-QLL4GXB1ZX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-QLL4GXB1ZX');
+  </script>
+  
+  <!-- Firebase (Compatibility Version) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="firebase-setup.js"></script>
+
+  <script>
+    // Global loading state tracking
+    let loadingStateActive = false;
+    let loadingCleanupTimeout = null;
+    
+    // Enhanced loading state management
+    function showLoadingState() {
+      try {
+        // Clear any existing cleanup timeout
+        if (loadingCleanupTimeout) {
+          clearTimeout(loadingCleanupTimeout);
+          loadingCleanupTimeout = null;
+        }
+        
+        // Prevent duplicate loading indicators
+        if (loadingStateActive || document.getElementById('loadingIndicator')) {
+          return;
+        }
+        
+        loadingStateActive = true;
+        
+        // Create loading indicator
+        const loadingDiv = document.createElement('div');
+        loadingDiv.id = 'loadingIndicator';
+        loadingDiv.style.cssText = `
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: rgba(255, 255, 255, 0.9);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          z-index: 9999;
+          backdrop-filter: blur(2px);
+        `;
+        
+        const spinnerDiv = document.createElement('div');
+        spinnerDiv.className = 'loading';
+        spinnerDiv.style.cssText = `
+          display: inline-block;
+          width: 40px;
+          height: 40px;
+          border: 4px solid #f3f3f3;
+          border-top: 4px solid #326891;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+        `;
+        
+        loadingDiv.appendChild(spinnerDiv);
+        document.body.appendChild(loadingDiv);
+        
+        // Safety cleanup after 8 seconds (shorter timeout)
+        loadingCleanupTimeout = setTimeout(() => {
+          hideLoadingState();
+        }, 8000);
+        
+      } catch (error) {
+        console.error('Error showing loading state:', error);
+        loadingStateActive = false;
+      }
+    }
+
+    function hideLoadingState() {
+      try {
+        loadingStateActive = false;
+        
+        // Clear cleanup timeout
+        if (loadingCleanupTimeout) {
+          clearTimeout(loadingCleanupTimeout);
+          loadingCleanupTimeout = null;
+        }
+        
+        // Single cleanup attempt - no need for multiple timeouts
+        const loadingDiv = document.getElementById('loadingIndicator');
+        if (loadingDiv && loadingDiv.parentNode) {
+          loadingDiv.parentNode.removeChild(loadingDiv);
+        }
+        
+      } catch (error) {
+        console.error('Error hiding loading state:', error);
+      }
+    }
+    
+    // Force cleanup on page visibility change
+    document.addEventListener('visibilitychange', function() {
+      if (document.visibilityState === 'visible') {
+        setTimeout(hideLoadingState, 100);
+      }
+    });
+    
+    // Force cleanup on page load
+    window.addEventListener('load', function() {
+      setTimeout(hideLoadingState, 500);
+    });
+    
+    // Force cleanup before page unload
+    window.addEventListener('beforeunload', function() {
+      hideLoadingState();
+    });
+
+    // Test if preview image is accessible
+    function testPreviewImage() {
+      const img = new Image();
+      img.onload = function() {
+        console.log('Preview image loaded successfully');
+      };
+      img.onerror = function() {
+        console.error('Preview image failed to load - check if https://punzzle.com/images/punzzle-preview.png is accessible');
+      };
+      img.src = 'https://punzzle.com/images/punzzle-preview.png';
+    }
+
+    // Dynamic meta tag updates for shared custom puzzles
+    function updateMetaTags(title, description) {
+      updateMetaTag('og:title', title, 'property');
+      updateMetaTag('og:description', description, 'property');
+      updateMetaTag('twitter:title', title, 'name');
+      updateMetaTag('twitter:description', description, 'name');
+      document.title = title;
+    }
+
+    function updateMetaTag(attribute, content, type = 'property') {
+      let meta = document.querySelector(`meta[${type}="${attribute}"]`);
+      if (meta) {
+        meta.setAttribute('content', content);
+      }
+    }
+
+    // Track link clicks to Firebase
+    async function trackLinkClick(linkText, linkType) {
+      try {
+        if (typeof db !== 'undefined' && db.collection) {
+          await db.collection('linkClicks').add({
+            linkText: linkText,
+            linkType: linkType,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            url: window.location.href,
+            puzzleId: gameState ? gameState.puzzleId : null
+          });
+        }
+      } catch (error) {
+        console.error('Error tracking link click:', error);
+      }
+    }
+
+    // Wait for DOM to be ready
+    document.addEventListener('DOMContentLoaded', function() {
+      // Cleanup any existing loading states
+      setTimeout(hideLoadingState, 100);
+      
+      // Global click tracking
+      document.addEventListener('click', function(e) {
+        if (typeof gtag === 'undefined') return;
+        
+        const link = e.target.closest('a');
+        const button = e.target.closest('button');
+        
+        if (link && link.href) {
+          const linkText = link.textContent.trim();
+          const linkHref = link.getAttribute('href');
+          
+          if (linkHref && linkHref !== '#' && !linkHref.startsWith('javascript:')) {
+            gtag('event', 'link_click', {
+              'event_category': 'navigation',
+              'event_label': linkText || linkHref
+            });
+            trackLinkClick(linkText || linkHref, 'link');
+          }
+        }
+        
+        if (button) {
+          const buttonText = button.textContent.trim();
+          const buttonId = button.id || button.className || 'unnamed_button';
+          
+          gtag('event', 'button_click', {
+            'event_category': 'interaction',
+            'event_label': buttonText || buttonId
+          });
+          
+          trackLinkClick(buttonText || buttonId, 'button');
+          
+          // Special tracking for game buttons
+          if (buttonText.includes('Random Letter')) {
+            gtag('event', 'feature_use', {
+              'event_category': 'gameplay',
+              'event_label': 'random_letter_button'
+            });
+          } else if (buttonText.includes('Random Word')) {
+            gtag('event', 'feature_use', {
+              'event_category': 'gameplay',
+              'event_label': 'random_word_button'
+            });
+          } else if (buttonText.includes('Hint') || buttonText.includes('Restart')) {
+            gtag('event', 'feature_use', {
+              'event_category': 'gameplay',
+              'event_label': 'hint_restart_button'
+            });
+          } else if (buttonText.includes('Play')) {
+            gtag('event', 'game_start', {
+              'event_category': 'gameplay',
+              'event_label': 'play_button'
+            });
+          } else if (buttonText.includes('Share')) {
+            gtag('event', 'social_share', {
+              'event_category': 'engagement',
+              'event_label': 'share_button'
+            });
+          } else if (buttonText.includes('More Punzzles')) {
+            gtag('event', 'more_puzzles', {
+              'event_category': 'engagement',
+              'event_label': 'more_puzzles_button'
+            });
+          }
+        }
+      });
+      
+      // Track mobile keyboard clicks
+      const mobileKeyboard = document.getElementById('mobileKeyboard');
+      if (mobileKeyboard) {
+        mobileKeyboard.addEventListener('click', function(e) {
+          const key = e.target.closest('.key-btn');
+          if (key && typeof gtag !== 'undefined') {
+            const keyText = key.textContent.trim();
+            gtag('event', 'mobile_keyboard', {
+              'event_category': 'interaction',
+              'event_label': keyText === '⌫' ? 'backspace' : 'letter_key'
+            });
+            trackLinkClick('Mobile Keyboard: ' + (keyText === '⌫' ? 'Backspace' : 'Letter'), 'keyboard');
+          }
+        });
+      }
+    });
+  </script>
+  
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      background-color: #fafafa;
+      color: #1a1a1a;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      overflow: hidden;
+    }
+    
 body.modal-open {
   overflow: hidden;
 }
+
 
         // Create loading indicator
         const loadingDiv = document.createElement('div');
