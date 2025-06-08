@@ -1248,88 +1248,49 @@ service cloud.firestore {
   </div>
 
   <script>
-    // Wait for DOM to be fully loaded
-    window.addEventListener('load', function() {
-      console.log('Page fully loaded');
-      
-      // Create hidden canvas container
-      var canvasContainer = document.createElement('div');
-      canvasContainer.id = 'previewCanvas';
-      canvasContainer.innerHTML = `
-        <div class="canvas-categories" id="canvasCategories"></div>
-        <div class="canvas-puzzle" id="canvasPuzzle"></div>
-      `;
-      document.body.appendChild(canvasContainer);
-      
-      // Firebase Configuration
-      const firebaseConfig = {
-        apiKey: "AIzaSyDD6fIiRCLLQFUUyUrq-AnipZdomJoVgB8",
-        authDomain: "punzzle.firebaseapp.com",
-        projectId: "punzzle",
-        storageBucket: "punzzle.firebasestorage.app",
-        messagingSenderId: "764724354815",
-        appId: "1:764724354815:web:339f700ef4165fd45576ca"
-      };
+    // Create hidden canvas container
+    var canvasContainer = document.createElement('div');
+    canvasContainer.id = 'previewCanvas';
+    canvasContainer.innerHTML = `
+      <div class="canvas-categories" id="canvasCategories"></div>
+      <div class="canvas-puzzle" id="canvasPuzzle"></div>
+    `;
+    document.body.appendChild(canvasContainer);
+    
+    // Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDD6fIiRCLLQFUUyUrq-AnipZdomJoVgB8",
+      authDomain: "punzzle.firebaseapp.com",
+      projectId: "punzzle",
+      storageBucket: "punzzle.firebasestorage.app",
+      messagingSenderId: "764724354815",
+      appId: "1:764724354815:web:339f700ef4165fd45576ca"
+    };
 
-      // Global variables
-      let db = null;
-      let isConnected = false;
-      let puzzles = [];
-      let customPuzzles = [];
-      let bonusPuzzles = [];
-      let analytics = {
-        totalPlays: 0,
-        completedPuzzles: 0,
-        incompletePuzzles: 0,
-        avgScore: 0,
-        shareRate: 0,
-        linkClicks: {},
-        puzzleStats: {},
-        customPuzzleStats: {}
-      };
+    // Global variables
+    let db = null;
+    let isConnected = false;
+    let puzzles = [];
+    let customPuzzles = [];
+    let bonusPuzzles = [];
+    let analytics = {
+      totalPlays: 0,
+      completedPuzzles: 0,
+      incompletePuzzles: 0,
+      avgScore: 0,
+      shareRate: 0,
+      linkClicks: {},
+      puzzleStats: {},
+      customPuzzleStats: {}
+    };
 
-      // Simple authentication
-      const VALID_USERNAME = 'peterjwagoner';
-      const VALID_PASSWORD = '**molosisi99EUP';
-      
-      // Track if puzzle order has been modified
-      let puzzleOrderModified = false;
-      let originalPuzzleOrder = [];
-      
-      // Set up login form handler
-      const loginForm = document.getElementById('loginForm');
-      if (loginForm) {
-        console.log('Setting up login form handler');
-        loginForm.addEventListener('submit', handleLogin);
-      } else {
-        console.error('Login form not found!');
-      }
-      
-      function handleLogin(e) {
-        e.preventDefault();
-        console.log('Login form submitted');
-        
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
-        
-        console.log('Credentials:', { username, passwordLength: password.length });
-        
-        if (username === VALID_USERNAME && password === VALID_PASSWORD) {
-          console.log('Login successful!');
-          document.getElementById('loginContainer').style.display = 'none';
-          document.getElementById('appContainer').style.display = 'block';
-          initFirebase();
-        } else {
-          console.log('Login failed - invalid credentials');
-          const errorDiv = document.getElementById('loginError');
-          errorDiv.textContent = 'Invalid username or password';
-          errorDiv.style.display = 'block';
-          
-          setTimeout(() => {
-            errorDiv.style.display = 'none';
-          }, 3000);
-        }
-      }
+    // Simple authentication
+    const VALID_USERNAME = 'peterjwagoner';
+    const VALID_PASSWORD = '**molosisi99EUP';
+    
+    // Track if puzzle order has been modified
+    let puzzleOrderModified = false;
+    let originalPuzzleOrder = [];
 
     // Initialize Firebase
     async function initFirebase() {
@@ -1375,21 +1336,31 @@ service cloud.firestore {
       }
     }
 
-      // Set initial dates
-      const today = new Date().toISOString().split('T')[0];
-      const dateInput = document.getElementById('date');
-      const bulkStartDateInput = document.getElementById('bulkStartDate');
-      if (dateInput) dateInput.value = today;
-      if (bulkStartDateInput) bulkStartDateInput.value = today;
+    // Authentication
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+      e.preventDefault();
       
-      // Real-time preview for single puzzle
-      ['category1', 'category2', 'answer', 'hint', 'date'].forEach(id => {
-        const element = document.getElementById(id);
-        if (element) {
-          element.addEventListener('input', previewSingle);
-        }
-      });
-    }); // End of window.addEventListener('load')
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      
+      console.log('Login attempt:', { username, passwordLength: password.length });
+      
+      if (username === VALID_USERNAME && password === VALID_PASSWORD) {
+        console.log('Login successful');
+        document.getElementById('loginContainer').style.display = 'none';
+        document.getElementById('appContainer').style.display = 'block';
+        initFirebase();
+      } else {
+        console.log('Login failed');
+        const errorDiv = document.getElementById('loginError');
+        errorDiv.textContent = 'Invalid username or password';
+        errorDiv.style.display = 'block';
+        
+        setTimeout(() => {
+          errorDiv.style.display = 'none';
+        }, 3000);
+      }
+    });
 
     function logout() {
       if (confirm('Are you sure you want to logout?')) {
