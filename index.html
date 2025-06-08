@@ -1569,6 +1569,11 @@
         margin: 0;
       }
       
+      /* Ensure header is always visible */
+      .header {
+        position: relative !important;
+      }
+      
       .button {
         font-size: 0.7rem;
         padding: 0.4rem 0.5rem;
@@ -4322,10 +4327,16 @@ if (!gameState.customHint) {
       // Add game-active class to show mobile controls
       document.body.classList.add('game-active');
       
+      // Ensure header is properly styled
+      document.querySelector('.header').style.position = '';
+      
       if (!hasStartedGame) {
         document.getElementById('startModal').style.display = 'flex';
       } else {
         startGame();
+      }
+      
+      var hamburgerMenu = document.getElementById('hamburgerMenu');
       }
       
       var hamburgerMenu = document.getElementById('hamburgerMenu');
