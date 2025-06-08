@@ -1771,56 +1771,34 @@
         font-size: 0.8rem !important;
       }
     }
-  /* iOS scroll fixes for modals */
-    .modal-overlay {
-      -webkit-overflow-scrolling: touch;
-      overflow-y: auto;
-    }
-
-    .modal {
-      -webkit-overflow-scrolling: touch;
-      overflow-y: auto;
-      /* Prevent bounce effect at edges */
-      overscroll-behavior: contain;
-    }
-
-    .create-container,
-    #createContainer,
-    #feedbackContainer,
-    #faqContainer {
-      -webkit-overflow-scrolling: touch;
-      overflow-y: auto;
-      overscroll-behavior: contain;
-      /* Add some padding at top/bottom for easier scrolling */
-      padding-top: 2rem;
-      padding-bottom: 5rem;
-    }
-
-    /* Prevent body scroll when modal is open */
-    body.modal-open {
-      position: fixed;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-    }
   </style>
   
   <style>
-    .copyright-footer {
-      position: fixed;
-      bottom: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 0.75rem;
-      color: #999;
-      z-index: 1;
-    }
-    
-    @media (max-width: 768px) {
-      .copyright-footer {
-        display: none;
-      }
-    }
+.create-container,
+#createContainer,
+#feedbackContainer,
+#faqContainer {
+  -webkit-overflow-scrolling: touch;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* Only add padding when these are actually modal dialogs */
+.create-wrapper.active .create-container,
+#feedbackWrapper.active #feedbackContainer,
+#faqWrapper.active #faqContainer {
+  /* Add some padding at top/bottom for easier scrolling */
+  padding-top: 3rem;
+  padding-bottom: 6rem;
+}
+
+/* Prevent body scroll when modal is open */
+body.modal-open {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
   </style>
   
   <script>
