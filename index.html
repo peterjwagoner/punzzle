@@ -4355,13 +4355,16 @@ function showMainGame() {
                    });
       
       if (isValid) {
-        updatePreview(categories, words);
-        previewSection.classList.add('active');
-        
-        createBtn.disabled = false;
-        copyBtn.disabled = false;
-        copyBtn.style.opacity = '1';
-        copyBtn.style.cursor = 'pointer';
+  updatePreview(categories, words);
+  previewSection.classList.add('active');
+  
+  // Set header for preview mode
+  document.getElementById('dateDisplay').innerHTML = '<a href="#" onclick="showMakeYourOwn(); return false;">← Back to Create</a> · Custom Punzzle';
+  
+  createBtn.disabled = false;
+  copyBtn.disabled = false;
+  copyBtn.style.opacity = '1';
+  copyBtn.style.cursor = 'pointer';
         
         var shareBtn = document.getElementById('shareBtn');
         shareBtn.disabled = false;
