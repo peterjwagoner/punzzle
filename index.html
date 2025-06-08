@@ -2725,7 +2725,7 @@
                 trackPunzzleEvent('shared_puzzle_opened', 'user_generated', gameState.categoryText);
               }
               
-              const customTitle = `Punzzle: ${gameState.categoryText}`;
+              const customTitle = `Custom Punzzle: ${gameState.categoryText}`;
               const customDescription = `Can you solve this custom Punzzle? Categories: ${gameState.categoryText}. Find the pun that connects them!`;
               updateMetaTags(customTitle, customDescription);
             } catch (error) {
@@ -4258,13 +4258,18 @@
       document.body.classList.remove('modal-open');
       document.getElementById('gameContainer').classList.remove('game-hidden', 'content-blur');
       
-      startGame();
+      if (!hasStartedGame) {
+        document.getElementById('startModal').style.display = 'flex';
+      } else {
+        startGame();
+      }
       
-      document.body.classList.add('game-active');
+      document.body.classList.remove('game-active');
+      document.body.classList.add('modal-open');
+      document.getElementById('gameContainer').classList.add('content-blur');
       
       var hamburgerMenu = document.getElementById('hamburgerMenu');
       if (hamburgerMenu) {
-        hamburgerMenu.style.display = 'none';
         hamburgerMenu.style.display = 'none';
       }
     }
@@ -4506,4 +4511,4 @@
     }
   </script>
 </body>
-</html> 
+</html>
