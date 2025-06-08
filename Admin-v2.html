@@ -1015,15 +1015,7 @@ TV SHOWS + BEVERAGES | GAME OF SCONES TEA" required></textarea>
             <button class="btn btn-secondary" onclick="filterPuzzles()">Filter</button>
             <button class="btn btn-secondary" onclick="loadPuzzles()">Show All</button>
             <button class="btn btn-success" onclick="exportPuzzles()">Export All</button>
-            <button class="btn btn-primary" onclick="savePuzzleOrder()" id="saveOrderBtn" style="display: none;">Save Order</button>
-
           </div>
-          <div class="help-text" style="margin: 10px 0;">
-  <strong>Tip:</strong> Drag and drop puzzles to reorder them.
-  <span id="reorderingMessage" style="display: none; color: #326891; font-weight: 600; margin-left: 10px;">
-    ⚠️ You have unsaved changes to the puzzle order. Click "Save Order" to apply changes.
-  </span>
-</div>
 
           <div class="puzzle-list" id="puzzleList">
             <p style="text-align: center; color: #666;">Click "Show All" to load puzzles</p>
@@ -1266,9 +1258,6 @@ service cloud.firestore {
     // Simple authentication
     const VALID_USERNAME = 'peterjwagoner';
     const VALID_PASSWORD = '**molosisi99EUP';
-
-    let puzzleOrderModified = false;
-let originalPuzzleOrder = [];
 
     // Initialize Firebase
     async function initFirebase() {
@@ -1653,8 +1642,6 @@ SUPERHEROES + FRUITS | WONDER WOMAN GO | A tropical justice warrior`;
         });
         
         displayPuzzles(puzzles);
-        originalPuzzleOrder = puzzles.map(p => p.date);
-puzzleOrderModified = false;
         console.log(`✅ Loaded ${puzzles.length} puzzles`);
         
       } catch (error) {
@@ -1665,55 +1652,14 @@ puzzleOrderModified = false;
 
     function displayPuzzles(puzzleList) {
       const container = document.getElementById('puzzleList');
-      displayPuzzles(puzzles);
-    console.log(`✅ Loaded ${puzzles.length} puzzles`);
-    
-  } catch (error) {
-    console.error('❌ Error loading puzzles:', error);
-    showMessage('Error loading puzzles: ' + error.message, 'error');
-  }
-}
-
-function displayPuzzles(puzzleList) {
-  // ... existing displayPuzzles code ...
-  setupDragAndDrop();
-}
-
-// Add the new functions here (after line 1655):
-
-// Setup drag and drop functionality
-function setupDragAndDrop() {
-  const puzzleItems = document.querySelectorAll('.puzzle-item');
-  let draggedElement = null;
-  
-  // ... rest of the setupDragAndDrop function ...
-}
-
-// Update puzzle order after drag and drop
-function updatePuzzleOrder() {
-  // ... updatePuzzleOrder function code ...
-}
-
-function arraysEqual(a, b) {
-  // ... arraysEqual function code ...
-}
-
-// Save the new puzzle order
-async function savePuzzleOrder() {
-  // ... savePuzzleOrder function code ...
-}
-
-// Then your existing editPuzzle function continues...
-function editPuzzle(date) {
-  // ... existing code ...
-}
+      
       if (puzzleList.length === 0) {
         container.innerHTML = '<p style="text-align: center; color: #666;">No puzzles found.</p>';
         return;
       }
       
       container.innerHTML = puzzleList.map(p => `
-        <div class="puzzle-item" draggable="true" data-date="${p.date}">
+        <div class="puzzle-item">
           <div class="puzzle-info">
             <div class="puzzle-date">${p.date}</div>
             <div class="puzzle-categories">${p.categories}</div>
@@ -2503,7 +2449,6 @@ function editPuzzle(date) {
     window.showTab = showTab;
     window.setQuickDate = setQuickDate;
     window.previewSingle = previewSingle;
-    window.savePuzzleOrder = savePuzzleOrder;
     window.clearForm = clearForm;
     window.showTemplate = showTemplate;
     window.downloadTemplate = downloadTemplate;
