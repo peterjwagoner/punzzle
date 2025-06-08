@@ -38,6 +38,10 @@
   <meta name="author" content="Punzzle">
   <link rel="canonical" href="https://punzzle.com/">
   
+  <!-- Usercentrics CMP - Must be loaded before third-party scripts -->
+  <script src="https://web.cmp.usercentrics.eu/modules/autoblocker.js"></script>
+  <script id="usercentrics-cmp" src="https://web.cmp.usercentrics.eu/ui/loader.js" data-settings-id="iGk5pMDXvzd5Qp" async></script>
+
   <!-- Google tag (gtag.js) -->
 
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-QLL4GXB1ZX"></script>
@@ -940,14 +944,6 @@
       flex: 1;
     }
     
-    /* Fix centering for scorecard "Try another" button specifically */
-    #tryAnotherBtn {
-      text-align: center;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    
     .modal-button:hover {
       background-color: #2c5a7a;
     }
@@ -965,22 +961,9 @@
       z-index: 2000;
     }
     
-    /* Hide hamburger menu when any modal is visible */
-    body:has(#startModal[style*="display: flex"]) .hamburger-menu,
-    body:has(#scoreCard[style*="display: flex"]) .hamburger-menu,
-    body:has(#morePunzzlesModal[style*="display: flex"]) .hamburger-menu,
-    body:has(.create-wrapper.active) .hamburger-menu,
-    body:has(#feedbackWrapper.active) .hamburger-menu,
-    body:has(#faqWrapper.active) .hamburger-menu {
-      display: none !important;
-    }
-    
-    /* Existing mobile positioning rules for hamburger menu */
-    /* This section can be removed since we're hiding the menu completely */
-    .hamburger-button {
-      background: white;
-      border: none;
-
+    .logo-container {
+      display: flex;
+      align-items: center;
 
       justify-content: center;
       margin-bottom: 0;
@@ -1714,7 +1697,18 @@
         margin-bottom: 0;
       }
       
-      /* More Punzzles modal - reduce padding on mobile */
+      /* Align hamburger menu with modal on mobile when score card is showing */
+      body:has(#scoreCard[style*="display: flex"]) .hamburger-menu,
+      body:has(#startModal[style*="display: flex"]) .hamburger-menu,
+      body:has(.create-wrapper.active) .hamburger-menu,
+      body:has(#morePunzzlesModal[style*="display: flex"]) .hamburger-menu,
+      body:has(#feedbackWrapper.active) .hamburger-menu,
+      body:has(#faqWrapper.active) .hamburger-menu {
+        position: fixed;
+        top: auto;
+        left: 50%;
+        transform: translateX(calc(-50% - min(240px, 50vw - 1rem) + 0.5rem));
+      }
       
       /* More Punzzles modal - reduce padding on mobile */
       #morePunzzlesContent {
@@ -1728,29 +1722,8 @@
     }
   </style>
   
-  <!-- Copyright footer styles -->
-  <style>
-    .copyright-footer {
-      position: fixed;
-      bottom: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 0.75rem;
-      color: #999;
-      z-index: 1;
-    }
-    
-    /* Hide on mobile */
-    @media (max-width: 768px) {
-      .copyright-footer {
-        display: none;
-      }
-    }
-  </style>
-  
   <script>
     // iOS-style keyboard popup functionality
-
     document.addEventListener('DOMContentLoaded', function() {
       let keyPopup = null;
       let activeKey = null;
@@ -1826,7 +1799,7 @@
   </div>
 
   <!-- Start Modal -->
-  <div id="startModal" class="modal-overlay" style="display: none;">
+  <div id="startModal" class="modal-overlay">
     <div class="modal">
       <div class="logo-container">
         <a href="/" style="text-decoration: none;">
@@ -1989,9 +1962,8 @@
         <h1 class="game-title">Share Your Thoughts</h1>
       </div>
 
-      <form id="feedbackForm" action="https://api.web3forms.com/submit" method="POST" onsubmit="handleFeedbackSubmit(event)">
-        <input type="hidden" name="access_key" value="350548ad-cde7-4679-b820-28458547077d">
-        <input type="hidden" name="subject" value="New Punzzle Contact Form Submission">
+      <form id="feedbackForm" onsubmit="handleFeedbackSubmit(event)">
+        <input type="hidden" name="form-name" value="punzzle-feedback">
         
         <div class="form-group">
           <label class="form-label" for="userName">Name</label>
@@ -2058,7 +2030,7 @@
       <div style="padding: 2rem; text-align: center;" id="morePunzzlesContent">
         <button onclick="closeMorePunzzlesModal()" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 24px; cursor: pointer; color: #666; z-index: 10;">&times;</button>
         <h2 class="modal-title" style="margin: 0 0 1rem 0;">Unlock more Punzzles</h2>
-        <p style="color: #666; font-size: 1.1rem; margin-bottom: 2rem;">Get weekly bonus punzzles in your inbox.</p>
+        <p style="color: #666; font-size: 1.1rem; margin-bottom: 2rem;">Get weekly bonus puzzles in your inbox.</p>
         
         <form action="https://app.kit.com/forms/8142815/subscriptions" method="post" id="morePunzzlesForm" style="margin-bottom: 1rem;">
           <input type="hidden" name="utf8" value="✓">
@@ -2207,9 +2179,6 @@
     </div>
   </div>
 
-  <!-- Copyright Footer (Desktop Only) -->
-  <div class="copyright-footer">Copyright Lowercase Studios</div>
-
   </div>
 
   <script>
@@ -2285,55 +2254,40 @@
       // Add more puzzles here
     ];
 
-    // Debug helper functions (can be called from browser console)
+    // Debug helper function (can be called from browser console)
     window.resetTriedAnotherFlag = function() {
-      setTriedAnotherCount(0);
-      console.log('triedAnotherCount reset to 0');
-      console.log('Now refresh the page and complete a puzzle to test "Try another" button');
+      setHasTriedAnother(false);
+      console.log('hasTriedAnother flag reset to false');
     };
     
     window.checkTriedAnotherFlag = function() {
-      console.log('triedAnotherCount is:', getTriedAnotherCount());
-    };
-    
-    window.forceShowTryAnother = function() {
-      setTriedAnotherCount(0);
-      console.log('Forced triedAnotherCount to 0 - the next scorecard will show "Try another"');
-    };
-    
-    window.forceShowMorePunzzles = function() {
-      setTriedAnotherCount(2);
-      console.log('Forced triedAnotherCount to 2 - the next scorecard will show "More Punzzles"');
+      console.log('hasTriedAnother flag is:', getHasTriedAnother());
     };
 
-    // Track how many times user has tried another puzzle
-    function getTriedAnotherCount() {
+    // Debug helper to test More Punzzles modal
+    window.testMorePunzzlesModal = function() {
+      console.log('Testing More Punzzles modal...');
+      showMorePunzzles();
+    };
+
+    // Track if user has already tried another puzzle
+    function getHasTriedAnother() {
       try {
-        return parseInt(localStorage.getItem('punzzle_tried_another_count') || '0', 10);
+        return localStorage.getItem('punzzle_has_tried_another') === 'true';
       } catch (e) {
-        return 0;
+        return false;
       }
     }
     
-    function setTriedAnotherCount(count) {
+    function setHasTriedAnother(value) {
       try {
-        localStorage.setItem('punzzle_tried_another_count', count.toString());
+        localStorage.setItem('punzzle_has_tried_another', value.toString());
       } catch (e) {
         // localStorage not available, continue without persistence
       }
     }
     
-    function incrementTriedAnotherCount() {
-      var currentCount = getTriedAnotherCount();
-      setTriedAnotherCount(currentCount + 1);
-      return currentCount + 1;
-    }
-
-    // Global variable to track if current puzzle is custom
-    var isCustomPuzzle = false;
-
-    // Global variable to track if user has started a game (seen intro)
-    var hasStartedGame = false;
+    var hasTriedAnother = getHasTriedAnother();
 
     // Function to get puzzle index based on date
     function getPuzzleIndexForDate(date) {
@@ -2344,9 +2298,6 @@
 
     // Add loading state functions
     function showLoadingState() {
-      // Only show loading if one doesn't already exist
-      if (document.getElementById('loadingIndicator')) return;
-      
       // Add a loading indicator to your game
       const loadingDiv = document.createElement('div');
       loadingDiv.id = 'loadingIndicator';
@@ -2356,13 +2307,10 @@
     }
 
     function hideLoadingState() {
-      // Use timeout to ensure cleanup happens even if page is navigating
-      setTimeout(() => {
-        const loadingDiv = document.getElementById('loadingIndicator');
-        if (loadingDiv) {
-          loadingDiv.remove();
-        }
-      }, 100);
+      const loadingDiv = document.getElementById('loadingIndicator');
+      if (loadingDiv) {
+        loadingDiv.remove();
+      }
     }
 
     // Function to load puzzle by date
@@ -2476,6 +2424,12 @@
       isBonus: false,
       isPreview: false
     };
+
+    // Global variable to track if current puzzle is custom
+    var isCustomPuzzle = false;
+
+    // Global variable to track if user has started a game (seen intro)
+    var hasStartedGame = false;
 
     // Google Analytics Enhanced Tracking
     function trackPunzzleEvent(action, category, label, value) {
@@ -2616,13 +2570,18 @@
       }
     }
 
-    // Initialize game on page load - optimized but keeping all functionality
+    // Initialize game on page load (Updated with Firebase integration)
     document.addEventListener('DOMContentLoaded', async function() {
-      var urlParams = new URLSearchParams(window.location.search);
-      var skipIntro = urlParams.get('skipIntro');
-      var optimized = urlParams.get('optimized');
+      // Check if date display element exists
+      const dateDisplay = document.getElementById('dateDisplay');
+      if (!dateDisplay) {
+        console.error('Date display element not found!');
+      } else {
+        console.log('Date display element found, content:', dateDisplay.innerHTML);
+      }
       
-      // Track page view with puzzle type (keep analytics)
+      // Track page view with puzzle type
+      var urlParams = new URLSearchParams(window.location.search);
       var pageType = 'daily';
       if (urlParams.get('puzzle')) pageType = 'custom_shared';
       if (urlParams.get('bonus')) pageType = 'bonus';
@@ -2633,9 +2592,10 @@
       var sharedPuzzle = urlParams.get('puzzle');
       var bonusId = urlParams.get('bonus');
       var dateParam = urlParams.get('date');
+      var skipIntro = urlParams.get('skipIntro');
       var isPreview = urlParams.get('preview') === 'true';
       
-      // Handle bonus puzzle (keep full functionality)
+      // Handle bonus puzzle
       if (bonusId) {
         isCustomPuzzle = true;
         try {
@@ -2657,15 +2617,18 @@
                 (isPreview ? 'Preview Mode' : 'Bonus Puzzle');
               
               if (skipIntro === 'true') {
+                document.getElementById('startModal').style.display = 'none';
                 startGame();
               } else {
                 document.getElementById('startModal').style.display = 'flex';
               }
             } else {
+              // Bonus puzzle not found or expired
               alert('This bonus puzzle is no longer available.');
               window.location.href = window.location.origin + window.location.pathname;
             }
           } else {
+            // PuzzleDB not available
             alert('Unable to load bonus puzzle. Please try again later.');
             window.location.href = window.location.origin + window.location.pathname;
           }
@@ -2678,7 +2641,7 @@
         return;
       }
       
-      // Handle shared custom puzzle (keep full functionality)
+      // Handle shared custom puzzle
       if (sharedPuzzle) {
         isCustomPuzzle = true;
         try {
@@ -2688,32 +2651,38 @@
           gameState.words = puzzleData.words;
           gameState.customHint = puzzleData.hint || null;
           
+          // Generate a temporary ID for this shared puzzle
           const tempId = 'shared-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
           gameState.puzzleId = `custom-${tempId}`;
           
-          // Only do heavy operations if not optimized mode
-          if (optimized !== 'true') {
-            const customId = await saveCustomPuzzle(puzzleData);
-            if (customId) {
-              gameState.puzzleId = `custom-${customId}`;
-              trackCustomPuzzleView(customId);
-              trackPunzzleEvent('shared_puzzle_opened', 'user_generated', gameState.categoryText);
-            }
+          // Save custom puzzle to database for tracking
+          const customId = await saveCustomPuzzle(puzzleData);
+          if (customId) {
+            gameState.puzzleId = `custom-${customId}`;
             
-            // Update meta tags
-            const customTitle = `Custom Punzzle: ${gameState.categoryText}`;
-            const customDescription = `Can you solve this custom Punzzle? Categories: ${gameState.categoryText}. Find the pun that connects them!`;
-            updateMetaTags(customTitle, customDescription);
+            // Track custom puzzle view
+            trackCustomPuzzleView(customId);
+            
+            // Track that someone opened a shared puzzle
+            trackPunzzleEvent('shared_puzzle_opened', 'user_generated', gameState.categoryText);
           }
           
           document.getElementById('categoryText').textContent = gameState.categoryText;
           document.getElementById('dateDisplay').innerHTML = 
             '<a href="' + window.location.origin + window.location.pathname + '?skipIntro=true">Today\'s Punzzle</a> · Shared Puzzle';
           
+          // Update meta tags for shared custom puzzle
+          const customTitle = `Custom Punzzle: ${gameState.categoryText}`;
+          const customDescription = `Can you solve this custom Punzzle? Categories: ${gameState.categoryText}. Find the pun that connects them!`;
+          updateMetaTags(customTitle, customDescription);
+          
           if (skipIntro === 'true') {
+            document.getElementById('startModal').style.display = 'none';
             startGame();
+
           } else {
             document.getElementById('startModal').style.display = 'flex';
+            // Hide hamburger menu on intro modal
             var hamburgerMenu = document.getElementById('hamburgerMenu');
             if (hamburgerMenu) {
               hamburgerMenu.style.display = 'none';
@@ -2731,11 +2700,12 @@
       var puzzleDate = dateParam ? new Date(dateParam + 'T00:00:00') : new Date();
       await loadPuzzleByDate(puzzleDate);
       
-      // Show intro or start game  
       if (skipIntro === 'true') {
+        document.getElementById('startModal').style.display = 'none';
         startGame();
       } else {
         document.getElementById('startModal').style.display = 'flex';
+        // Hide hamburger menu on intro modal
         var hamburgerMenu = document.getElementById('hamburgerMenu');
         if (hamburgerMenu) {
           hamburgerMenu.style.display = 'none';
@@ -2743,26 +2713,25 @@
         document.body.classList.add('modal-open');
         document.getElementById('gameContainer').classList.add('content-blur');
       }
-      
       setupCreateForm();
+      
+      // Set up More Punzzles form handler
       handleMorePunzzlesSubmit();
       
-      // Only do fallback if not optimized
-      if (optimized !== 'true') {
-        setTimeout(function() {
-          const dateDisplay = document.getElementById('dateDisplay');
-          if (dateDisplay && !dateDisplay.innerHTML.includes('Previous')) {
-            const today = new Date().toLocaleDateString('en-US', { 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            });
-            dateDisplay.innerHTML = 
-              '<a href="?skipIntro=true">Today\'s Puzzle</a> · ' + 
-              today;
-          }
-        }, 1000);
-      }
+      // Final fallback - ensure date display shows something
+      setTimeout(function() {
+        const dateDisplay = document.getElementById('dateDisplay');
+        if (dateDisplay && !dateDisplay.innerHTML.includes('Previous')) {
+          const today = new Date().toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          });
+          dateDisplay.innerHTML = 
+            '<a href="?skipIntro=true">Today\'s Puzzle</a> · ' + 
+            today;
+        }
+      }, 1000);
     });
 
     // Test preview image on load
@@ -3255,19 +3224,13 @@
       scoreCardTitle.innerHTML = title;
 
       scoreCardCategories.textContent = gameState.categoryText;
-      
-      // FIXED: Show the appropriate button based on "tried another" count
-      var triedAnotherCount = getTriedAnotherCount();
-      console.log('Scorecard: triedAnotherCount =', triedAnotherCount);
-      
-      if (triedAnotherCount < 2) {
-        console.log('Showing "Try another" button');
-        tryAnotherBtn.style.display = 'inline-flex';
-        morePunzzlesBtn.style.display = 'none';
-      } else {
-        console.log('Showing "More Punzzles" button');
+      // Show the appropriate button based on whether user has tried another puzzle
+      if (getHasTriedAnother()) {
         tryAnotherBtn.style.display = 'none';
-        morePunzzlesBtn.style.display = 'inline-flex';
+        morePunzzlesBtn.style.display = 'inline-block';
+      } else {
+        tryAnotherBtn.style.display = 'inline-block';
+        morePunzzlesBtn.style.display = 'none';
       }
       
       // Show penalties
@@ -3304,7 +3267,7 @@
       
       finalScoreDisplay.textContent = gameState.score;
       
-      // FIXED: Set score color properly (removed duplicate line)
+      // Make score red if completed with hints or negative score
       if (gameState.completedWithHints || gameState.score < 0) {
         finalScoreDisplay.style.color = '#c9372c';
       } else {
@@ -3324,9 +3287,9 @@
     }
 
     function closeScoreModal() {
-      // Fast reload with optimized loading
+      // Reload the page to reset the game, but skip the intro
       var baseUrl = window.location.origin + window.location.pathname;
-      window.location.href = baseUrl + '?skipIntro=true&optimized=true';
+      window.location.href = baseUrl + '?skipIntro=true';
     }
 
     function restartGame() {
@@ -3334,15 +3297,11 @@
       gameState.penalties = [];
       gameState.completedWithHints = false;
       gameState.hintUsed = false;
+      gameState.customHint = null;
       
-      // Reset button text based on custom hint
-      if (!gameState.customHint) {
-        document.getElementById('hintRestartBtn').textContent = 'Restart';
-        document.getElementById('mobileHintRestartBtn').textContent = 'Restart';
-      } else {
-        document.getElementById('hintRestartBtn').textContent = 'Hint (-5)';
-        document.getElementById('mobileHintRestartBtn').textContent = 'Hint (-5)';
-      }
+      // Reset button text to "Hint (-5)"
+      document.getElementById('hintRestartBtn').textContent = 'Hint (-5)';
+      document.getElementById('mobileHintRestartBtn').textContent = 'Hint (-5)';
       
       if (gameState.currentActiveTile) {
         gameState.currentActiveTile.classList.remove('active');
@@ -3537,21 +3496,12 @@
       }
     });
 
-    // Fixed tryAnotherPuzzle function - only count daily puzzles toward total
+    // Fixed tryAnotherPuzzle function
     async function tryAnotherPuzzle() {
-      // Only increment counter for daily puzzles (not custom puzzles)
-      if (!isCustomPuzzle) {
-        incrementTriedAnotherCount();
-        console.log('Daily puzzle completed - counter incremented to:', getTriedAnotherCount());
-      } else {
-        console.log('Custom puzzle completed - counter NOT incremented (still:', getTriedAnotherCount() + ')');
-      }
+      // Set the flag that user has tried another puzzle (persist across page loads)
+      setHasTriedAnother(true);
       
-      // Track analytics (keep this)
-      trackNavigation('try_another');
-      trackPunzzleEvent('navigation', 'puzzle_flow', isCustomPuzzle ? 'custom_to_daily' : 'daily_to_previous');
-      
-      // Track custom puzzle analytics if needed
+      // Track that user played another puzzle
       if (gameState.puzzleId && gameState.puzzleId.startsWith('custom-')) {
         try {
           if (typeof db !== 'undefined' && db.collection) {
@@ -3566,14 +3516,19 @@
         }
       }
       
-      // Fast redirect with optimized parameter
+      trackNavigation('try_another');
+      trackPunzzleEvent('navigation', 'puzzle_flow', isCustomPuzzle ? 'custom_to_daily' : 'daily_to_previous');
+      
       if (isCustomPuzzle) {
+        // For custom puzzles, go to today's puzzle by removing the query parameter
         var baseUrl = window.location.origin + window.location.pathname;
+        // Make sure we're going to the index page
         if (!baseUrl.endsWith('.html') && !baseUrl.endsWith('/')) {
           baseUrl = baseUrl + '/';
         }
-        window.location.href = baseUrl + '?skipIntro=true&optimized=true';
+        window.location.href = baseUrl + '?skipIntro=true';
       } else {
+        // For daily puzzles, go to previous day
         var urlParams = new URLSearchParams(window.location.search);
         var dateParam = urlParams.get('date');
         var currentDate = dateParam ? new Date(dateParam + 'T00:00:00') : new Date();
@@ -3582,7 +3537,7 @@
         prevDate.setDate(prevDate.getDate() - 1);
         var prevDateParam = prevDate.toISOString().split('T')[0];
         
-        window.location.href = window.location.origin + window.location.pathname + '?date=' + prevDateParam + '&skipIntro=true&optimized=true';
+        window.location.href = window.location.origin + window.location.pathname + '?date=' + prevDateParam + '&skipIntro=true';
       }
     }
 
@@ -4498,52 +4453,22 @@
       var category = document.getElementById('category').value;
       var message = document.getElementById('message').value;
       
-      // Validate form
-      if (!name || !email || !category || !message) {
-        alert('Please fill in all fields');
-        return false;
-      }
+      // For now, use mailto as a fallback
+      // In production, you should implement a proper backend endpoint
+      var subject = 'Punzzle ' + category + ' from ' + name;
+      var body = 'Name: ' + name + '\n' +
+                 'Email: ' + email + '\n' +
+                 'Category: ' + category + '\n\n' +
+                 'Message:\n' + message;
       
-      // Track form submission
-      if (typeof trackPunzzleEvent === 'function') {
-        trackPunzzleEvent('contact_form_submitted', 'engagement', category);
-      }
+      var mailtoLink = 'mailto:peter@lowercasestudios.com?subject=' + 
+                       encodeURIComponent(subject) + 
+                       '&body=' + encodeURIComponent(body);
       
-      // Show loading state
-      var submitBtn = event.target.querySelector('button[type="submit"]');
-      var originalText = submitBtn.textContent;
-      submitBtn.textContent = 'Sending...';
-      submitBtn.disabled = true;
+      window.location.href = mailtoLink;
       
-      // Submit form using fetch
-      var formData = new FormData(event.target);
-      
-      fetch('https://api.web3forms.com/submit', {
-        method: 'POST',
-        body: formData
-      })
-      .then(function(response) {
-        return response.json();
-      })
-      .then(function(data) {
-        if (data.success) {
-          alert('Thank you for your message! We\'ll get back to you soon.');
-          closeFeedbackForm();
-        } else {
-          alert('Sorry, there was an error sending your message. Please try again.');
-        }
-      })
-      .catch(function(error) {
-        console.error('Error:', error);
-        alert('Sorry, there was an error sending your message. Please try again.');
-      })
-      .finally(function() {
-        // Reset button state
-        submitBtn.textContent = originalText;
-        submitBtn.disabled = false;
-      });
-      
-      return false;
+      // Close modal and reset form
+      closeFeedbackForm();
     }
 
     // Helper function to save custom puzzle (placeholder - implement based on your Firebase setup)
