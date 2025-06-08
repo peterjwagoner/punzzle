@@ -3818,6 +3818,8 @@
       trackNavigation('make_your_own');
       
       closeHamburgerMenu();
+      // Remove custom preview class when going back to create
+document.body.classList.remove('custom-preview');
       
       document.getElementById('createWrapper').classList.add('active');
       document.body.classList.add('modal-open');
