@@ -318,67 +318,56 @@
     height: 100vh !important;
     max-height: 100vh !important;
     overflow: hidden !important;
-    padding: 0.5rem !important;
+    padding: 0 !important;
+    margin: 0 !important;
     display: flex !important;
     flex-direction: column !important;
   }
   
   body.custom-preview .header {
     position: relative !important;
-    flex-shrink: 0 !important;
-    padding: 0.5rem 0 !important;
-    margin-bottom: 0.5rem !important;
-  }
-  
-  body.custom-preview .date-display {
-    margin-bottom: 0 !important;
+    flex: 0 0 auto !important;
+    padding: 0.5rem !important;
+    margin: 0 !important;
+    background-color: white !important;
+    z-index: 10 !important;
   }
   
   body.custom-preview .category-section {
     flex: 1 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    overflow: hidden !important;
-    margin-bottom: 0.5rem !important;
-  }
-  
-  body.custom-preview .gameplay-example-section {
-    flex: 1 !important;
+    min-height: 0 !important;
     display: flex !important;
     flex-direction: column !important;
     padding: 0.5rem !important;
-    margin-bottom: 0 !important;
-    overflow: visible !important;
+    margin: 0 !important;
   }
   
-  body.custom-preview .category-text {
-    flex-shrink: 0 !important;
+  body.custom-preview .gameplay-example-section {
+    flex: 0 0 auto !important;
+    height: auto !important;
+    padding: 0.75rem !important;
     margin-bottom: 0.5rem !important;
+    background-color: #f8fafc !important;
   }
   
   body.custom-preview .puzzle-container {
-    flex: 0 0 auto !important;
-    margin: 0.5rem 0 !important;
     padding: 0.5rem 0 !important;
+    margin: 0 !important;
   }
   
-  body.custom-preview .message-area {
-    display: none !important;
-  }
-  
-  body.custom-preview .progress-section {
-    flex-shrink: 0 !important;
-    margin-bottom: 0.5rem !important;
-    padding: 0 !important;
-  }
-  
+  body.custom-preview .progress-section,
   body.custom-preview .controls-section {
-    flex-shrink: 0 !important;
-    margin-bottom: 0.5rem !important;
+    flex: 0 0 auto !important;
+    padding: 0.5rem !important;
+    margin: 0 !important;
   }
   
   body.custom-preview .fixed-bottom-section,
   body.custom-preview .mobile-keyboard {
+    display: none !important;
+  }
+  
+  body.custom-preview .message-area {
     display: none !important;
   }
 }
