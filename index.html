@@ -309,13 +309,21 @@
       overflow: hidden;
     }
     
-    body.modal-open {
-      overflow: hidden;
-    }
-    
-    .content-blur {
-      pointer-events: none;
-    }
+  body.modal-open {
+  overflow: hidden;
+}
+
+body.custom-preview .game-container {
+  max-height: calc(100vh - 284px);
+}
+
+body.custom-preview .category-section {
+  overflow-y: auto;
+}
+
+.content-blur {
+  pointer-events: none;
+}
     
     .game-container {
       background-color: #ffffff;
@@ -3857,11 +3865,12 @@
       savedFormData = null;
     }
     
-    function showMainGame() {
-      document.getElementById('createWrapper').classList.remove('active');
-      document.body.classList.remove('modal-open');
-      
-      document.getElementById('gameContainer').classList.remove('content-blur');
+function showMainGame() {
+  document.getElementById('createWrapper').classList.remove('active');
+  document.body.classList.remove('modal-open');
+  document.body.classList.remove('custom-preview');
+  
+  document.getElementById('gameContainer').classList.remove('content-blur');
       document.getElementById('scoreCard').classList.remove('content-blur');
       
       savedFormData = null;
@@ -4243,9 +4252,12 @@
       document.getElementById('categoryText').textContent = gameState.categoryText;
       
       document.getElementById('dateDisplay').innerHTML = 
-        '<a href="#" onclick="showMakeYourOwn(); return false;">← Back to Create</a> · Custom Punzzle';
-      
-      if (!gameState.customHint) {
+  '<a href="#" onclick="showMakeYourOwn(); return false;">← Back to Create</a> · Custom Punzzle';
+
+// Add custom preview class for mobile layout
+document.body.classList.add('custom-preview');
+
+if (!gameState.customHint) {
         document.getElementById('hintRestartBtn').textContent = 'Restart';
         document.getElementById('mobileHintRestartBtn').textContent = 'Restart';
       } else {
