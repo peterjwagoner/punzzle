@@ -313,14 +313,17 @@
   overflow: hidden;
 }
 
-body.custom-preview .game-container {
-  max-height: calc(100vh - 284px);
+@media (max-width: 768px) {
+  body.custom-preview .gameplay-example-section {
+    max-height: 45vh;
+    overflow-y: auto;
+  }
+  
+  body.custom-preview .puzzle-container {
+    max-height: 35vh;
+    overflow-y: auto;
+  }
 }
-
-body.custom-preview .category-section {
-  overflow-y: auto;
-}
-
 .content-blur {
   pointer-events: none;
 }
