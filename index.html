@@ -4258,18 +4258,13 @@
       document.body.classList.remove('modal-open');
       document.getElementById('gameContainer').classList.remove('game-hidden', 'content-blur');
       
-      if (!hasStartedGame) {
-        document.getElementById('startModal').style.display = 'flex';
-      } else {
-        startGame();
-      }
+      startGame();
       
-      document.body.classList.remove('game-active');
-      document.body.classList.add('modal-open');
-      document.getElementById('gameContainer').classList.add('content-blur');
+      document.body.classList.add('game-active');
       
       var hamburgerMenu = document.getElementById('hamburgerMenu');
       if (hamburgerMenu) {
+        hamburgerMenu.style.display = 'none';
         hamburgerMenu.style.display = 'none';
       }
     }
