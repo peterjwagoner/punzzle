@@ -317,6 +317,7 @@
   body.custom-preview .game-container {
     height: calc(100vh - 284px) !important;
     overflow-y: auto !important;
+    padding-top: 100px !important; /* Add space at top */
   }
   
   body.custom-preview .header {
@@ -327,11 +328,12 @@
     background-color: white;
     z-index: 1000;
     padding: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Add shadow for clarity */
   }
   
   body.custom-preview .category-section {
-    margin-top: 80px; /* Space for fixed header */
-    height: calc(100% - 80px);
+    margin-top: 0; /* Remove this line - we'll use padding instead */
+    height: 100%;
     overflow: hidden;
   }
   
