@@ -1771,6 +1771,38 @@
         font-size: 0.8rem !important;
       }
     }
+  /* iOS scroll fixes for modals */
+    .modal-overlay {
+      -webkit-overflow-scrolling: touch;
+      overflow-y: auto;
+    }
+
+    .modal {
+      -webkit-overflow-scrolling: touch;
+      overflow-y: auto;
+      /* Prevent bounce effect at edges */
+      overscroll-behavior: contain;
+    }
+
+    .create-container,
+    #createContainer,
+    #feedbackContainer,
+    #faqContainer {
+      -webkit-overflow-scrolling: touch;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      /* Add some padding at top/bottom for easier scrolling */
+      padding-top: 2rem;
+      padding-bottom: 3rem;
+    }
+
+    /* Prevent body scroll when modal is open */
+    body.modal-open {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
   </style>
   
   <style>
