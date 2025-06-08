@@ -14,8 +14,18 @@ export default async (request, context) => {
   try {
     // Decode the puzzle data
     const puzzleData = JSON.parse(atob(puzzleParam));
-    const customTitle = `Punzzle: ${puzzleData.categories}`;
-    const customDescription = `Can you solve this custom Punzzle? Categories: ${puzzleData.categories}. Find the pun that connects them!`;
+    
+    // Function to convert to title case
+    const toTitleCase = (str) => {
+      return str.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
+    };
+    
+    // Convert categories to title case
+    const titleCaseCategories = toTitleCase(puzzleData.categories);
+    
+    // Create the custom title and description
+    const customTitle = `Punzzle: ${titleCaseCategories}`;
+    const customDescription = `Can you solve this custom Punzzle? Categories: ${titleCaseCategories}. Find the pun that connects them!`;
     
     // Replace the meta tags in the HTML
     let modifiedHtml = html
