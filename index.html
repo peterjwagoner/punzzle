@@ -315,25 +315,73 @@
 
 @media (max-width: 768px) {
   body.custom-preview .game-container {
-    height: calc(100vh - 284px) !important;
-    overflow-y: auto !important;
-    padding-top: 100px !important; /* Add space at top */
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow: hidden !important;
+    padding: 0.5rem !important;
+    display: flex !important;
+    flex-direction: column !important;
   }
   
   body.custom-preview .header {
-    position: fixed !important;
-    top: 0;
-    left: 0;
-    right: 0;
-    background-color: white;
-    z-index: 1000;
-    padding: 0.5rem;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Add shadow for clarity */
+    position: relative !important;
+    flex-shrink: 0 !important;
+    padding: 0.5rem 0 !important;
+    margin-bottom: 0.5rem !important;
+  }
+  
+  body.custom-preview .date-display {
+    margin-bottom: 0 !important;
   }
   
   body.custom-preview .category-section {
-    margin-top: 0; /* Remove this line - we'll use padding instead */
-    height: 100%;
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    margin-bottom: 0.5rem !important;
+  }
+  
+  body.custom-preview .gameplay-example-section {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 0.5rem !important;
+    margin-bottom: 0 !important;
+    overflow: visible !important;
+  }
+  
+  body.custom-preview .category-text {
+    flex-shrink: 0 !important;
+    margin-bottom: 0.5rem !important;
+  }
+  
+  body.custom-preview .puzzle-container {
+    flex: 0 0 auto !important;
+    margin: 0.5rem 0 !important;
+    padding: 0.5rem 0 !important;
+  }
+  
+  body.custom-preview .message-area {
+    display: none !important;
+  }
+  
+  body.custom-preview .progress-section {
+    flex-shrink: 0 !important;
+    margin-bottom: 0.5rem !important;
+    padding: 0 !important;
+  }
+  
+  body.custom-preview .controls-section {
+    flex-shrink: 0 !important;
+    margin-bottom: 0.5rem !important;
+  }
+  
+  body.custom-preview .fixed-bottom-section,
+  body.custom-preview .mobile-keyboard {
+    display: none !important;
+  }
+}
     overflow: hidden;
   }
   
