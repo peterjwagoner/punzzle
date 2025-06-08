@@ -26,53 +26,6 @@ body.modal-open {
   overflow: hidden;
 }
 
-.content-blur {
-  pointer-events: none;
-}
-  <meta name="twitter:image" content="https://punzzle.com/images/punzzle-preview.png">
-  <meta name="twitter:image:alt" content="Punzzle - Daily Word Puzzle Game">
-
-  <!-- Additional SEO meta tags -->
-  <meta name="description" content="Find the pun that connects the categories! A new word puzzle every day where you solve clever puns by filling in missing letters.">
-  <meta name="keywords" content="word puzzle, pun game, daily puzzle, word game, crossword, brain teaser">
-  <meta name="author" content="Punzzle">
-  <link rel="canonical" href="https://punzzle.com/">
-  
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-QLL4GXB1ZX"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-QLL4GXB1ZX');
-  </script>
-  
-  <!-- Firebase (Compatibility Version) -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-  <script src="firebase-setup.js"></script>
-
-  <script>
-    // Global loading state tracking
-    let loadingStateActive = false;
-    let loadingCleanupTimeout = null;
-    
-    // Enhanced loading state management
-    function showLoadingState() {
-      try {
-        // Clear any existing cleanup timeout
-        if (loadingCleanupTimeout) {
-          clearTimeout(loadingCleanupTimeout);
-          loadingCleanupTimeout = null;
-        }
-        
-        // Prevent duplicate loading indicators
-        if (loadingStateActive || document.getElementById('loadingIndicator')) {
-          return;
-        }
-        
-        loadingStateActive = true;
-        
         // Create loading indicator
         const loadingDiv = document.createElement('div');
         loadingDiv.id = 'loadingIndicator';
