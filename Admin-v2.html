@@ -446,32 +446,9 @@
       transform: translateY(-2px);
     }
     
-    .puzzle-item.dragging {
-      opacity: 0.5;
-      cursor: grabbing;
-    }
-    
-    .puzzle-item.drag-over {
-      background: #e3f2fd;
-      border-color: #326891;
-    }
-    
-    .drag-handle {
-      cursor: grab;
-    }
-    
     .puzzle-info {
       flex: 1;
-      display: flex;
-      align-items: center;
     }
-    
-    .puzzle-details {
-      flex: 1;
-    }
-    
-    .puzzle-date {
-
     
     .puzzle-date {
       font-weight: 700;
@@ -1039,17 +1016,16 @@ TV SHOWS + BEVERAGES | GAME OF SCONES TEA" required></textarea>
             <button class="btn btn-secondary" onclick="loadPuzzles()">Show All</button>
             <button class="btn btn-success" onclick="exportPuzzles()">Export All</button>
             <button class="btn btn-primary" onclick="savePuzzleOrder()" id="saveOrderBtn" style="display: none;">Save Order</button>
+
           </div>
-          
           <div class="help-text" style="margin: 10px 0;">
-            <strong>Tip:</strong> Drag and drop puzzles to reorder them. When you delete a puzzle, subsequent puzzles will automatically shift dates to fill the gap.
-            <span id="reorderingMessage" style="display: none; color: #326891; font-weight: 600; margin-left: 10px;">
-              ⚠️ You have unsaved changes to the puzzle order. Click "Save Order" to apply changes.
-            </span>
-          </div>
+  <strong>Tip:</strong> Drag and drop puzzles to reorder them.
+  <span id="reorderingMessage" style="display: none; color: #326891; font-weight: 600; margin-left: 10px;">
+    ⚠️ You have unsaved changes to the puzzle order. Click "Save Order" to apply changes.
+  </span>
+</div>
 
           <div class="puzzle-list" id="puzzleList">
-
             <p style="text-align: center; color: #666;">Click "Show All" to load puzzles</p>
           </div>
         </div>
@@ -1290,14 +1266,12 @@ service cloud.firestore {
     // Simple authentication
     const VALID_USERNAME = 'peterjwagoner';
     const VALID_PASSWORD = '**molosisi99EUP';
-    
-    // Track if puzzle order has been modified
+
     let puzzleOrderModified = false;
-    let originalPuzzleOrder = [];
+let originalPuzzleOrder = [];
 
     // Initialize Firebase
     async function initFirebase() {
-
       try {
         console.log('🚀 Initializing Firebase...');
         
@@ -1679,22 +1653,60 @@ SUPERHEROES + FRUITS | WONDER WOMAN GO | A tropical justice warrior`;
         });
         
         displayPuzzles(puzzles);
-        console.log(`✅ Loaded ${puzzles.length} puzzles`);
-        
-        // Store original order for comparison
         originalPuzzleOrder = puzzles.map(p => p.date);
-        puzzleOrderModified = false;
+puzzleOrderModified = false;
+        console.log(`✅ Loaded ${puzzles.length} puzzles`);
         
       } catch (error) {
         console.error('❌ Error loading puzzles:', error);
-
         showMessage('Error loading puzzles: ' + error.message, 'error');
       }
     }
 
     function displayPuzzles(puzzleList) {
       const container = document.getElementById('puzzleList');
-      
+      displayPuzzles(puzzles);
+    console.log(`✅ Loaded ${puzzles.length} puzzles`);
+    
+  } catch (error) {
+    console.error('❌ Error loading puzzles:', error);
+    showMessage('Error loading puzzles: ' + error.message, 'error');
+  }
+}
+
+function displayPuzzles(puzzleList) {
+  // ... existing displayPuzzles code ...
+  setupDragAndDrop();
+}
+
+// Add the new functions here (after line 1655):
+
+// Setup drag and drop functionality
+function setupDragAndDrop() {
+  const puzzleItems = document.querySelectorAll('.puzzle-item');
+  let draggedElement = null;
+  
+  // ... rest of the setupDragAndDrop function ...
+}
+
+// Update puzzle order after drag and drop
+function updatePuzzleOrder() {
+  // ... updatePuzzleOrder function code ...
+}
+
+function arraysEqual(a, b) {
+  // ... arraysEqual function code ...
+}
+
+// Save the new puzzle order
+async function savePuzzleOrder() {
+  // ... savePuzzleOrder function code ...
+}
+
+// Then your existing editPuzzle function continues...
+function editPuzzle(date) {
+  // ... existing code ...
+}
       if (puzzleList.length === 0) {
         container.innerHTML = '<p style="text-align: center; color: #666;">No puzzles found.</p>';
         return;
@@ -1703,17 +1715,10 @@ SUPERHEROES + FRUITS | WONDER WOMAN GO | A tropical justice warrior`;
       container.innerHTML = puzzleList.map(p => `
         <div class="puzzle-item" draggable="true" data-date="${p.date}">
           <div class="puzzle-info">
-            <span class="drag-handle" style="margin-right: 10px; font-size: 1.2rem;">☰</span>
-            <div class="puzzle-details">
-              <div class="puzzle-date">${p.date}</div>
-              <div class="puzzle-categories">${p.categories}</div>
-              <div class="puzzle-answer">Answer: ${p.answer}</div>
-              ${p.hint ? `<div class="help-text">Hint: ${p.hint}</div>` : '<div class="help-text">No hint</div>'}
-            </div>
-          </div>
-          <div class="puzzle-actions">
-            <button class="btn btn-secondary" onclick="editPuzzle('${p.date}')">Edit</button>
-
+            <div class="puzzle-date">${p.date}</div>
+            <div class="puzzle-categories">${p.categories}</div>
+            <div class="puzzle-answer">Answer: ${p.answer}</div>
+            ${p.hint ? `<div class="help-text">Hint: ${p.hint}</div>` : '<div class="help-text">No hint</div>'}
           </div>
           <div class="puzzle-actions">
             <button class="btn btn-secondary" onclick="editPuzzle('${p.date}')">Edit</button>
@@ -1721,147 +1726,10 @@ SUPERHEROES + FRUITS | WONDER WOMAN GO | A tropical justice warrior`;
           </div>
         </div>
       `).join('');
-      
-      // Add drag and drop event listeners
-      setupDragAndDrop();
-    }
-    
-    // Setup drag and drop functionality
-    function setupDragAndDrop() {
-      const puzzleItems = document.querySelectorAll('.puzzle-item');
-      let draggedElement = null;
-      
-      puzzleItems.forEach(item => {
-        item.addEventListener('dragstart', function(e) {
-          draggedElement = this;
-          this.classList.add('dragging');
-          e.dataTransfer.effectAllowed = 'move';
-          e.dataTransfer.setData('text/html', this.innerHTML);
-        });
-        
-        item.addEventListener('dragend', function(e) {
-          this.classList.remove('dragging');
-        });
-        
-        item.addEventListener('dragover', function(e) {
-          if (e.preventDefault) {
-            e.preventDefault();
-          }
-          e.dataTransfer.dropEffect = 'move';
-          this.classList.add('drag-over');
-          return false;
-        });
-        
-        item.addEventListener('dragleave', function(e) {
-          this.classList.remove('drag-over');
-        });
-        
-        item.addEventListener('drop', function(e) {
-          if (e.stopPropagation) {
-            e.stopPropagation();
-          }
-          
-          this.classList.remove('drag-over');
-          
-          if (draggedElement !== this) {
-            // Get the container
-            const container = document.getElementById('puzzleList');
-            
-            // Get all puzzle items
-            const allItems = Array.from(container.querySelectorAll('.puzzle-item'));
-            
-            // Find indices
-            const draggedIndex = allItems.indexOf(draggedElement);
-            const targetIndex = allItems.indexOf(this);
-            
-            // Reorder in DOM
-            if (draggedIndex < targetIndex) {
-              this.parentNode.insertBefore(draggedElement, this.nextSibling);
-            } else {
-              this.parentNode.insertBefore(draggedElement, this);
-            }
-            
-            // Update puzzles array to match new order
-            updatePuzzleOrder();
-          }
-          
-          return false;
-        });
-      });
-    }
-    
-    // Update puzzle order after drag and drop
-    function updatePuzzleOrder() {
-      const puzzleItems = document.querySelectorAll('.puzzle-item');
-      const newOrder = Array.from(puzzleItems).map(item => item.dataset.date);
-      
-      // Check if order has changed
-      puzzleOrderModified = !arraysEqual(newOrder, originalPuzzleOrder);
-      
-      // Show/hide save button and message
-      document.getElementById('saveOrderBtn').style.display = puzzleOrderModified ? 'inline-block' : 'none';
-      document.getElementById('reorderingMessage').style.display = puzzleOrderModified ? 'inline' : 'none';
-    }
-    
-    function arraysEqual(a, b) {
-      return a.length === b.length && a.every((val, index) => val === b[index]);
-    }
-    
-    // Save the new puzzle order
-    async function savePuzzleOrder() {
-      if (!isConnected || !puzzleOrderModified) return;
-      
-      const puzzleItems = document.querySelectorAll('.puzzle-item');
-      const startDate = new Date(puzzleItems[0].dataset.date);
-      
-      showMessage('Saving new order...', 'success');
-      
-      let savedCount = 0;
-      let failedCount = 0;
-      
-      // Get puzzles in new order and update their dates
-      for (let i = 0; i < puzzleItems.length; i++) {
-        const item = puzzleItems[i];
-        const oldDate = item.dataset.date;
-        const puzzle = puzzles.find(p => p.date === oldDate);
-        
-        if (puzzle) {
-          const newDate = new Date(startDate);
-          newDate.setDate(newDate.getDate() + i);
-          const newDateStr = newDate.toISOString().split('T')[0];
-          
-          try {
-            // Delete old puzzle
-            await db.collection('puzzles').doc(oldDate).delete();
-            
-            // Save with new date
-            await db.collection('puzzles').doc(newDateStr).set({
-              ...puzzle,
-              date: newDateStr,
-              lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            
-            savedCount++;
-          } catch (error) {
-            console.error(`Failed to update puzzle ${oldDate}:`, error);
-            failedCount++;
-          }
-        }
-      }
-      
-      if (savedCount > 0) {
-        showMessage(`✅ Order saved! ${savedCount} puzzles updated.`, 'success');
-        puzzleOrderModified = false;
-        document.getElementById('saveOrderBtn').style.display = 'none';
-        document.getElementById('reorderingMessage').style.display = 'none';
-        loadPuzzles(); // Reload to show new dates
-      } else {
-        showMessage('❌ Failed to save order', 'error');
-      }
     }
 
     // Edit puzzle
-
+    function editPuzzle(date) {
       const puzzle = puzzles.find(p => p.date === date);
       if (!puzzle) return;
       
@@ -1893,39 +1761,8 @@ SUPERHEROES + FRUITS | WONDER WOMAN GO | A tropical justice warrior`;
         await db.collection('puzzles').doc(date).delete();
         showMessage(`✅ Deleted puzzle for ${date}`, 'success');
         
-        // Auto-shift subsequent puzzles to fill the gap
-        const deletedIndex = puzzles.findIndex(p => p.date === date);
-        if (deletedIndex !== -1 && deletedIndex < puzzles.length - 1) {
-          showMessage('Shifting subsequent puzzles...', 'success');
-          
-          // Get puzzles that need to be shifted
-          const puzzlesToShift = puzzles.slice(deletedIndex + 1).sort((a, b) => new Date(a.date) - new Date(b.date));
-          
-          for (let i = 0; i < puzzlesToShift.length; i++) {
-            const puzzle = puzzlesToShift[i];
-            const oldDate = puzzle.date;
-            const newDate = new Date(oldDate);
-            newDate.setDate(newDate.getDate() - 1);
-            const newDateStr = newDate.toISOString().split('T')[0];
-            
-            try {
-              await db.collection('puzzles').doc(oldDate).delete();
-              await db.collection('puzzles').doc(newDateStr).set({
-                ...puzzle,
-                date: newDateStr,
-                lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-              });
-            } catch (error) {
-              console.error(`Failed to shift puzzle ${oldDate}:`, error);
-            }
-          }
-          
-          showMessage('✅ Puzzles shifted to fill the gap', 'success');
-        }
-        
         // Remove from local array
         puzzles = puzzles.filter(p => p.date !== date);
-
         
         loadPuzzles(); // Refresh list
       } catch (error) {
@@ -2666,6 +2503,7 @@ SUPERHEROES + FRUITS | WONDER WOMAN GO | A tropical justice warrior`;
     window.showTab = showTab;
     window.setQuickDate = setQuickDate;
     window.previewSingle = previewSingle;
+    window.savePuzzleOrder = savePuzzleOrder;
     window.clearForm = clearForm;
     window.showTemplate = showTemplate;
     window.downloadTemplate = downloadTemplate;
@@ -2680,10 +2518,6 @@ SUPERHEROES + FRUITS | WONDER WOMAN GO | A tropical justice warrior`;
     window.deleteCustomPuzzle = deleteCustomPuzzle;
     window.copyToClipboard = copyToClipboard;
     window.previewBonus = previewBonus;
-    window.savePuzzleOrder = savePuzzleOrder;
-    window.loadBonusPuzzles = loadBonusPuzzles;
-    window.loadAnalytics = loadAnalytics;
-    window.testConnection = testConnection;
     window.loadBonusPuzzles = loadBonusPuzzles;
     window.loadAnalytics = loadAnalytics;
     window.testConnection = testConnection;
