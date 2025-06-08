@@ -22,7 +22,9 @@
   <meta property="og:image:alt" content="Punzzle - Daily Word Puzzle Game">
   <meta property="og:site_name" content="Punzzle">
 
-
+body.modal-open {
+  overflow: hidden;
+}
 
         // Create loading indicator
         const loadingDiv = document.createElement('div');
@@ -260,6 +262,40 @@
       overflow: hidden;
     }
     
+  body.modal-open {
+  overflow: hidden;
+}
+
+.content-blur {
+  pointer-events: none;
+}
+  
+  body.custom-preview .game-title {
+    font-size: 1.5rem !important;
+    margin: 0 !important;
+  }
+  
+  body.custom-preview .date-display {
+    font-size: 0.75rem !important;
+    margin: 0 !important;
+  }
+  
+  body.custom-preview .fixed-bottom-section,
+  body.custom-preview .mobile-keyboard {
+    display: none !important;
+  }
+}
+    overflow: hidden;
+  }
+  
+  body.custom-preview .gameplay-example-section {
+    height: 100%;
+    overflow-y: auto;
+  }
+}
+.content-blur {
+  pointer-events: none;
+}
     
     .game-container {
       background-color: #ffffff;
@@ -1022,8 +1058,6 @@
       max-height: calc(100vh - 4rem);
       overflow-y: auto;
       margin-top: 0;
-      display: flex;
-      flex-direction: column;
     }
     
     .create-close-btn {
@@ -1277,15 +1311,16 @@
     }
 
     .preview-section {
+      background-color: #f8fafc;
+      border: 1px solid #e5e5e5;
+      border-radius: 6px;
+      padding: 1rem;
       margin-top: 1rem;
       display: none;
-      flex: 1;
-      flex-direction: column;
-      min-height: 0;
     }
 
     .preview-section.active {
-      display: flex;
+      display: block;
     }
 
     .preview-title {
@@ -1294,88 +1329,51 @@
       color: #666666;
       margin-bottom: 0.75rem;
       text-align: center;
-      flex-shrink: 0;
-    }
-
-    .preview-gameplay-section {
-      background-color: #f8fafc;
-      border: 1px solid #e5e5e5;
-      border-radius: 6px;
-      padding: 0.75rem 1rem 1rem 1rem;
-      text-align: center;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-      justify-content: center;
     }
 
     .preview-categories {
-      font-size: 0.875rem;
+      font-size: 0.75rem;
       font-weight: 600;
       color: #326891;
-      padding: 0.75rem 1rem;
+      margin-bottom: 0.75rem;
+      padding: 0.4rem 0.6rem;
       background-color: rgba(50, 104, 145, 0.1);
       border: 1px solid rgba(50, 104, 145, 0.2);
-      border-radius: 6px;
+      border-radius: 4px;
+      display: inline-block;
       text-transform: uppercase;
-      word-wrap: break-word;
-      hyphens: auto;
-      overflow-wrap: break-word;
-      flex-shrink: 0;
       text-align: center;
-      margin-bottom: 0.5rem;
+      width: 100%;
+      box-sizing: border-box;
     }
 
-   .preview-puzzle {
+    .preview-puzzle {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 0.25rem;
-      margin: 0.5rem 0;
-      padding: 0.5rem;
-      flex: 1;
-      justify-content: center;
-      min-height: 0;
-      overflow: hidden;
+      gap: 0.5rem;
     }
 
     .preview-word {
       display: flex;
       gap: 0.25rem;
       justify-content: center;
-      flex-wrap: nowrap;
-      max-width: 100%;
-      padding: 0.25rem;
-      margin: 0 auto;
     }
 
     .preview-tile {
-      width: clamp(32px, 6vw, 48px);
-      height: clamp(32px, 6vw, 48px);
+      width: 24px;
+      height: 24px;
       background-color: #326891;
       color: white;
-      border: 2px solid #326891;
-      border-radius: 4px;
-      font-size: clamp(0.8rem, 2vw, 1.2rem);
-      font-weight: 400;
+      border: 1px solid #326891;
+      border-radius: 3px;
+      font-size: 0.75rem;
+      font-weight: 700;
       display: flex;
       justify-content: center;
       align-items: center;
-      text-transform: uppercase;
     }
-    
-    .tiles-medium .preview-tile {
-      width: clamp(28px, 5vw, 40px);
-      height: clamp(28px, 5vw, 40px);
-      font-size: clamp(0.7rem, 1.8vw, 1rem);
-    }
-    
-    .tiles-small .preview-tile {
-      width: clamp(24px, 4vw, 32px);
-      height: clamp(24px, 4vw, 32px);
-      font-size: clamp(0.6rem, 1.5vw, 0.9rem);
-    }
+
     .share-url-input {
       display: none;
     }
@@ -1634,56 +1632,6 @@
         margin-top: 0;
         max-height: calc(100vh - 2rem);
         border-radius: 8px;
-        display: flex;
-        flex-direction: column;
-      }
-      
-      .preview-section {
-        flex: 1;
-        display: none;
-        min-height: 0;
-        overflow: hidden;
-      }
-      
-      .preview-section.active {
-        display: flex;
-      }
-      
-      .preview-gameplay-section {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        min-height: 0;
-        overflow: hidden;
-      }
-      
-      .preview-puzzle {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.5rem 0 1rem 0;
-        margin: 0;
-      }
-      
-      .preview-tile {
-        width: 42px;
-        height: 42px;
-        font-size: 1rem;
-      }
-      
-      .tiles-medium .preview-tile {
-        width: 36px;
-        height: 36px;
-        font-size: 0.9rem;
-      }
-      
-      .tiles-small .preview-tile {
-        width: 30px;
-        height: 30px;
-        font-size: 0.8rem;
       }
       
       #createContainer .game-title,
@@ -1821,6 +1769,8 @@ body.modal-open {
     }
   </style>
   
+  <style>
+  </style>
   
   <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -2034,12 +1984,11 @@ body.modal-open {
         </div>
 
         <div class="preview-section" id="previewSection">
-          <div class="preview-title">Preview</div>
-          <div class="preview-gameplay-section">
-            <div class="preview-categories" id="previewCategories"></div>
-            <div class="preview-puzzle" id="previewPuzzle"></div>
-          </div>
+          <div class="preview-title">View</div>
+          <div class="preview-categories" id="previewCategories"></div>
+          <div class="preview-puzzle" id="previewPuzzle"></div>
         </div>
+
         <input type="text" class="share-url-input" id="shareUrlInput" readonly>
 
         <div class="create-actions">
@@ -4163,31 +4112,13 @@ function showMainGame() {
       document.getElementById('wordsError').style.display = 'none';
     }
 
-function updatePreview(categories, words) {
+    function updatePreview(categories, words) {
       var previewCategories = document.getElementById('previewCategories');
       var previewPuzzle = document.getElementById('previewPuzzle');
       
       previewCategories.textContent = categories.toUpperCase();
       
       previewPuzzle.innerHTML = '';
-      
-      // Calculate total letters and max word length for sizing
-      var totalLetters = 0;
-      var maxWordLength = 0;
-      words.forEach(function(word) {
-        var cleanWord = word.replace(/\s+/g, '');
-        totalLetters += cleanWord.length;
-        maxWordLength = Math.max(maxWordLength, cleanWord.length);
-      });
-      
-      // Apply size classes to container
-      previewPuzzle.classList.remove('tiles-small', 'tiles-medium');
-      if (totalLetters > 20 || maxWordLength > 8) {
-        previewPuzzle.classList.add('tiles-small');
-      } else if (totalLetters > 15 || maxWordLength > 6) {
-        previewPuzzle.classList.add('tiles-medium');
-      }
-      
       words.forEach(function(word) {
         var cleanWord = word.replace(/\s+/g, '');
         if (cleanWord.length > 0) {
