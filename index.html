@@ -317,57 +317,39 @@
   body.custom-preview .game-container {
     height: 100vh !important;
     max-height: 100vh !important;
-    overflow: hidden !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    display: flex !important;
-    flex-direction: column !important;
+    padding-top: 60px !important; /* Space for header */
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
   }
   
   body.custom-preview .header {
-    position: relative !important;
-    flex: 0 0 auto !important;
-    padding: 0.5rem !important;
-    margin: 0 !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
     background-color: white !important;
-    z-index: 10 !important;
-  }
-  
-  body.custom-preview .category-section {
-    flex: 1 !important;
-    min-height: 0 !important;
+    z-index: 1000 !important;
+    padding: 0.5rem !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+    height: 60px !important; /* Fixed height */
     display: flex !important;
     flex-direction: column !important;
-    padding: 0.5rem !important;
+    justify-content: center !important;
+  }
+  
+  body.custom-preview .game-title {
+    font-size: 1.5rem !important;
     margin: 0 !important;
   }
   
-  body.custom-preview .gameplay-example-section {
-    flex: 0 0 auto !important;
-    height: auto !important;
-    padding: 0.75rem !important;
-    margin-bottom: 0.5rem !important;
-    background-color: #f8fafc !important;
-  }
-  
-  body.custom-preview .puzzle-container {
-    padding: 0.5rem 0 !important;
-    margin: 0 !important;
-  }
-  
-  body.custom-preview .progress-section,
-  body.custom-preview .controls-section {
-    flex: 0 0 auto !important;
-    padding: 0.5rem !important;
+  body.custom-preview .date-display {
+    font-size: 0.75rem !important;
     margin: 0 !important;
   }
   
   body.custom-preview .fixed-bottom-section,
   body.custom-preview .mobile-keyboard {
-    display: none !important;
-  }
-  
-  body.custom-preview .message-area {
     display: none !important;
   }
 }
