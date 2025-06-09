@@ -192,14 +192,40 @@
       }
       
       console.log('Game started successfully');
+      
+      // FORCE: Immediate mobile control display for debugging
+      if (window.innerWidth <= 768) {
+        console.log('FORCE: Immediately showing mobile controls');
+        const fixedBottomSection = document.getElementById('fixedBottomSection');
+        const mobileKeyboard = document.getElementById('mobileKeyboard');
+        
+        if (fixedBottomSection) {
+          fixedBottomSection.style.display = 'block';
+          fixedBottomSection.style.visibility = 'visible';
+          console.log('FORCE: Bottom section displayed');
+        }
+        if (mobileKeyboard) {
+          mobileKeyboard.style.display = 'block';
+          mobileKeyboard.style.visibility = 'visible';
+          console.log('FORCE: Mobile keyboard displayed');
+        }
+      }
     }
 
     // Enhanced initialization with strict server requirement for date navigation
     document.addEventListener('DOMContentLoaded', async function() {
+      // DEBUG: Log mobile detection
+      console.log('=== MOBILE DEBUG ===');
+      console.log('Window width:', window.innerWidth);
+      console.log('User agent:', navigator.userAgent);
+      console.log('Is mobile width:', window.innerWidth <= 768);
+      console.log('Body classes at start:', document.body.classList.toString());
+      console.log('==================');
       
-      // Clear any loading states first
-      hideLoadingState();
-      
+      var urlParams = new URLSearchParams(window.location.search);
+      var skipIntro = urlParams.get('skipIntro');
+      var optimized = urlParams.get('optimized');
+
       // Ensure modal is hidden
       document.getElementById('startModal').style.display = 'none';
       
@@ -902,10 +928,21 @@
         display: none !important;
       }
       
+      /* NUCLEAR OPTION: Force mobile controls to show */
+      .fixed-bottom-section {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+      }
+      
+      .mobile-keyboard {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+      }
+      
       /* Mobile inline message */
       .mobile-inline-message {
-        display: block !important;
-        font-size: 0.75rem !important;
         font-weight: 600 !important;
         color: #666 !important;
         text-align: center !important;
@@ -3701,11 +3738,24 @@ body.modal-open {
       // Show intro or start game  
       if (skipIntro === 'true') {
         console.log('Skipping intro, starting game directly');
+        console.log('About to call startGameDirectly()');
         // Ensure game container is visible before starting
         var gameContainer = document.getElementById('gameContainer');
         if (gameContainer) {
           gameContainer.classList.remove('game-hidden');
           console.log('Game container made visible for skipIntro');
+          console.log('Game container classes:', gameContainer.classList.toString());
+        }
+        
+        // Force mobile class for debugging
+        if (window.innerWidth <= 768) {
+          document.body.classList.add('game-active');
+          console.log('FORCE: Added game-active class for mobile debugging');
+          console.log('Body classes after force:', document.body.classList.toString());
+        }
+        
+        startGameDirectly(); // Use the new optimized function
+      } else {
         }
         startGame();
       } else {
