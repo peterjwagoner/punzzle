@@ -1950,11 +1950,10 @@ body.modal-open {
       <span class="hamburger-line"></span>
     </button>
     <div id="hamburgerDropdown" class="hamburger-dropdown">
-      <a href="/" onclick="trackNavigation('todays_puzzle'); closeHamburgerMenu();">Today's Punzzle</a>
       <a href="#" onclick="showMorePunzzles(); closeHamburgerMenu(); return false;">More Punzzles</a>
       <a href="#" onclick="showMakeYourOwn(); closeHamburgerMenu(); return false;">Make your own</a>
       <a href="#" onclick="showFAQ(); closeHamburgerMenu(); return false;">FAQ</a>
-
+      <a href="#" onclick="showFeedbackForm(); closeHamburgerMenu(); return false;">Contact</a>
       <a href="/privacy" onclick="trackNavigation('privacy'); closeHamburgerMenu();">Privacy policy</a>
     </div>
   </div>
@@ -2818,7 +2817,10 @@ body.modal-open {
           }
           setupCreateForm();
           return;
-
+        }
+        
+        // Handle shared custom puzzle
+        if (sharedPuzzle) {
           isCustomPuzzle = true;
           
           var puzzleData = JSON.parse(atob(sharedPuzzle));
@@ -2926,10 +2928,13 @@ body.modal-open {
       } else {
         console.log('Showing intro modal');
         document.getElementById('startModal').style.display = 'flex';
+        var hamburgerMenu = document.getElementById('hamburgerMenu');
+        if (hamburgerMenu) {
+          hamburgerMenu.style.display = 'none';
+        }
         document.body.classList.add('modal-open');
         document.getElementById('gameContainer').classList.add('content-blur');
       }
-
       
       setupCreateForm();
       handleMorePunzzlesSubmit();
@@ -4451,11 +4456,16 @@ if (!gameState.customHint) {
           // User cancelled share, do nothing
         });
       } else {
-        startGame();
+        copyPuzzleUrl();
       }
     }
 
-    function removeCustomPreviewClass() {
+    // Hamburger menu functionality
+    function toggleHamburgerMenu() {
+      var button = document.getElementById('hamburgerButton');
+      var dropdown = document.getElementById('hamburgerDropdown');
+      
+      button.classList.toggle('active');
       dropdown.classList.toggle('active');
       
       if (button.classList.contains('active')) {
