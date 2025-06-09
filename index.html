@@ -355,6 +355,11 @@
       max-width: 480px;
       box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
       min-height: 500px;
+      height: fit-content;
+      max-height: calc(100vh - 2rem);
+      overflow-y: auto;
+      display: flex;
+
       height: auto;
       max-height: calc(100vh - 2rem);
       overflow-y: auto;
@@ -1425,10 +1430,21 @@
     .share-url-input {
       display: none;
     }
-
+    
+    /* Desktop: Always show controls */
+    @media (min-width: 769px) {
+      .controls-section {
+        display: flex !important;
+      }
+      .progress-section {
+        display: block !important;
+      }
+    }
+    
     .fixed-bottom-section {
       position: fixed;
       bottom: 164px;
+
       left: 0;
       right: 0;
       background-color: white;
@@ -1673,13 +1689,10 @@
         font-size: 0.8rem;
       }
 
-      .game-container:not(.game-hidden) .progress-section,
-      .game-container:not(.game-hidden) .controls-section {
-        display: none;
-      }
-      
       .message-area {
         display: none;
+      }
+
       }
 
       .mobile-inline-message {
@@ -1788,7 +1801,14 @@
         padding: 0.5rem 0.75rem !important;
         min-height: 40px !important;
       }
+      
+      /* Mobile: Hide desktop controls when mobile controls are active */
+      .game-container:not(.game-hidden) .progress-section,
+      .game-container:not(.game-hidden) .controls-section {
+        display: none;
+      }
 
+      .fixed-bottom-section .progress-section {
       .fixed-bottom-section .progress-section {
         margin-bottom: 0.75rem;
 
