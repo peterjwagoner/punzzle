@@ -1409,9 +1409,28 @@
       display: none;
     }
 
-    .preview-section.active {
-      display: block;
+    @media (min-width: 769px) {
+      .desktop-game-wrapper {
+        background-color: #ffffff;
+        border: 1px solid #e5e5e5;
+        border-radius: 8px;
+        margin: 1rem auto;
+        padding: 1rem;
+        width: calc(100% - 2rem);
+        max-width: 500px;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        min-height: 520px;
+        max-height: 600px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+      }
     }
+
+    @media (max-width: 768px) {
+      body {
+        height: 100vh;
+
 
     .preview-title {
       font-size: 0.875rem;
@@ -2251,11 +2270,13 @@ body.modal-open {
 
   <!-- More Punzzles Modal -->
   <div id="morePunzzlesModal" style="display: none;" class="modal-overlay" onclick="closeMorePunzzlesModal()">
-    <div class="modal" style="max-width: 500px; position: relative;" onclick="event.stopPropagation()">
-      
-      <div style="padding: 2rem; text-align: center;" id="morePunzzlesContent">
-        <button onclick="closeMorePunzzlesModal()" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 24px; cursor: pointer; color: #666; z-index: 10;">&times;</button>
-        <h2 class="modal-title" style="margin: 0 0 1rem 0;">Unlock more Punzzles</h2>
+  <!-- Desktop Game Wrapper -->
+  <div class="desktop-game-wrapper" style="display: none;">
+
+  <div class="game-container game-hidden" id="gameContainer">
+    <div class="header">
+      <div class="header-title-group">
+
         <p style="color: #666; font-size: 1.1rem; margin-bottom: 2rem;">Get weekly bonus punzzles in your inbox.</p>
         
         <form action="https://app.kit.com/forms/8142815/subscriptions" method="post" id="morePunzzlesForm" style="margin-bottom: 1rem;">
@@ -2343,10 +2364,11 @@ body.modal-open {
       <button onclick="handleHintOrRestart()" class="button" id="hintRestartBtn">Hint (-5)</button>
     </div>
   </div>
+  </div>
 
   <!-- Fixed Bottom Section for Mobile -->
   <div class="fixed-bottom-section" id="fixedBottomSection">
-    <div class="progress-section">
+
       <div class="score-display">
         <span class="score-label">Score</span>
         <span class="mobile-inline-message" id="mobileMessage"></span>
@@ -3010,8 +3032,15 @@ body.modal-open {
       handleMorePunzzlesSubmit();
     });
 
-    testPreviewImage();
-
+    // Show/hide desktop wrapper based on screen size
+    function updateDesktopWrapper() {
+      const wrapper = document.querySelector('.desktop-game-wrapper');
+      if (wrapper && window.innerWidth >= 769) {
+        wrapper.style.display = 'flex';
+      }
+    }
+    updateDesktopWrapper();
+    window.addEventListener('resize', updateDesktopWrapper);
     function startGame() {
       console.log('startGame() called');
       
