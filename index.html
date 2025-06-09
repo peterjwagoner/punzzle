@@ -1743,111 +1743,9 @@
       }
     }
 
-    /* Cookie Banner Styles */
-    #cookie-banner {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background-color: #fff;
-      border-top: 2px solid #eee;
-      padding: 20px;
-      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-      z-index: 1000;
-      transform: translateY(100%);
-      transition: transform 0.3s ease-in-out;
-    }
-
-    #cookie-banner.show {
-      transform: translateY(0);
-    }
-
-    .cookie-content {
-      max-width: 800px;
-      margin: 0 auto;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 20px;
-    }
-
-    .cookie-text {
-      flex: 1;
-      min-width: 300px;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      color: #333;
-      line-height: 1.5;
-    }
-
-    .cookie-text h2 {
-      margin: 0 0 5px 0;
-      font-size: 1.75em;
-      font-weight: 400;
-      color: #222;
-      font-family: 'Headland One', serif;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      text-rendering: optimizeLegibility;
-    }
-
-    .cookie-text p {
-      margin: 0;
-      font-size: 0.9em;
-    }
-
-    .cookie-buttons {
-      display: flex;
-      gap: 15px;
-      align-items: center;
-    }
-
-    .cookie-btn {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      font-size: 16px;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      text-decoration: none;
-      transition: all 0.2s ease;
-    }
-
-    .cookie-btn-primary {
-      background-color: #333;
-      color: white;
-    }
-
-    .cookie-btn-primary:hover {
-      background-color: #555;
-    }
-
-    .cookie-btn-link {
-      background: none;
-      color: #666;
-      text-decoration: underline;
-      padding: 10px;
-    }
-
-    .cookie-btn-link:hover {
-      color: #333;
-    }
-
-    /* Mobile responsive for cookie banner */
-    @media (max-width: 600px) {
-      .cookie-content {
-        flex-direction: column;
-        text-align: center;
-      }
-      
-      .cookie-buttons {
-        width: 100%;
-        justify-content: center;
-      }
-    }
-
     /* Additional mobile styles for better compatibility */
     @media (max-width: 768px) {
+      body.custom-preview .game-title {
         font-size: 1.5rem !important;
         margin: 0 !important;
       }
@@ -2361,21 +2259,9 @@
   <!-- Copyright Footer (Desktop Only) -->
   <div class="copyright-footer">Copyright Lowercase Studios</div>
 
-  <!-- Cookie Banner -->
-  <div id="cookie-banner">
-    <div class="cookie-content">
-      <div class="cookie-text">
-        <h2>🍪 Cookies, anyone?</h2>
-        <p>We use cookies to analyze traffic and improve your experience. By using this site, you agree to our use of cookies.</p>
-      </div>
-      <div class="cookie-buttons">
-        <button class="cookie-btn cookie-btn-primary" onclick="acceptCookies()">Got it!</button>
-        <a href="/terms-privacy" class="cookie-btn cookie-btn-link">Learn more</a>
-      </div>
-    </div>
-  </div>
-
   <script>
+    // Define randomizeCategory immediately to ensure it's available
+    window.randomizeCategory = function(categoryNumber) {
       var categoryList = [
         "Movie stars", "TV Shows", "Cartoons", "Famous Athletes", "Video Games",
         "Sitcom Characters", "Superheroes", "Supervillains", "Oscar-Winning Films", "Reality Shows",
@@ -2456,32 +2342,6 @@
       setTriedAnotherCount(currentCount + 1);
       return currentCount + 1;
     }
-
-    // Cookie Banner Functions
-    function checkCookieConsent() {
-      const consent = localStorage.getItem('cookieConsent');
-      if (!consent) {
-        // Show banner after a short delay
-        setTimeout(() => {
-          document.getElementById('cookie-banner').classList.add('show');
-        }, 1000);
-      }
-    }
-
-    function acceptCookies() {
-      localStorage.setItem('cookieConsent', 'accepted');
-      document.getElementById('cookie-banner').classList.remove('show');
-      
-      // Track cookie consent acceptance
-      if (typeof trackPunzzleEvent === 'function') {
-        trackPunzzleEvent('cookie_consent', 'privacy', 'accepted');
-      }
-    }
-
-    // Check cookie consent on page load
-    window.addEventListener('DOMContentLoaded', function() {
-      checkCookieConsent();
-    });
 
     // Global variables
     var isCustomPuzzle = false;
