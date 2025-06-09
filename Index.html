@@ -1955,7 +1955,6 @@ body.modal-open {
       <a href="#" onclick="showMakeYourOwn(); closeHamburgerMenu(); return false;">Make your own</a>
       <a href="#" onclick="showFAQ(); closeHamburgerMenu(); return false;">FAQ</a>
 
-
       <a href="/privacy" onclick="trackNavigation('privacy'); closeHamburgerMenu();">Privacy policy</a>
     </div>
   </div>
@@ -2990,15 +2989,8 @@ body.modal-open {
       if (hamburgerMenu) {
         hamburgerMenu.style.display = 'block';
       }
-      
-      // Also show hamburger menu for custom puzzles
-      if (isCustomPuzzle) {
-        var hamburgerMenu = document.getElementById('hamburgerMenu');
-        if (hamburgerMenu) {
-          hamburgerMenu.style.display = 'block';
-        }
-      }
       var puzzleType = isCustomPuzzle ? 'custom' : 'daily';
+      trackPuzzleStart(puzzleType, gameState.categoryText);
       
       console.log('Game started successfully');
     }
@@ -4641,4 +4633,4 @@ if (!gameState.customHint) {
     }
   </script>
 </body>
-</html>   hello
+</html>
