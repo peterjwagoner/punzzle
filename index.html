@@ -1754,6 +1754,11 @@ body.modal-open {
       
       body.preview-mode .header {
         flex-shrink: 0;
+        position: static;
+        display: block;
+        visibility: visible;
+        opacity: 1;
+        z-index: auto;
       }
       
       body.preview-mode .category-section {
@@ -1773,9 +1778,17 @@ body.modal-open {
         flex: 1;
         min-height: 0;
       }
+      
+      /* Ensure preview mode shows mobile controls when game is active */
+      body.preview-mode.game-active .mobile-keyboard {
+        display: block !important;
+      }
+      
+      body.preview-mode.game-active .fixed-bottom-section {
+        display: block !important;
+      }
 
       body.game-active .fixed-bottom-section {
-      }
       
       .game-container {
         margin: 0;
@@ -1854,13 +1867,12 @@ body.modal-open {
       
       .category-text {
         font-size: 0.75rem;
-        padding: 0.4rem 0.6rem;
-        margin-bottom: 0.25rem;
       }
-      
-      .puzzle-container {
-        position: static;
-        transform: none;
+
+      body.game-active .game-container:not(.game-hidden) .progress-section,
+      body.game-active .game-container:not(.game-hidden) .controls-section {
+        display: none;
+      }
         left: auto;
         right: auto;
         width: 100%;
