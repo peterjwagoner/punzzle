@@ -463,12 +463,6 @@
     
     .mobile-keyboard {
 
-    }
-    
-    .scorecard-title {
-      margin-top: 0.5rem !important;
-      margin-bottom: 0.5rem !important;
-      line-height: 1.1;
       font-family: 'Headland One', serif;
       font-weight: 400;
       font-size: 2.1rem;
@@ -620,6 +614,71 @@
     /* Desktop: Hide mobile elements completely */
     @media (min-width: 769px) {
       .fixed-bottom-section,
+      .mobile-keyboard {
+        display: none !important;
+      }
+    }
+    
+    /* Mobile: Basic responsive layout - don't force visibility */
+    @media (max-width: 768px) {
+      body {
+        height: 100vh;
+        overflow: hidden;
+      }
+      
+      .game-container {
+        margin: 0;
+        padding: 0.5rem;
+        border: none;
+        box-shadow: none;
+        border-radius: 0;
+        width: 100%;
+        max-width: none;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+      
+      /* When game is active - show mobile controls and adjust height */
+      body.game-active .game-container {
+        height: calc(100vh - 300px);
+      }
+      
+      body.game-active .fixed-bottom-section {
+        display: block;
+      }
+      
+      body.game-active .mobile-keyboard {
+        display: block;
+      }
+      
+      /* Hide desktop controls on mobile when game is active */
+      body.game-active .game-container .progress-section,
+      body.game-active .game-container .controls-section {
+        display: none;
+      }
+      
+      .keyboard-row {
+        display: flex;
+        justify-content: center;
+        gap: 4px;
+        margin-bottom: 6px;
+      }
+      
+      .keyboard-row:last-child {
+        margin-bottom: 0;
+      }
+      
+      .key-btn {
+        background-color: white;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        padding: 12px 8px;
+        font-size: 16px;
+        font-weight: 600;
+        color: #333;
+        cursor: pointer;
+
       .mobile-keyboard {
         display: none !important;
       }
@@ -912,26 +971,6 @@
         flex: 0.3;
       }
     }
-
-    .loading {
-
-      /* When game is not active, show normal layout */
-      body:not(.game-active) .game-container {
-        height: auto;
-        min-height: 100vh;
-      }
-      
-      /* Header adjustments for mobile */
-      .header {
-        padding: 1rem 0 0.5rem 0;
-        margin-bottom: 0.5rem;
-        position: relative;
-        background-color: #ffffff;
-        z-index: 10;
-      }
-      
-      /* Gameplay section adjustments */
-      .gameplay-example-section {
         flex: 1;
         display: flex;
         flex-direction: column;
