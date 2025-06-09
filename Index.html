@@ -1535,20 +1535,23 @@
       
       /* Mobile Custom Puzzle Preview Layout */
       body.custom-puzzle-preview .header {
-        position: fixed !important;
+        position: sticky !important;
         top: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        z-index: 1000 !important;
+        z-index: 100 !important;
         background-color: white !important;
         border-bottom: 1px solid #e5e5e5 !important;
+        margin-bottom: 0 !important;
         padding: 0.5rem !important;
       }
       
-      body.custom-puzzle-preview .category-section {
-        margin-top: 0 !important;
-        padding-top: 0 !important;
 
+      body.custom-puzzle-preview .game-container {
+        padding-top: 100px !important;
+        height: calc(100vh - 284px) !important;
+      }
+      
+      
+      .game-container {
         margin: 0;
         padding: 0.5rem;
         padding-bottom: 0.5rem;
@@ -1577,19 +1580,9 @@
       
       body.custom-puzzle-preview .category-text {
         margin-top: 0 !important;
-        padding-top: 80px !important;
-      }
-      
-      body.custom-puzzle-preview .gameplay-example-section {
-        padding-top: 0 !important;
       }
       
       body.custom-puzzle-preview .puzzle-container {
-        font-size: 1.5rem;
-        margin: 0;
-      }
-      
-      .button {
         font-size: 0.7rem;
         padding: 0.4rem 0.5rem;
         min-height: 36px;
