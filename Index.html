@@ -1551,15 +1551,6 @@
         height: calc(100vh - 284px);
         padding-bottom: 0;
       }
-      
-      /* Ensure preview mode containers are properly constrained */
-      .game-container:not(.game-hidden) .category-section {
-        flex: 1;
-        min-height: 0;
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-      }
 
       .header {
         padding: 0.5rem 0;
@@ -1676,8 +1667,22 @@
         color: #00875a;
       }
       
+      /* Custom puzzle preview mode layout fixes */
+      body.custom-puzzle-preview .category-section {
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+      
+      body.custom-puzzle-preview .gameplay-example-section {
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+      }
+      
       .create-wrapper {
-        padding: 1rem;
         align-items: flex-start;
         padding-top: 1rem;
       }
