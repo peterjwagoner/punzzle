@@ -4845,5 +4845,134 @@
       }
     }
   </script>
+
+<!-- Cookie Banner - Add this right before </body> -->
+<div id="punzzle-cookie-banner" style="display: none;">
+  <style>
+    #punzzle-cookie-banner {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background-color: #fff;
+      border-top: 2px solid #eee;
+      padding: 20px;
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+      z-index: 9999;
+    }
+    
+    #punzzle-cookie-inner {
+      max-width: 800px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    
+    #punzzle-cookie-text {
+      flex: 1;
+      min-width: 300px;
+    }
+    
+    #punzzle-cookie-text h2 {
+      margin: 0 0 5px 0;
+      font-size: 1.75em;
+      font-weight: 400;
+      color: #222;
+      font-family: 'Headland One', serif;
+    }
+    
+    #punzzle-cookie-text p {
+      margin: 0;
+      font-size: 0.9em;
+      color: #333;
+      font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    }
+    
+    #punzzle-cookie-buttons {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+    
+    #punzzle-cookie-accept {
+      background-color: #333;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    }
+    
+    #punzzle-cookie-accept:hover {
+      background-color: #555;
+    }
+    
+    #punzzle-cookie-learn {
+      color: #666;
+      text-decoration: underline;
+      padding: 10px;
+      font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    }
+    
+    #punzzle-cookie-learn:hover {
+      color: #333;
+    }
+    
+    @media (max-width: 600px) {
+      #punzzle-cookie-inner {
+        flex-direction: column;
+        text-align: center;
+      }
+      
+      #punzzle-cookie-buttons {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  </style>
+  
+  <div id="punzzle-cookie-inner">
+    <div id="punzzle-cookie-text">
+      <h2>🍪 Cookies, anyone?</h2>
+      <p>We use cookies to analyze traffic and improve your experience. By using this site, you agree to our use of cookies.</p>
+    </div>
+    <div id="punzzle-cookie-buttons">
+      <button id="punzzle-cookie-accept">Got it!</button>
+      <a href="/terms-privacy" id="punzzle-cookie-learn">Learn more</a>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  // Check if user already accepted cookies
+  if (!localStorage.getItem('punzzleCookieAccepted')) {
+    // Show banner after 1 second
+    setTimeout(function() {
+      var banner = document.getElementById('punzzle-cookie-banner');
+      if (banner) {
+        banner.style.display = 'block';
+      }
+    }, 1000);
+  }
+  
+  // Handle accept button
+  var acceptBtn = document.getElementById('punzzle-cookie-accept');
+  if (acceptBtn) {
+    acceptBtn.onclick = function() {
+      localStorage.setItem('punzzleCookieAccepted', 'true');
+      var banner = document.getElementById('punzzle-cookie-banner');
+      if (banner) {
+        banner.style.display = 'none';
+      }
+    };
+  }
+})();
+</script>
 </body>
 </html>
