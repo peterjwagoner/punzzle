@@ -305,10 +305,11 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: flex-start;
-      overflow: hidden;
-    }
-    
+      gap: 1rem;
+      margin: 0.5rem 0;
+      padding: 0.5rem;
+      flex: 1;
+
   body.modal-open {
   overflow: hidden;
 }
@@ -371,19 +372,20 @@
       display: none;
     }
     
-    .header {
+    .gameplay-example-section {
+      background-color: #ffffff;
+      border: none;
+      border-radius: 12px;
+      padding: 2rem;
       text-align: center;
-      margin-bottom: 0;
-      padding: 0.5rem 0;
-      flex-shrink: 0;
+      flex: 0 1 auto;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      justify-content: center;
     }
-    
-    .create-container .header {
-      position: static;
-      background-color: transparent;
-      z-index: auto;
-      padding: 0.5rem 0 1rem 0;
-      text-align: center;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -412,10 +414,11 @@
     .game-title {
       font-family: 'Headland One', serif;
       font-size: 2.1rem;
-      font-weight: 400;
+      font-weight: 500;
       margin: 0;
       display: inline-block;
       -webkit-font-smoothing: antialiased;
+
       -moz-osx-font-smoothing: grayscale;
       text-rendering: optimizeLegibility;
     }
@@ -434,22 +437,19 @@
 
     .date-display {
       font-size: 0.875rem;
-      color: #666;
-      margin-top: 0.75rem;
+      color: #6b7280;
+      margin-top: 1rem;
       margin-bottom: 0;
       display: block;
       visibility: visible;
+
       opacity: 1;
       text-align: center;
     }
     
-    @media (min-width: 769px) {
-      .date-display {
-        margin-bottom: 1.5rem;
-      }
-    }
-    
     .date-display a {
+      color: #326891;
+      text-decoration: none;
       color: #326891;
       text-decoration: none;
     }
@@ -506,12 +506,12 @@
       font-size: 0.875rem;
       font-weight: 600;
       color: #326891;
-      padding: 0.75rem 1rem;
+      padding: 1rem 1.5rem;
       background-color: rgba(50, 104, 145, 0.1);
-      border: 1px solid rgba(50, 104, 145, 0.2);
-      border-radius: 6px;
+      border: none;
+      border-radius: 8px;
       text-transform: uppercase;
-      word-wrap: break-word;
+      letter-spacing: 0.5px;
       hyphens: auto;
       overflow-wrap: break-word;
       flex-shrink: 0;
@@ -533,7 +533,7 @@
     
     .word-group {
       display: flex;
-      gap: 0.25rem;
+      gap: 0.5rem;
       justify-content: center;
       flex-wrap: nowrap;
       max-width: 100%;
@@ -544,14 +544,15 @@
     .tile {
       width: clamp(32px, 6vw, 48px);
       height: clamp(32px, 6vw, 48px);
-      background-color: #ffffff;
-      border: 2px solid #d3d6da;
-      border-radius: 4px;
+      background-color: #f8f9fa;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
       font-size: clamp(0.8rem, 2vw, 1.2rem);
-      font-weight: 400;
+      font-weight: 500;
       display: flex;
       justify-content: center;
       align-items: center;
+
       cursor: pointer;
       user-select: none;
       text-transform: uppercase;
@@ -562,11 +563,12 @@
     
     .tile.hidden {
       color: transparent;
-      background-color: #f8fafc;
-      border-color: #d0d0d0;
+      background-color: #ffffff;
+      border-color: #e5e7eb;
       visibility: visible;
       opacity: 1;
     }
+
     
     .tile.revealed {
       background-color: #326891;
@@ -577,10 +579,8 @@
     .tile.active {
       border-color: #326891;
       box-shadow: 0 0 0 2px rgba(50, 104, 145, 0.2);
-      background-color: #f0f7ff;
+      background-color: #eff6ff;
     }
-    
-    .tile.user-filled {
       background-color: #ffffff;
       color: #1a1a1a;
       border-color: #326891;
@@ -628,10 +628,11 @@
     
     .progress-section {
       margin-bottom: 0.75rem;
-      padding: 0.5rem 0;
+      padding: 1rem 0;
       flex-shrink: 0;
     }
     
+
     .message-area {
       min-height: 1.5rem;
       display: flex;
@@ -671,9 +672,11 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 0.5rem;
+      margin-bottom: 1rem;
     }
     
+    .score-label {
+
     .score-label {
       font-size: 0.875rem;
       font-weight: 500;
@@ -695,21 +698,19 @@
     
     .progress-bar {
       width: 100%;
-      height: 6px;
-      background-color: #e5e5e5;
-      border-radius: 3px;
+      height: 8px;
+      background-color: #e5e7eb;
+      border-radius: 4px;
       overflow: hidden;
     }
     
     .progress-fill {
+
       height: 100%;
       background-color: #326891;
       transition: width 0.3s ease-out;
-      border-radius: 3px;
+      border-radius: 4px;
     }
-    
-    .key-popup {
-      position: fixed;
       background-color: white;
       border: 1px solid #d0d0d0;
       border-radius: 8px;
@@ -761,24 +762,37 @@
     
     .controls-section {
       display: flex;
-      gap: 0.5rem;
+      gap: 1rem;
       margin-bottom: 0;
       flex-shrink: 0;
     }
-    
+
     .button {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 0.75rem 1.5rem;
+      padding: 1rem 1.5rem;
       font-size: 0.875rem;
-      font-weight: 500;
-      border: 1px solid #d0d0d0;
-      border-radius: 6px;
+      font-weight: 600;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
       cursor: pointer;
       transition: all 0.2s ease;
       user-select: none;
-      min-height: 44px;
+      min-height: 52px;
+      background-color: #ffffff;
+      color: #374151;
+      flex: 1;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .button:hover {
+      background-color: #f9fafb;
+      border-color: #326891;
+      color: #326891;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      transform: translateY(-1px);
+    }
       background-color: #ffffff;
       color: #666666;
       flex: 1;
