@@ -1588,7 +1588,8 @@
         background-color: transparent !important;
       }
       
-      body.custom-puzzle-preview .button {
+      /* Only apply small buttons during custom preview, not regular gameplay */
+      body.custom-puzzle-preview:not(.game-active) .button {
         font-size: 0.7rem !important;
         padding: 0.4rem 0.5rem !important;
         min-height: 36px !important;
