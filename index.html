@@ -557,28 +557,6 @@ body.modal-open {
 .content-blur {
   pointer-events: none;
 }
-  
-  body.custom-preview .game-title {
-    font-size: 1.5rem !important;
-    margin: 0 !important;
-  }
-  
-  body.custom-preview .date-display {
-    font-size: 0.75rem !important;
-    margin: 0 !important;
-  }
-  
-  body.custom-preview .fixed-bottom-section,
-  body.custom-preview .mobile-keyboard {
-    display: none !important;
-  }
-}
-    overflow: hidden;
-  }
-  
-  body.custom-preview .gameplay-example-section {
-    height: 100%;
-    overflow-y: auto;
   }
 }
 .content-blur {
@@ -1766,8 +1744,37 @@ body.modal-open {
         display: block !important;
       }
       
+      /* Preview mode adjustments for mobile */
+      body.preview-mode .game-container {
+        height: calc(100vh - 284px);
+        max-height: calc(100vh - 284px);
+        display: flex;
+        flex-direction: column;
+      }
+      
+      body.preview-mode .header {
+        flex-shrink: 0;
+      }
+      
+      body.preview-mode .category-section {
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+      }
+      
+      body.preview-mode .gameplay-example-section {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+      }
+      
+      body.preview-mode .puzzle-container {
+        flex: 1;
+        min-height: 0;
+      }
+
       body.game-active .fixed-bottom-section {
-        display: block !important;
       }
       
       .game-container {
@@ -1786,6 +1793,20 @@ body.modal-open {
       
       .game-container:not(.game-hidden) {
         height: calc(100vh - 284px);
+        padding-bottom: 0;
+      }
+
+      /* Ensure preview mode containers are properly sized */
+      body.preview-mode .game-container:not(.game-hidden) {
+        height: calc(100vh - 284px);
+        max-height: calc(100vh - 284px);
+        padding-bottom: 0;
+      }
+
+      /* Ensure preview mode containers are properly sized */
+      body.preview-mode .game-container:not(.game-hidden) {
+        height: calc(100vh - 284px);
+        max-height: calc(100vh - 284px);
         padding-bottom: 0;
       }
 
@@ -4156,10 +4177,11 @@ body.modal-open {
     }
     
 function showMainGame() {
+  // Remove preview mode class when returning to main game
+  document.body.classList.remove('preview-mode');
+  
   document.getElementById('createWrapper').classList.remove('active');
   document.body.classList.remove('modal-open');
-  
-  document.getElementById('gameContainer').classList.remove('content-blur');
       document.getElementById('scoreCard').classList.remove('content-blur');
       
       savedFormData = null;
@@ -4512,6 +4534,11 @@ function showMainGame() {
       gameState.currentActiveTile = null;
       gameState.hintUsed = false;
       gameState.puzzleId = `custom-shared-${Date.now()}`;
+      
+      // Add preview mode class to body for mobile layout
+      if (window.innerWidth <= 768) {
+        document.body.classList.add('preview-mode');
+      }
       
       const customId = await saveCustomPuzzle(puzzleData);
       if (customId) {
