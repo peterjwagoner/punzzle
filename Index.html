@@ -2815,13 +2815,13 @@ body.modal-open {
             startGame();
           } else {
             document.getElementById('startModal').style.display = 'flex';
-            var hamburgerMenu = document.getElementById('hamburgerMenu');
-            if (hamburgerMenu) {
-              hamburgerMenu.style.display = 'none';
-            }
           }
           setupCreateForm();
           return;
+        }
+        
+        // Handle shared custom puzzle
+        if (sharedPuzzle) {
           isCustomPuzzle = true;
           
           var puzzleData = JSON.parse(atob(sharedPuzzle));
@@ -2864,6 +2864,71 @@ body.modal-open {
             if (hamburgerMenu) {
               hamburgerMenu.style.display = 'none';
             }
+          }
+          // Always show hamburger menu for custom puzzles when not showing modal
+          var hamburgerMenu = document.getElementById('hamburgerMenu');
+          if (hamburgerMenu && skipIntro === 'true') {
+            hamburgerMenu.style.display = 'block';
+          }
+          setupCreateForm();
+          return;
+        
+        // Handle shared custom puzzle
+        if (sharedPuzzle) {
+          isCustomPuzzle = true;
+          
+          var puzzleData = JSON.parse(atob(sharedPuzzle));
+          gameState.puzzleAnswer = puzzleData.answer;
+          gameState.categoryText = puzzleData.categories;
+          gameState.words = puzzleData.words;
+          gameState.customHint = puzzleData.hint || null;
+          
+          const tempId = 'shared-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+          gameState.puzzleId = `custom-${tempId}`;
+          
+          if (optimized !== 'true') {
+            try {
+              const customId = await saveCustomPuzzle(puzzleData);
+              if (customId) {
+                gameState.puzzleId = `custom-${customId}`;
+                trackCustomPuzzleView(customId);
+                trackPunzzleEvent('shared_puzzle_opened', 'user_generated', gameState.categoryText);
+              }
+              
+              const customTitle = `Punzzle: ${gameState.categoryText}`;
+              const customDescription = `Can you solve this custom Punzzle? Categories: ${gameState.categoryText}. Find the pun that connects them!`;
+              updateMetaTags(customTitle, customDescription);
+            } catch (error) {
+              console.error('Error processing shared puzzle:', error);
+            }
+          }
+          
+          document.getElementById('categoryText').textContent = gameState.categoryText;
+          document.getElementById('dateDisplay').innerHTML = 
+            '<a href="' + window.location.origin + window.location.pathname + '?skipIntro=true">Today\'s Punzzle</a> · Shared Puzzle';
+          
+          hideLoadingState();
+          
+          if (skipIntro === 'true') {
+            startGame();
+          } else {
+            document.getElementById('startModal').style.display = 'flex';
+            var hamburgerMenu = document.getElementById('hamburgerMenu');
+            if (hamburgerMenu) {
+              hamburgerMenu.style.display = 'none';
+            }
+          }
+          // Always show hamburger menu for custom puzzles when not showing modal
+          var hamburgerMenu = document.getElementById('hamburgerMenu');
+          if (hamburgerMenu && skipIntro === 'true') {
+            hamburgerMenu.style.display = 'block';
+          }
+          setupCreateForm();
+          return;
+        }
+        
+        // Load puzzle based on date - try server first, fallback to local
+        var puzzleDate = dateParam ? new Date(dateParam + 'T00:00:00') : new Date();
           }
           setupCreateForm();
           return;
