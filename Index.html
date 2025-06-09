@@ -137,18 +137,17 @@
       }
     }
     
-    /* Hamburger menu visibility - only hide for specific modals, not custom puzzles */
-    .modal-open:has(#startModal[style*="display: flex"]) .hamburger-menu,
-    .modal-open:has(#scoreCard[style*="display: flex"]) .hamburger-menu,
-    .modal-open:has(#morePunzzlesModal[style*="display: flex"]) .hamburger-menu,
-    .modal-open:has(.create-wrapper.active) .hamburger-menu,
-    .modal-open:has(#feedbackWrapper.active) .hamburger-menu,
-    .modal-open:has(#faqWrapper.active) .hamburger-menu {
-      display: none !important;
-    }
+    // Force cleanup on page visibility change
+    document.addEventListener('visibilitychange', function() {
+      if (document.visibilityState === 'visible') {
+        setTimeout(hideLoadingState, 100);
+      }
+    });
     
-    .logo {
-
+    // Force cleanup on page load
+    window.addEventListener('load', function() {
+      setTimeout(hideLoadingState, 500);
+    });
     
     // Force cleanup before page unload
     window.addEventListener('beforeunload', function() {
@@ -3000,17 +2999,10 @@ body.modal-open {
       
       var hamburgerMenu = document.getElementById('hamburgerMenu');
       if (hamburgerMenu) {
-        // Always show hamburger menu for active games, including custom puzzles
         hamburgerMenu.style.display = 'block';
-        hamburgerMenu.style.visibility = 'visible';
-        hamburgerMenu.style.opacity = '1';
-        hamburgerMenu.style.position = 'fixed';
-        hamburgerMenu.style.zIndex = '2000';
         console.log('startGame: hamburger menu visibility set, isCustomPuzzle:', isCustomPuzzle);
       }
       var puzzleType = isCustomPuzzle ? 'custom' : 'daily';
-
-      trackPuzzleStart(puzzleType, gameState.categoryText);
       
       console.log('Game started successfully');
     }
@@ -4009,26 +4001,17 @@ function showMainGame() {
         document.getElementById('gameContainer').classList.add('content-blur');
         var hamburgerMenu = document.getElementById('hamburgerMenu');
         if (hamburgerMenu) {
-          // Only hide hamburger for start modal, not for custom puzzle previews
           hamburgerMenu.style.display = 'none';
-          console.log('showMainGame: hiding hamburger for start modal');
         }
-      } else {
-        document.getElementById('gameContainer').classList.remove('game-hidden');
-
       } else {
         document.getElementById('gameContainer').classList.remove('game-hidden');
         document.body.classList.add('game-active');
         var hamburgerMenu = document.getElementById('hamburgerMenu');
         if (hamburgerMenu) {
           hamburgerMenu.style.display = 'block';
-          hamburgerMenu.style.visibility = 'visible';
-          hamburgerMenu.style.opacity = '1';
-          console.log('showMainGame: showing hamburger for active game');
         }
         startFoxTimer();
       }
-
     }
 
     function setupCreateForm() {
@@ -4421,14 +4404,10 @@ if (!gameState.customHint) {
       
       var hamburgerMenu = document.getElementById('hamburgerMenu');
       if (hamburgerMenu) {
-        // Don't hide hamburger menu for custom puzzle creation - user should be able to navigate
-        if (hasStartedGame) {
-          hamburgerMenu.style.display = 'block';
-        } else {
-          hamburgerMenu.style.display = 'none';
-        }
+        hamburgerMenu.style.display = 'none';
       }
     }
+
     function removeCustomPreviewClass() {
       document.body.classList.remove('custom-puzzle-preview');
       console.log('Removed custom-puzzle-preview class');
