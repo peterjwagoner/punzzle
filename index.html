@@ -2012,7 +2012,7 @@
         <input type="text" class="share-url-input" id="shareUrlInput" readonly>
 
         <div class="create-actions">
-          <button type="submit" class="create-btn" id="createBtn" disabled>View</button>
+          <button type="submit" class="create-btn" id="createBtn" disabled>Preview</button>
           <button type="button" class="create-btn" onclick="shareCreatedPuzzle()" disabled id="shareBtn" style="opacity: 0.5; cursor: not-allowed;">Share</button>
           <button type="button" class="create-btn" id="copyBtn" onclick="copyPuzzleUrl()" disabled style="opacity: 0.5; cursor: not-allowed;">Copy Link</button>
         </div>
@@ -4022,7 +4022,7 @@
       
       form.addEventListener('submit', function(e) {
         e.preventDefault();
-        createPuzzle();
+        previewPuzzle();
       });
       
       updateAddWordButton();
@@ -4230,6 +4230,21 @@
           previewPuzzle.appendChild(wordDiv);
         }
       });
+    }
+
+    function previewPuzzle() {
+      var shareUrlInput = document.getElementById('shareUrlInput');
+      var shareUrl = shareUrlInput.value;
+      
+      if (shareUrl) {
+        // Add preview parameter to the URL
+        var previewUrl = shareUrl + '&preview=true';
+        
+        trackCustomPuzzle('previewed');
+        
+        // Open in same tab/window
+        window.location.href = previewUrl;
+      }
     }
 
     async function createPuzzle() {
