@@ -416,10 +416,11 @@
       border-radius: 6px;
       padding: 0.75rem 1rem 1rem 1rem;
       text-align: center;
-      flex: 0 1 auto;
+      flex: 1 1 auto;
       display: flex;
       flex-direction: column;
       min-height: 0;
+
       margin-bottom: 0.5rem;
       justify-content: center;
     }
@@ -447,17 +448,19 @@
       gap: 0.25rem;
       margin: 0.5rem 0;
       padding: 0.5rem;
-      flex: 1;
+      flex: 0 1 auto;
       justify-content: center;
       min-height: 0;
       overflow: hidden;
+
     }
     
-    .word-group {
+    .message-area {
+      min-height: 3rem;
       display: flex;
-      gap: 0.25rem;
+      flex-direction: column;
       justify-content: center;
-      flex-wrap: nowrap;
+
       max-width: 100%;
       padding: 0.25rem;
       margin: 0 auto;
@@ -555,10 +558,10 @@
       text-align: center;
       margin-top: auto;
       margin-bottom: 0.5rem;
-      flex-shrink: 0;
-      padding: 0.5rem;
-    }
-    
+      flex: 1 0 auto;
+      padding: 0.5rem 1rem;
+      width: 100%;
+      box-sizing: border-box;
     .message {
       font-size: 0.875rem;
       font-weight: 600;
