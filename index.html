@@ -680,8 +680,126 @@
       flex-shrink: 0;
     }
     
+    /* Desktop keyboard toggle button */
+    .desktop-keyboard-toggle {
+      display: none;
+      margin-top: 0.75rem;
+      text-align: center;
+    }
+    
+    @media (min-width: 769px) {
+      .desktop-keyboard-toggle {
+        display: block;
+      }
+      
+      /* Override max-height when keyboard is active */
+      body.desktop-keyboard-active .game-container {
+        max-height: none !important;
+        height: auto !important;
+      }
+    }
+    
+    .desktop-keyboard-toggle button {
+      background-color: #ffffff;
+      color: #666666;
+      border: 1px solid #d0d0d0;
+      padding: 0.5rem 1rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .desktop-keyboard-toggle button:hover {
+      background-color: #f8fafc;
+      color: #1a1a1a;
+    }
+    
+    /* Desktop keyboard styles */
+    .desktop-keyboard-wrapper {
+      display: none;
+      margin-top: 1rem;
+      padding: 0.75rem;
+      background-color: #fafafa;
+      border: 1px solid #e5e5e5;
+      border-radius: 6px;
+    }
+    
+    @media (min-width: 769px) {
+      body.desktop-keyboard-active .desktop-keyboard-wrapper {
+        display: block;
+      }
+      
+      .desktop-keyboard {
+        max-width: 500px;
+        margin: 0 auto;
+      }
+      
+      .desktop-keyboard .keyboard-row {
+        display: flex;
+        justify-content: center;
+        gap: 4px;
+        margin-bottom: 6px;
+      }
+      
+      .desktop-keyboard .keyboard-row:last-child {
+        margin-bottom: 0;
+      }
+      
+      .desktop-keyboard .key-btn {
+        background-color: white;
+        border: 1px solid #d0d0d0;
+        border-radius: 6px;
+        padding: 8px 12px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #333;
+        cursor: pointer;
+        transition: all 0.1s ease;
+        text-align: center;
+        user-select: none;
+        -webkit-user-select: none;
+        min-width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .desktop-keyboard .key-btn:hover {
+        background-color: #f0f0f0;
+        border-color: #326891;
+      }
+      
+      .desktop-keyboard .key-btn:active {
+        background-color: #e0e0e0;
+        transform: scale(0.95);
+      }
+      
+      .desktop-keyboard .key-btn.special {
+        background-color: #326891;
+        color: white;
+        border-color: #326891;
+        min-width: 60px;
+      }
+      
+      .desktop-keyboard .key-btn.special:hover {
+        background-color: #2c5a7a;
+      }
+      
+      .desktop-keyboard .key-btn.special:active {
+        background-color: #2a5a78;
+      }
+      
+      .desktop-keyboard .key-spacer {
+        width: 18px;
+      }
+    }
+    
     .button {
       display: inline-flex;
+
       align-items: center;
       justify-content: center;
       padding: 0.75rem 1.5rem;
@@ -2193,9 +2311,58 @@
       <button onclick="revealRandomWord()" class="button">Random Word (-5)</button>
       <button onclick="handleHintOrRestart()" class="button" id="hintRestartBtn">Hint (-3)</button>
     </div>
+    
+    <!-- Desktop keyboard toggle -->
+    <div class="desktop-keyboard-toggle">
+      <button onclick="toggleDesktopKeyboard()" id="desktopKeyboardToggle">Show Keyboard</button>
+    </div>
+    
+    <!-- Desktop keyboard -->
+    <div class="desktop-keyboard-wrapper">
+      <div class="desktop-keyboard">
+        <div class="keyboard-row">
+          <button class="key-btn" onclick="handleDesktopKey('Q')">Q</button>
+          <button class="key-btn" onclick="handleDesktopKey('W')">W</button>
+          <button class="key-btn" onclick="handleDesktopKey('E')">E</button>
+          <button class="key-btn" onclick="handleDesktopKey('R')">R</button>
+          <button class="key-btn" onclick="handleDesktopKey('T')">T</button>
+          <button class="key-btn" onclick="handleDesktopKey('Y')">Y</button>
+          <button class="key-btn" onclick="handleDesktopKey('U')">U</button>
+          <button class="key-btn" onclick="handleDesktopKey('I')">I</button>
+          <button class="key-btn" onclick="handleDesktopKey('O')">O</button>
+          <button class="key-btn" onclick="handleDesktopKey('P')">P</button>
+        </div>
+        <div class="keyboard-row">
+          <div class="key-spacer"></div>
+          <button class="key-btn" onclick="handleDesktopKey('A')">A</button>
+          <button class="key-btn" onclick="handleDesktopKey('S')">S</button>
+          <button class="key-btn" onclick="handleDesktopKey('D')">D</button>
+          <button class="key-btn" onclick="handleDesktopKey('F')">F</button>
+          <button class="key-btn" onclick="handleDesktopKey('G')">G</button>
+          <button class="key-btn" onclick="handleDesktopKey('H')">H</button>
+          <button class="key-btn" onclick="handleDesktopKey('J')">J</button>
+          <button class="key-btn" onclick="handleDesktopKey('K')">K</button>
+          <button class="key-btn" onclick="handleDesktopKey('L')">L</button>
+          <div class="key-spacer"></div>
+        </div>
+        <div class="keyboard-row">
+          <div class="key-spacer"></div>
+          <button class="key-btn" onclick="handleDesktopKey('Z')">Z</button>
+          <button class="key-btn" onclick="handleDesktopKey('X')">X</button>
+          <button class="key-btn" onclick="handleDesktopKey('C')">C</button>
+          <button class="key-btn" onclick="handleDesktopKey('V')">V</button>
+          <button class="key-btn" onclick="handleDesktopKey('B')">B</button>
+          <button class="key-btn" onclick="handleDesktopKey('N')">N</button>
+          <button class="key-btn" onclick="handleDesktopKey('M')">M</button>
+          <button class="key-btn special" onclick="handleDesktopKey('Backspace')">⌫</button>
+          <div class="key-spacer"></div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Fixed Bottom Section for Mobile -->
+
   <div class="fixed-bottom-section" id="fixedBottomSection">
     <div class="progress-section">
       <div class="score-display">
@@ -3705,6 +3872,28 @@
           prevTile.classList.add('hidden');
         }
       }
+    }
+
+    // Desktop keyboard toggle functionality
+    function toggleDesktopKeyboard() {
+      var body = document.body;
+      var toggleBtn = document.getElementById('desktopKeyboardToggle');
+      
+      if (body.classList.contains('desktop-keyboard-active')) {
+        body.classList.remove('desktop-keyboard-active');
+        toggleBtn.textContent = 'Show Keyboard';
+        trackFeatureUse('desktop_keyboard_hidden', 1);
+      } else {
+        body.classList.add('desktop-keyboard-active');
+        toggleBtn.textContent = 'Hide Keyboard';
+        trackFeatureUse('desktop_keyboard_shown', 1);
+      }
+    }
+    
+    // Handle desktop keyboard button clicks
+    function handleDesktopKey(key) {
+      processDesktopKeyInput(key);
+      trackFeatureUse('desktop_keyboard_key', 1);
     }
 
     document.addEventListener('keydown', function(event) {
