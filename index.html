@@ -50,27 +50,7 @@
   <!-- Firebase (Compatibility Version) -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-  <script>
-    // Mock Firebase setup since we don't have access to the actual config
-    window.firebase = {
-      firestore: {
-        FieldValue: {
-          serverTimestamp: () => new Date(),
-          increment: (val) => val
-        }
-      }
-    };
-    window.db = {
-      collection: () => ({
-        add: () => Promise.resolve({ id: 'mock-id' }),
-        doc: () => ({
-          get: () => Promise.resolve({ exists: false }),
-          update: () => Promise.resolve(),
-          set: () => Promise.resolve()
-        })
-      })
-    };
-  </script>
+  <script src="firebase-setup.js"></script>
 
   <script>
     // Global loading state tracking
@@ -321,47 +301,49 @@
       color: #1a1a1a;
       margin: 0;
       padding: 0;
-      min-height: 100vh;
+      height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: flex-start;
-    }
-    
-    body.modal-open {
       overflow: hidden;
     }
-
-    .content-blur {
-      pointer-events: none;
-    }
     
-    @media (max-width: 768px) {
-      body {
-        height: 100vh;
-        overflow: hidden;
-      }
-      
-      body.custom-preview .game-title {
-        font-size: 1.5rem !important;
-        margin: 0 !important;
-      }
-      
-      body.custom-preview .date-display {
-        font-size: 0.75rem !important;
-        margin: 0 !important;
-      }
-      
-      body.custom-preview .fixed-bottom-section,
-      body.custom-preview .mobile-keyboard {
-        display: none !important;
-      }
-      
-      body.custom-preview .gameplay-example-section {
-        height: 100%;
-        overflow-y: auto;
-      }
-    }
+  body.modal-open {
+  overflow: hidden;
+}
+
+@media (max-width: 768px) {
+.content-blur {
+  pointer-events: none;
+}
+  
+  body.custom-preview .game-title {
+    font-size: 1.5rem !important;
+    margin: 0 !important;
+  }
+  
+  body.custom-preview .date-display {
+    font-size: 0.75rem !important;
+    margin: 0 !important;
+  }
+  
+  body.custom-preview .fixed-bottom-section,
+  body.custom-preview .mobile-keyboard {
+    display: none !important;
+  }
+}
+    overflow: hidden;
+  }
+  
+  body.custom-preview .gameplay-example-section {
+    height: 100%;
+    overflow-y: auto;
+  }
+}
+.content-blur {
+  pointer-events: none;
+}
     
     .game-container {
       background-color: #ffffff;
@@ -375,6 +357,16 @@
       min-height: 520px;
       height: auto;
       max-height: 600px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+      max-height: 600px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+      max-height: calc(100vh - 2rem);
       overflow-y: auto;
       display: flex;
       flex-direction: column;
@@ -456,13 +448,44 @@
       text-align: center;
     }
     
+    .fixed-bottom-section {
+      position: fixed;
+      bottom: 180px;
+      left: 0;
+      right: 0;
+      background-color: white;
+      padding: 0.75rem 1rem;
+      z-index: 200;
+      display: none;
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+      border-top: 1px solid #e5e5e5;
+    }
+    
+    .mobile-keyboard {
+
+      font-family: 'Headland One', serif;
+      font-weight: 400;
+      font-size: 2.1rem;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+      text-align: center;
+      margin-bottom: 0.5rem;
+      flex: 1;
+      display: block;
+      position: relative;
+      flex-direction: column;
+      min-height: 0;
+      overflow: visible;
+    }
+    
     .gameplay-example-section {
       background-color: #f8fafc;
       border: 1px solid #e5e5e5;
       border-radius: 6px;
       padding: 0.75rem 1rem 1rem 1rem;
       text-align: center;
-      flex: 1;
+      flex: 0 1 auto;
       display: flex;
       flex-direction: column;
       min-height: 0;
@@ -475,7 +498,13 @@
         max-height: 600px;
         height: auto;
       }
-      
+    }
+
+    .category-text {
+      justify-content: center;
+    }
+
+    @media (min-width: 769px) {
       .gameplay-example-section {
         max-height: 600px;
         padding: 1.5rem 1.5rem 1.75rem 1.5rem;
@@ -487,6 +516,15 @@
         margin: 1rem 0;
         padding: 1rem;
       }
+    }
+
+    .category-text {
+      font-size: 0.875rem;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      margin-bottom: 0.5rem;
+      justify-content: center;
     }
 
     .category-text {
@@ -503,9 +541,6 @@
       overflow-wrap: break-word;
       flex-shrink: 0;
       text-align: center;
-      display: flex;
-      justify-content: center;
-      margin-bottom: 0.5rem;
     }
     
     .puzzle-container {
@@ -550,6 +585,633 @@
       overflow: hidden;
     }
     
+    .fixed-bottom-section {
+      position: fixed;
+      bottom: 180px;
+      left: 0;
+      right: 0;
+      background-color: white;
+      padding: 0.75rem 1rem;
+      z-index: 200;
+      display: none;
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+      border-top: 1px solid #e5e5e5;
+    }
+    
+    .mobile-keyboard {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      width: 100%;
+      background-color: #f8f9fa;
+      padding: 12px;
+      z-index: 500;
+      display: none;
+      border-top: 1px solid #d0d0d0;
+    }
+    
+    /* Desktop: Hide mobile elements completely */
+    @media (min-width: 769px) {
+      .fixed-bottom-section,
+      .mobile-keyboard {
+        display: none !important;
+      }
+    }
+    
+    /* Mobile: Basic responsive layout - don't force visibility */
+    @media (max-width: 768px) {
+      body {
+        height: 100vh;
+        overflow: hidden;
+      }
+      
+      .game-container {
+        margin: 0;
+        padding: 0.5rem;
+        border: none;
+        box-shadow: none;
+        border-radius: 0;
+        width: 100%;
+        max-width: none;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+      
+      /* When game is active - show mobile controls and adjust height */
+      body.game-active .game-container {
+        height: calc(100vh - 300px);
+      }
+      
+      body.game-active .fixed-bottom-section {
+        display: block;
+      }
+      
+      body.game-active .mobile-keyboard {
+        display: block;
+      }
+      
+      /* Hide desktop controls on mobile when game is active */
+      body.game-active .game-container .progress-section,
+      body.game-active .game-container .controls-section {
+        display: none;
+      }
+      
+      .keyboard-row {
+        display: flex;
+        justify-content: center;
+        gap: 4px;
+        margin-bottom: 6px;
+      }
+      
+      .keyboard-row:last-child {
+        margin-bottom: 0;
+      }
+      
+      .key-btn {
+        background-color: white;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        padding: 12px 8px;
+        font-size: 16px;
+        font-weight: 600;
+        color: #333;
+        cursor: pointer;
+
+      .mobile-keyboard {
+        display: none !important;
+      }
+      
+      /* Ensure desktop elements are visible */
+      .game-container .progress-section,
+      .game-container .controls-section {
+        display: flex !important;
+      }
+      
+      .game-container .progress-section {
+        display: block !important;
+      }
+      
+      /* Hide mobile-specific score elements */
+      #mobileScoreValue,
+      #mobileMessage,
+      #mobileProgressFill,
+      #mobileHintRestartBtn {
+        display: none !important;
+      }
+    }
+    
+    /* Mobile: Show mobile elements when game is active */
+    @media (max-width: 768px) {
+      /* Basic mobile layout */
+      body {
+        height: 100vh !important;
+        overflow: hidden !important;
+      }
+      
+      .game-container {
+        margin: 0 !important;
+        padding: 0.5rem !important;
+        border: none !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        width: 100% !important;
+        max-width: none !important;
+        background-color: #ffffff !important;
+        display: flex !important;
+        flex-direction: column !important;
+      }
+      
+      /* When game is not active */
+      body:not(.game-active) .game-container {
+        height: 100vh !important;
+        overflow-y: auto !important;
+      }
+      
+      /* When game is active - show mobile controls */
+      body.game-active .game-container {
+        height: calc(100vh - 300px) !important;
+        overflow-y: auto !important;
+      }
+      
+      body.game-active .fixed-bottom-section {
+        display: block !important;
+      }
+      
+      body.game-active .mobile-keyboard {
+        display: block !important;
+      }
+      
+      /* Hide desktop controls on mobile when game is active */
+      body.game-active .game-container .progress-section,
+      body.game-active .game-container .controls-section {
+        display: none !important;
+      }
+      
+      /* Mobile header */
+      .header {
+        padding: 0.5rem 0 !important;
+        margin-bottom: 0.5rem !important;
+        flex-shrink: 0 !important;
+      }
+      
+      /* Mobile hamburger menu positioning */
+      .hamburger-menu {
+        top: 0.5rem !important;
+        left: 0.5rem !important;
+      }
+      
+      .header {
+        padding-left: 3rem !important;
+      }
+      
+      .date-display {
+        padding-left: 2.5rem !important;
+        margin-left: -2.5rem !important;
+        text-align: center !important;
+      }
+      
+      /* Mobile gameplay section */
+      .gameplay-example-section {
+        flex: 1 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        padding: 0.5rem !important;
+        min-height: 200px !important;
+      }
+      
+      /* Mobile puzzle container */
+      .puzzle-container {
+        flex: 1 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        align-items: center !important;
+        gap: 0.5rem !important;
+        padding: 1rem 0 !important;
+      }
+      
+      /* Mobile tiles */
+      .tile {
+        width: 40px !important;
+        height: 40px !important;
+        font-size: 1rem !important;
+      }
+      
+      .tiles-medium .tile {
+        width: 36px !important;
+        height: 36px !important;
+        font-size: 0.9rem !important;
+      }
+      
+      .tiles-small .tile {
+        width: 32px !important;
+        height: 32px !important;
+        font-size: 0.8rem !important;
+      }
+      
+      /* Mobile message area */
+      .message-area {
+        display: none !important;
+      }
+      
+      /* Mobile inline message */
+      .mobile-inline-message {
+        display: block !important;
+        font-size: 0.75rem !important;
+        font-weight: 600 !important;
+        color: #666 !important;
+        text-align: center !important;
+        flex: 1 !important;
+        padding: 0 0.5rem !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+      }
+      
+      .mobile-inline-message.success {
+        color: #00875a !important;
+      }
+      
+      .mobile-inline-message.error {
+        color: #c9372c !important;
+      }
+      
+      /* Hide desktop score elements on mobile */
+      #scoreValue,
+      #progressFill,
+      #hintRestartBtn {
+        display: none !important;
+      }
+      
+      /* Show mobile score elements */
+      #mobileScoreValue,
+      #mobileProgressFill,
+      #mobileHintRestartBtn {
+        display: block !important;
+      }
+    }
+    
+    /* Mobile keyboard styling */
+    @media (max-width: 768px) {
+      .keyboard-row {
+        display: flex;
+        justify-content: center;
+        gap: 4px;
+        margin-bottom: 6px;
+      }
+      
+      .keyboard-row:last-child {
+        margin-bottom: 0;
+      }
+      
+      .key-btn {
+        background-color: white;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        padding: 12px 8px;
+        font-size: 16px;
+        font-weight: 600;
+        color: #333;
+        cursor: pointer;
+
+      .mobile-keyboard {
+        display: none !important;
+      }
+    }
+    
+    /* Mobile: Show mobile elements only when game is active */
+    @media (max-width: 768px) {
+      body.game-active .fixed-bottom-section {
+        display: block !important;
+      }
+      
+      body.game-active .mobile-keyboard {
+        display: block !important;
+      }
+      
+      /* Hide desktop controls on mobile when game is active */
+      body.game-active .game-container .progress-section,
+      body.game-active .game-container .controls-section {
+        display: none !important;
+      }
+      
+      /* Adjust game container for mobile controls */
+      body.game-active .game-container {
+        padding-bottom: 0 !important;
+        margin-bottom: 0 !important;
+        height: calc(100vh - 300px) !important;
+        overflow-y: auto !important;
+      }
+      
+      /* Ensure proper spacing for mobile layout */
+      body.game-active .gameplay-example-section {
+        flex: 1;
+        min-height: 0;
+        overflow: visible;
+      }
+    }
+    
+    /* Fix mobile keyboard layout */
+    @media (max-width: 768px) {
+      .mobile-keyboard {
+        background-color: #f8f9fa;
+      }
+      
+      .keyboard-row {
+        display: flex;
+        justify-content: center;
+        gap: 4px;
+        margin-bottom: 6px;
+      }
+      
+      .keyboard-row:last-child {
+        margin-bottom: 0;
+      }
+      
+      .key-btn {
+        background-color: white;
+        border: 1px solid #d0d0d0;
+        border-radius: 6px;
+        padding: 12px 8px;
+        font-size: 16px;
+        font-weight: 600;
+        color: #333;
+        cursor: pointer;
+        transition: all 0.1s ease;
+        text-align: center;
+        user-select: none;
+        -webkit-user-select: none;
+        flex: 1;
+        min-width: 0;
+        max-width: 36px;
+      }
+      
+      .key-btn.special {
+        background-color: #326891;
+        color: white;
+        border-color: #326891;
+        flex: 1.5;
+        max-width: 54px;
+      }
+      
+      .key-btn:active,
+      .key-btn.pressed {
+        background-color: #e0e0e0;
+        transform: scale(0.95);
+      }
+      
+      .key-btn.special:active,
+      .key-btn.special.pressed {
+        background-color: #2a5a78;
+      }
+      
+      .key-spacer {
+        flex: 0.3;
+      }
+    }
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        overflow: visible;
+        padding: 1rem;
+      }
+      
+      /* Puzzle container adjustments */
+      .puzzle-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 1rem 0;
+      }
+      
+      /* Message area for mobile */
+      .message-area {
+        min-height: 2rem;
+        margin: 0.5rem 0;
+      }
+    }
+    
+    /* Fix hamburger menu positioning on mobile */
+    @media (max-width: 768px) {
+      .hamburger-menu {
+        top: 1rem;
+        left: 1rem;
+        z-index: 2000;
+      }
+      
+      .header {
+        padding-left: 4rem;
+      }
+      
+      .date-display {
+        padding-left: 3rem;
+        margin-left: -3rem;
+        text-align: center;
+      }
+    }
+      display: none;
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+      border-top: 1px solid #e5e5e5;
+    }
+    
+    .mobile-keyboard {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      width: 100%;
+      background-color: white;
+      padding: 12px;
+      z-index: 500;
+      display: none;
+      border-top: 1px solid #d0d0d0;
+    }
+    
+    /* Desktop: Hide mobile elements */
+    @media (min-width: 769px) {
+      .fixed-bottom-section,
+      .mobile-keyboard {
+        display: none !important;
+      }
+    }
+    
+    /* Mobile: Show mobile elements only when game is active */
+    @media (max-width: 768px) {
+      body.game-active .fixed-bottom-section {
+        display: block !important;
+      }
+      
+      body.game-active .mobile-keyboard {
+        display: block !important;
+      }
+      
+      /* Hide desktop controls on mobile when game is active */
+      body.game-active .game-container .progress-section,
+      body.game-active .game-container .controls-section {
+        display: none !important;
+      }
+      
+      /* Adjust game container for mobile controls */
+      body.game-active .game-container {
+        padding-bottom: 0 !important;
+        margin-bottom: 0 !important;
+        height: calc(100vh - 300px) !important;
+        overflow-y: auto !important;
+      }
+      
+      /* Ensure proper spacing for mobile layout */
+      body.game-active .gameplay-example-section {
+        flex: 1;
+        min-height: 0;
+        overflow: visible;
+      }
+    }
+    
+    /* Fix mobile keyboard layout */
+    @media (max-width: 768px) {
+      .mobile-keyboard {
+        background-color: #f8f9fa;
+      }
+      
+      .keyboard-row {
+        display: flex;
+        justify-content: center;
+        gap: 4px;
+        margin-bottom: 6px;
+      }
+      
+      .keyboard-row:last-child {
+        margin-bottom: 0;
+      }
+      
+      .key-btn {
+        background-color: white;
+        border: 1px solid #d0d0d0;
+        border-radius: 6px;
+        padding: 12px 8px;
+        font-size: 16px;
+        font-weight: 600;
+        color: #333;
+        cursor: pointer;
+        transition: all 0.1s ease;
+        text-align: center;
+        user-select: none;
+        flex: 1;
+        min-width: 0;
+        max-width: 36px;
+      }
+      
+      .key-btn.special {
+        background-color: #326891;
+        color: white;
+        border-color: #326891;
+        flex: 1.5;
+        max-width: 54px;
+      }
+      
+      .key-btn:active,
+      .key-btn.pressed {
+        background-color: #e0e0e0;
+        transform: scale(0.95);
+      }
+      
+      .key-btn.special:active,
+      .key-btn.special.pressed {
+        background-color: #2a5a78;
+      }
+      
+      .key-spacer {
+        flex: 0.3;
+      }
+    }
+    
+    /* Ensure mobile layout works properly */
+    @media (max-width: 768px) {
+      body {
+        height: 100vh;
+        overflow: hidden;
+      }
+      
+      .game-container {
+        margin: 0;
+        padding: 1rem;
+        border: none;
+        box-shadow: none;
+        border-radius: 0;
+        width: 100%;
+        max-width: none;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+      
+      /* When game is not active, show normal layout */
+      body:not(.game-active) .game-container {
+        height: auto;
+        min-height: 100vh;
+      }
+      
+      /* Header adjustments for mobile */
+      .header {
+        padding: 1rem 0 0.5rem 0;
+        margin-bottom: 0.5rem;
+        position: relative;
+        background-color: #ffffff;
+        z-index: 10;
+      }
+      
+      /* Gameplay section adjustments */
+      .gameplay-example-section {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        overflow: visible;
+        padding: 1rem;
+      }
+      
+      /* Puzzle container adjustments */
+      .puzzle-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 1rem 0;
+      }
+      
+      /* Message area for mobile */
+      .message-area {
+        min-height: 2rem;
+        margin: 0.5rem 0;
+      }
+    }
+    
+    /* Fix hamburger menu positioning on mobile */
+    @media (max-width: 768px) {
+      .hamburger-menu {
+        top: 1rem;
+        left: 1rem;
+        z-index: 2000;
+      }
+      
+      .header {
+        padding-left: 4rem;
+      }
+      
+      .date-display {
+        padding-left: 3rem;
+        margin-left: -3rem;
+        text-align: center;
+      }
+    }
     .tile.revealed {
       background-color: #326891;
       border-color: #326891;
@@ -776,6 +1438,26 @@
       top: 1rem;
       left: 1rem;
       z-index: 2000;
+    }
+    
+    @media (max-width: 768px) {
+      .hamburger-menu {
+        top: 0.5rem;
+        left: 0.5rem;
+      }
+      
+      .header {
+        padding-left: 3rem;
+      }
+      
+      .date-display {
+        padding-left: 2.5rem;
+        margin-left: -2.5rem;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        text-align: center;
+      }
     }
     
     .hamburger-button {
@@ -1325,9 +2007,20 @@
       display: none;
     }
 
-    .preview-section {
-      background-color: #f8fafc;
-      border: 1px solid #e5e5e5;
+    @media (min-width: 769px) {
+      .game-container {
+        background-color: #ffffff;
+        border: 1px solid #e5e5e5;
+        border-radius: 8px;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        max-width: 500px;
+        margin: 2rem auto;
+      }
+    }
+
+    @media (max-width: 768px) {
+      body {
+        height: 100vh;
       border-radius: 6px;
       padding: 1rem;
       margin-top: 1rem;
@@ -1403,7 +2096,7 @@
       padding-bottom: 0.5rem;
       z-index: 200;
       display: none;
-      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.0);
       height: 120px;
     }
     
@@ -1485,248 +2178,7 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
-
-    /* Mobile specific fixes */
-    @media (max-width: 768px) {
-      body {
-        height: 100vh !important;
-        overflow: hidden !important;
-      }
       
-      .game-container {
-        margin: 0 !important;
-        padding: 0.5rem !important;
-        border: none !important;
-        box-shadow: none !important;
-        border-radius: 0 !important;
-        width: 100% !important;
-        max-width: none !important;
-        background-color: #ffffff !important;
-        display: flex !important;
-        flex-direction: column !important;
-        min-height: 100vh !important;
-      }
-      
-      /* When game is not active */
-      body:not(.game-active) .game-container {
-        height: 100vh !important;
-        overflow-y: auto !important;
-      }
-      
-      /* When game is active - show mobile controls */
-      body.game-active .game-container {
-        height: calc(100vh - 300px) !important;
-        overflow-y: auto !important;
-      }
-      
-      body.game-active .fixed-bottom-section {
-        display: block !important;
-      }
-      
-      body.game-active .mobile-keyboard {
-        display: block !important;
-      }
-      
-      /* Hide desktop controls on mobile when game is active */
-      body.game-active .game-container .progress-section,
-      body.game-active .game-container .controls-section {
-        display: none !important;
-      }
-      
-      /* Mobile header adjustments */
-      .header {
-        padding: 0.5rem 0 !important;
-        margin-bottom: 0.5rem !important;
-        flex-shrink: 0 !important;
-      }
-      
-      /* Mobile hamburger menu positioning */
-      .hamburger-menu {
-        top: 0.5rem !important;
-        left: 0.5rem !important;
-      }
-      
-      .header {
-        padding-left: 3rem !important;
-      }
-      
-      .date-display {
-        padding-left: 2.5rem !important;
-        margin-left: -2.5rem !important;
-        text-align: center !important;
-      }
-      
-      /* Mobile gameplay section */
-      .gameplay-example-section {
-        flex: 1 !important;
-        display: flex !important;
-        flex-direction: column !important;
-        padding: 0.5rem !important;
-        min-height: 200px !important;
-      }
-      
-      /* Mobile puzzle container */
-      .puzzle-container {
-        flex: 1 !important;
-        display: flex !important;
-        flex-direction: column !important;
-        justify-content: center !important;
-        align-items: center !important;
-        gap: 0.5rem !important;
-        padding: 1rem 0 !important;
-      }
-      
-      /* Mobile tiles */
-      .tile {
-        width: 40px !important;
-        height: 40px !important;
-        font-size: 1rem !important;
-      }
-      
-      .tiles-medium .tile {
-        width: 36px !important;
-        height: 36px !important;
-        font-size: 0.9rem !important;
-      }
-      
-      .tiles-small .tile {
-        width: 32px !important;
-        height: 32px !important;
-        font-size: 0.8rem !important;
-      }
-      
-      /* Mobile message area */
-      .message-area {
-        display: none !important;
-      }
-      
-      /* Mobile inline message */
-      .mobile-inline-message {
-        display: block !important;
-        font-size: 0.75rem !important;
-        font-weight: 600 !important;
-        color: #666 !important;
-        text-align: center !important;
-        flex: 1 !important;
-        padding: 0 0.5rem !important;
-        white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-      }
-      
-      .mobile-inline-message.success {
-        color: #00875a !important;
-      }
-      
-      .mobile-inline-message.error {
-        color: #c9372c !important;
-      }
-      
-      /* Hide desktop score elements on mobile */
-      #scoreValue,
-      #progressFill,
-      #hintRestartBtn {
-        display: none !important;
-      }
-      
-      /* Show mobile score elements */
-      #mobileScoreValue,
-      #mobileProgressFill,
-      #mobileHintRestartBtn {
-        display: block !important;
-      }
-      
-      /* Mobile keyboard styling improvements */
-      .keyboard-row {
-        display: flex;
-        justify-content: center;
-        gap: 4px;
-        margin-bottom: 6px;
-      }
-      
-      .keyboard-row:last-child {
-        margin-bottom: 0;
-      }
-      
-      .key-btn {
-        background-color: white;
-        border: 1px solid #d0d0d0;
-        border-radius: 6px;
-        padding: 12px 8px;
-        font-size: 16px;
-        font-weight: 600;
-        color: #333;
-        cursor: pointer;
-        transition: all 0.1s ease;
-        text-align: center;
-        user-select: none;
-        -webkit-user-select: none;
-        flex: 1;
-        min-width: 0;
-        max-width: 36px;
-      }
-      
-      .key-btn.special {
-        background-color: #326891;
-        color: white;
-        border-color: #326891;
-        flex: 1.5;
-        max-width: 54px;
-      }
-      
-      .key-btn:active,
-      .key-btn.pressed {
-        background-color: #e0e0e0;
-        transform: scale(0.95);
-      }
-      
-      .key-btn.special:active,
-      .key-btn.special.pressed {
-        background-color: #2a5a78;
-      }
-      
-      .key-spacer {
-        flex: 0.3;
-      }
-      
-      /* Mobile bottom section styling */
-      .fixed-bottom-section .progress-section {
-        margin-bottom: 0.75rem;
-        padding: 0;
-        margin-top: 0;
-      }
-      
-      .fixed-bottom-section .score-display {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 0.75rem;
-      }
-      
-      .fixed-bottom-section .score-label {
-        flex: 1;
-        text-align: left;
-      }
-      
-      .fixed-bottom-section .score-value {
-        flex: 1;
-        text-align: right;
-      }
-
-      .fixed-bottom-section .controls-section {
-        display: flex;
-        gap: 0.5rem;
-        margin-bottom: 0;
-      }
-      
-      /* Mobile button adjustments for better UX */
-      body.game-active .button {
-        font-size: 0.75rem !important;
-        padding: 0.5rem 0.75rem !important;
-        min-height: 40px !important;
-      }
-      
-      /* Create form mobile adjustments */
       .create-container {
         width: 100%;
         padding: 1.5rem 1rem;
@@ -1786,6 +2238,61 @@
         padding: 0.75rem 0.5rem;
         font-size: 0.8rem;
       }
+
+      /* Regular mobile gameplay buttons - smaller for better UX */
+      body.game-active .button {
+        font-size: 0.75rem !important;
+        padding: 0.5rem 0.75rem !important;
+        min-height: 40px !important;
+      }
+      
+      /* Mobile: Hide desktop controls when mobile controls are active */
+      .game-container:not(.game-hidden) .progress-section,
+      .game-container:not(.game-hidden) .controls-section {
+        display: none;
+      }
+      
+      /* Desktop: Always show controls */
+      @media (min-width: 769px) {
+        .game-container:not(.game-hidden) .progress-section,
+        .game-container:not(.game-hidden) .controls-section {
+          display: flex !important;
+        }
+        
+        .game-container:not(.game-hidden) .progress-section {
+          display: block !important;
+        }
+      }
+
+      .fixed-bottom-section .progress-section {
+      .fixed-bottom-section .progress-section {
+        margin-bottom: 0.75rem;
+        padding: 0;
+        margin-top: 0;
+      }
+      
+      .fixed-bottom-section .score-display {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+      }
+      
+      .fixed-bottom-section .score-label {
+        flex: 1;
+        text-align: left;
+      }
+      
+      .fixed-bottom-section .score-value {
+        flex: 1;
+        text-align: right;
+      }
+
+      .fixed-bottom-section .controls-section {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 0;
+      }
       
       #morePunzzlesContent {
         padding: 2rem 1rem !important;
@@ -1795,54 +2302,31 @@
         font-size: 0.8rem !important;
       }
     }
+  </style>
+  
+  <style>
+.create-container,
+#createContainer,
+#feedbackContainer,
+#faqContainer {
+  -webkit-overflow-scrolling: touch;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
 
-    /* Desktop specific styles */
-    @media (min-width: 769px) {
-      .fixed-bottom-section,
-      .mobile-keyboard {
-        display: none !important;
-      }
-      
-      /* Always show desktop controls */
-      .game-container .progress-section,
-      .game-container .controls-section {
-        display: flex !important;
-      }
-      
-      .game-container .progress-section {
-        display: block !important;
-      }
-      
-      /* Hide mobile score elements on desktop */
-      #mobileScoreValue,
-      #mobileMessage,
-      #mobileProgressFill,
-      #mobileHintRestartBtn {
-        display: none !important;
-      }
-      
-      .mobile-inline-message {
-        display: none !important;
-      }
-    }
+/* Only add padding when these are actually modal dialogs */
+.create-wrapper.active .create-container,
+#feedbackWrapper.active #feedbackContainer,
+#faqWrapper.active #faqContainer {
+  /* Add some padding at top/bottom for easier scrolling */
+  padding-top: 3rem;
+  padding-bottom: 6rem;
+}
 
-    .create-container,
-    #createContainer,
-    #feedbackContainer,
-    #faqContainer {
-      -webkit-overflow-scrolling: touch;
-      overflow-y: auto;
-      overscroll-behavior: contain;
-    }
-
-    /* Only add padding when these are actually modal dialogs */
-    .create-wrapper.active .create-container,
-    #feedbackWrapper.active #feedbackContainer,
-    #faqWrapper.active #faqContainer {
-      /* Add some padding at top/bottom for easier scrolling */
-      padding-top: 3rem;
-      padding-bottom: 6rem;
-    }
+/* Prevent body scroll when modal is open */
+body.modal-open {
+  overflow: hidden;
+}
 
     .copyright-footer {
       display: none; /* Hidden by default (mobile) */
@@ -1863,6 +2347,9 @@
         pointer-events: none;
       }
     }
+  </style>
+  
+  <style>
   </style>
   
   <script>
@@ -2451,8 +2938,28 @@
     async function loadPuzzleFromServer(date) {
       console.log('Attempting to load puzzle from server for date:', date.toISOString().split('T')[0]);
       
-      // Since we don't have the real Firebase setup, just throw an error to use fallback
-      throw new Error('Server not available in demo mode');
+      // Check if Firebase is available
+      if (typeof PuzzleDB === 'undefined' || !PuzzleDB || !PuzzleDB.getDailyPuzzle) {
+        console.log('PuzzleDB not available');
+        throw new Error('PuzzleDB not available');
+      }
+      
+      try {
+        const puzzle = await Promise.race([
+          PuzzleDB.getDailyPuzzle(date),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Server request timeout')), 5000))
+        ]);
+        
+        if (!puzzle) {
+          throw new Error('No puzzle found on server for this date');
+        }
+        
+        console.log('Server puzzle loaded successfully:', puzzle.categories);
+        return puzzle;
+      } catch (error) {
+        console.log('Server request failed:', error.message);
+        throw error;
+      }
     }
 
     // Enhanced function to load puzzle by date with smart fallback strategy
@@ -2715,10 +3222,8 @@
       }
     }
 
-    // Enhanced initialization with better mobile handling
+    // Enhanced initialization with strict server requirement for date navigation
     document.addEventListener('DOMContentLoaded', async function() {
-      console.log('=== DOMContentLoaded fired ===');
-      
       var urlParams = new URLSearchParams(window.location.search);
       var skipIntro = urlParams.get('skipIntro');
       var optimized = urlParams.get('optimized');
@@ -2735,47 +3240,51 @@
       var dateParam = urlParams.get('date');
       var isPreview = urlParams.get('preview') === 'true';
       
-      console.log('URL parameters:', { skipIntro, sharedPuzzle, bonusId, dateParam, isPreview });
-      
       // Always show loading when we need to fetch data
-      var needsLoading = bonusId || sharedPuzzle || dateParam || true; // Always show loading for consistency
+      var needsLoading = bonusId || sharedPuzzle || dateParam || (typeof PuzzleDB !== 'undefined');
       
       if (needsLoading) {
-        console.log('Showing loading state...');
         showLoadingState();
       }
       
       try {
         // Handle bonus puzzle
         if (bonusId) {
-          console.log('Handling bonus puzzle...');
           isCustomPuzzle = true;
           
-          // Mock bonus puzzle for demo
-          const bonusPuzzle = {
-            answer: "BONUS PUZZLE",
-            categories: "DEMO + BONUS",
-            words: ["BONUS", "PUZZLE"],
-            hint: "This is a demo bonus puzzle"
-          };
-          
-          gameState.puzzleAnswer = bonusPuzzle.answer;
-          gameState.categoryText = bonusPuzzle.categories;
-          gameState.words = bonusPuzzle.words;
-          gameState.customHint = bonusPuzzle.hint || null;
-          gameState.puzzleId = `bonus-${bonusId}`;
-          gameState.isBonus = true;
-          gameState.isPreview = isPreview;
-          
-          document.getElementById('categoryText').textContent = gameState.categoryText;
-          document.getElementById('dateDisplay').innerHTML = 
-            '<a href="' + window.location.origin + window.location.pathname + '?skipIntro=true">Today\'s Punzzle</a> · ' +
-            (isPreview ? 'Preview Mode' : 'Bonus Puzzle');
+          if (typeof PuzzleDB !== 'undefined' && PuzzleDB.getBonusPuzzle) {
+            const bonusPuzzle = await PuzzleDB.getBonusPuzzle(bonusId);
+            
+            if (bonusPuzzle) {
+              gameState.puzzleAnswer = bonusPuzzle.answer;
+              gameState.categoryText = bonusPuzzle.categories;
+              gameState.words = bonusPuzzle.words;
+              gameState.customHint = bonusPuzzle.hint || null;
+              gameState.puzzleId = `bonus-${bonusId}`;
+              gameState.isBonus = true;
+              gameState.isPreview = isPreview;
+              
+              document.getElementById('categoryText').textContent = gameState.categoryText;
+              document.getElementById('dateDisplay').innerHTML = 
+                '<a href="' + window.location.origin + window.location.pathname + '?skipIntro=true">Today\'s Punzzle</a> · ' +
+                (isPreview ? 'Preview Mode' : 'Bonus Puzzle');
+            } else {
+              hideLoadingState();
+              alert('This bonus puzzle is no longer available.');
+              window.location.href = window.location.origin + window.location.pathname;
+              return;
+            }
+          } else {
+            hideLoadingState();
+            alert('Unable to load bonus puzzle. Please try again later.');
+            window.location.href = window.location.origin + window.location.pathname;
+            return;
+          }
           
           hideLoadingState();
           
           if (skipIntro === 'true') {
-            startGameDirectly();
+            startGame();
           } else {
             document.getElementById('startModal').style.display = 'flex';
           }
@@ -2785,7 +3294,6 @@
         
         // Handle shared custom puzzle
         if (sharedPuzzle) {
-          console.log('Handling shared custom puzzle...');
           isCustomPuzzle = true;
           
           var puzzleData = JSON.parse(atob(sharedPuzzle));
@@ -2821,7 +3329,7 @@
           hideLoadingState();
           
           if (skipIntro === 'true') {
-            startGameDirectly();
+            startGame();
           } else {
             document.getElementById('startModal').style.display = 'flex';
             var hamburgerMenu = document.getElementById('hamburgerMenu');
@@ -2835,8 +3343,6 @@
         
         // Load puzzle based on date - try server first, fallback to local
         var puzzleDate = dateParam ? new Date(dateParam + 'T00:00:00') : new Date();
-        
-        console.log('Loading puzzle for date:', puzzleDate);
         
         try {
           await loadPuzzleByDate(puzzleDate);
@@ -2882,10 +3388,16 @@
         return;
       }
       
-      // Show intro or start game with better mobile handling
+      // Show intro or start game  
       if (skipIntro === 'true') {
         console.log('Skipping intro, starting game directly');
-        startGameDirectly();
+        // Ensure game container is visible before starting
+        var gameContainer = document.getElementById('gameContainer');
+        if (gameContainer) {
+          gameContainer.classList.remove('game-hidden');
+          console.log('Game container made visible for skipIntro');
+        }
+        startGame();
       } else {
         console.log('Showing intro modal');
         document.getElementById('startModal').style.display = 'flex';
@@ -2899,15 +3411,12 @@
       
       setupCreateForm();
       handleMorePunzzlesSubmit();
-      
-      console.log('=== DOMContentLoaded completed ===');
     });
 
     testPreviewImage();
 
-    // New function to start game directly (for better mobile handling)
-    function startGameDirectly() {
-      console.log('startGameDirectly() called - optimized for mobile');
+    function startGame() {
+      console.log('startGame() called');
       
       // Clear any loading states first
       hideLoadingState();
@@ -2923,14 +3432,14 @@
       document.body.classList.remove('modal-open');
       gameContainer.classList.remove('content-blur');
       
-      // Add game active class - CRITICAL for mobile
+      // Add game active class
       document.body.classList.add('game-active');
       
       hasStartedGame = true;
       
       // Verify we have puzzle data
       if (!gameState.puzzleAnswer || !gameState.categoryText || !gameState.words.length) {
-        console.error('Missing puzzle data in startGameDirectly:', {
+        console.error('Missing puzzle data in startGame:', {
           answer: gameState.puzzleAnswer,
           category: gameState.categoryText,
           words: gameState.words
@@ -2961,29 +3470,7 @@
       var puzzleType = isCustomPuzzle ? 'custom' : 'daily';
       trackPuzzleStart(puzzleType, gameState.categoryText);
       
-      // Force mobile layout update
-      if (window.innerWidth <= 768) {
-        console.log('Mobile detected - ensuring mobile controls are visible');
-        setTimeout(() => {
-          const fixedBottomSection = document.getElementById('fixedBottomSection');
-          const mobileKeyboard = document.getElementById('mobileKeyboard');
-          
-          if (fixedBottomSection) {
-            fixedBottomSection.style.display = 'block';
-            console.log('Mobile bottom section shown');
-          }
-          if (mobileKeyboard) {
-            mobileKeyboard.style.display = 'block';
-            console.log('Mobile keyboard shown');
-          }
-        }, 100);
-      }
-      
-      console.log('Game started successfully with mobile optimization');
-    }
-
-    function startGame() {
-      startGameDirectly(); // Use the new optimized function
+      console.log('Game started successfully');
     }
 
     function startFoxTimer() {
@@ -3963,15 +4450,15 @@
       savedFormData = null;
     }
     
-    function showMainGame() {
-      document.getElementById('createWrapper').classList.remove('active');
-      document.body.classList.remove('modal-open');
+function showMainGame() {
+  document.getElementById('createWrapper').classList.remove('active');
+  document.body.classList.remove('modal-open');
+  
+  // Remove custom preview class when returning to main game
+  removeCustomPreviewClass();
+  
+  document.getElementById('gameContainer').classList.remove('content-blur');
       
-      // Remove custom preview class when returning to main game
-      removeCustomPreviewClass();
-      
-      document.getElementById('gameContainer').classList.remove('content-blur');
-            
       savedFormData = null;
       
       if (!hasStartedGame) {
@@ -4359,9 +4846,10 @@
       document.getElementById('dateDisplay').innerHTML = 
         'Custom Punzzle · <a href="#" onclick="copyPuzzleUrl(); return false;">Copy link</a>';
 
-      if (!gameState.customHint) {
+if (!gameState.customHint) {
         document.getElementById('hintRestartBtn').textContent = 'Restart';
         document.getElementById('mobileHintRestartBtn').textContent = 'Restart';
+
       } else {
         document.getElementById('hintRestartBtn').textContent = 'Hint (-5)';
         document.getElementById('mobileHintRestartBtn').textContent = 'Hint (-5)';
@@ -4629,4 +5117,3 @@
   </script>
 </body>
 </html>
-      
