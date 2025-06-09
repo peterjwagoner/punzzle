@@ -4371,8 +4371,7 @@ function showMainGame() {
       document.getElementById('categoryText').textContent = gameState.categoryText;
       
       document.getElementById('dateDisplay').innerHTML = 
-        'Custom Punzzle' + 
-        '<span style="float: right;"><a href="#" onclick="copyPuzzleUrl(); return false;">Copy link</a></span>';
+        'Custom Punzzle · <a href="#" onclick="copyPuzzleUrl(); return false;">Copy link</a>';
 
 if (!gameState.customHint) {
         document.getElementById('hintRestartBtn').textContent = 'Restart';
