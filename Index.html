@@ -2955,6 +2955,10 @@ body.modal-open {
       // Add game active class
       document.body.classList.add('game-active');
       
+      // Ensure custom preview class is removed during actual gameplay
+      document.body.classList.remove('custom-puzzle-preview');
+      console.log('Removed custom-puzzle-preview class from actual gameplay');
+      
       hasStartedGame = true;
       
       // Verify we have puzzle data
