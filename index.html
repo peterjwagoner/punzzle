@@ -454,12 +454,11 @@
       overflow: hidden;
     }
     
-    .message-area {
-      min-height: 5rem;
+    .word-group {
       display: flex;
-      flex-direction: column;
+      gap: 0.25rem;
       justify-content: center;
-
+      flex-wrap: nowrap;
       max-width: 100%;
       padding: 0.25rem;
       margin: 0 auto;
@@ -560,11 +559,7 @@
       flex-shrink: 0;
       padding: 0.75rem 1.5rem;
       width: 100%;
-      overflow: visible;
     }
-    
-    .message {
-
     .message {
       font-size: 0.875rem;
       font-weight: 600;
@@ -585,12 +580,9 @@
       font-style: italic;
       margin-top: 0.25rem;
       margin-bottom: 0;
-      max-width: 100%;
-      word-wrap: break-word;
-      line-height: 1.4;
-      padding: 0 0.5rem;
-      white-space: normal;
     }
+    
+    .score-display {
       display: flex;
       justify-content: space-between;
       align-items: center;
