@@ -1668,21 +1668,19 @@
       }
       
       /* Custom puzzle preview mode layout fixes */
+      body.custom-puzzle-preview .game-container {
+        height: calc(100vh - 284px) !important;
+        max-height: calc(100vh - 284px) !important;
+        overflow: hidden;
+      }
+      
       body.custom-puzzle-preview .category-section {
         flex: 1;
         min-height: 0;
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
+        overflow: auto;
       }
       
-      body.custom-puzzle-preview .gameplay-example-section {
-        flex: 1;
-        max-height: calc(100vh - 200px);
-        min-height: 0;
-        overflow: hidden;
-        overflow-y: auto;
-      }
+      .create-wrapper {
       
       .create-wrapper {
         align-items: flex-start;
