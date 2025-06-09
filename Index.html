@@ -797,16 +797,16 @@
         left: 0.5rem;
       }
       
-      /* Ensure normal button size during regular gameplay */
-      body.game-active .button {
-        font-size: 0.6rem !important;
-        padding: 0.3rem 0.4rem !important;
-        min-height: 32px !important;
+      .header {
+        padding-left: 3rem;
       }
       
-      body.custom-puzzle-preview .puzzle-container {
-        margin-top: 0 !important;
-        padding-top: 1rem !important;
+      .date-display {
+        padding-left: 2.5rem;
+        margin-left: -2.5rem;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
         text-align: center;
       }
     }
@@ -1539,13 +1539,15 @@
         top: 0 !important;
         z-index: 100 !important;
         background-color: white !important;
+
         border-bottom: 1px solid #e5e5e5 !important;
         box-shadow: none !important;
         margin-bottom: 0 !important;
         padding: 0.5rem !important;
+        display: block !important;
       }
-
       
+      body.custom-puzzle-preview .category-section {
 
       body.custom-puzzle-preview .game-container {
         padding-top: 100px !important;
