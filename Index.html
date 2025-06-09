@@ -204,11 +204,12 @@
       // Cleanup any existing loading states
       setTimeout(hideLoadingState, 100);
       
-      /* Ensure normal button size during regular gameplay */
-      body.game-active:not(.custom-puzzle-preview) .button {
-        font-size: 0.6rem !important;
-        padding: 0.3rem 0.4rem !important;
-        min-height: 32px !important;
+      // Global click tracking
+      document.addEventListener('click', function(e) {
+        if (typeof gtag === 'undefined') return;
+        
+        const link = e.target.closest('a');
+        const button = e.target.closest('button');
         
         if (link && link.href) {
           const linkText = link.textContent.trim();
