@@ -527,14 +527,10 @@
       height: 100%;
       object-fit: contain;
     }
-    
-    .logo-container {
-      margin-bottom: 0.25rem;
-    }
-    
-    .scorecard-logo-container {
-      display: flex;
-      flex-direction: column;
+
+    .tiles-medium .tile {
+      width: clamp(28px, 5vw, 40px);
+      height: clamp(28px, 5vw, 40px);
       font-size: clamp(0.7rem, 1.8vw, 1rem);
     }
     
@@ -834,11 +830,8 @@
       font-weight: 400;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
-      margin-top: 0.25rem;
+      margin-top: 0.5rem;
       margin-bottom: 1rem;
-    }
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
     }
     
     .modal-content p {
@@ -962,7 +955,6 @@
       width: 60px;
       height: 60px;
       object-fit: contain;
-      margin-bottom: 0.5rem;
     }
     
     .scorecard-logo-container {
@@ -4395,7 +4387,7 @@
         document.getElementById('mobileHintRestartBtn').textContent = 'Restart';
       } else {
         document.getElementById('hintRestartBtn').textContent = 'Hint (3)';
-        document.getElementById('mobileHintRestartBtn').textContent = 'Hint (-3)';
+        document.getElementById('mobileHintRestartBtn').textContent = 'Hint (-)';
       }
       
       document.getElementById('createWrapper').classList.remove('active');
