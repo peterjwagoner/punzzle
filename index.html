@@ -116,9 +116,163 @@
       }
     }
 
-    function hideLoadingState() {
-      try {
-        loadingStateActive = false;
+    // NEW: Enhanced mobile-optimized startGame function
+    function startGameDirectly() {
+      console.log('startGameDirectly() called - optimized for mobile');
+      
+      // Clear any loading states first
+      hideLoadingState();
+      
+      // Ensure modal is hidden
+      document.getElementById('startModal').style.display = 'none';
+      
+      // Make sure game container is visible
+      var gameContainer = document.getElementById('gameContainer');
+      gameContainer.classList.remove('game-hidden');
+      
+      // Remove modal classes
+      document.body.classList.remove('modal-open');
+      gameContainer.classList.remove('content-blur');
+      
+      // Add game active class - CRITICAL for mobile
+      document.body.classList.add('game-active');
+      
+      hasStartedGame = true;
+      
+      // Verify we have puzzle data
+      if (!gameState.puzzleAnswer || !gameState.categoryText || !gameState.words.length) {
+        console.error('Missing puzzle data in startGameDirectly:', {
+          answer: gameState.puzzleAnswer,
+          category: gameState.categoryText,
+          words: gameState.words
+        });
+        alert('Puzzle data not loaded. Please refresh the page.');
+        return;
+      }
+      
+      console.log('Building puzzle with data:', {
+        answer: gameState.puzzleAnswer,
+        category: gameState.categoryText,
+        words: gameState.words
+      });
+      
+      // Build puzzle if not already built
+      if (gameState.letterTiles.length === 0) {
+        buildPuzzle();
+        updateScore(0);
+      }
+      
+      startFoxTimer();
+      startTimeTracking();
+      
+      var hamburgerMenu = document.getElementById('hamburgerMenu');
+      if (hamburgerMenu) {
+        hamburgerMenu.style.display = 'block';
+      }
+      
+      var puzzleType = isCustomPuzzle ? 'custom' : 'daily';
+      trackPuzzleStart(puzzleType, gameState.categoryText);
+      
+      // Force mobile layout update
+      if (window.innerWidth <= 768) {
+        console.log('Mobile detected - ensuring mobile controls are visible');
+        setTimeout(() => {
+          const fixedBottomSection = document.getElementById('fixedBottomSection');
+          const mobileKeyboard = document.getElementById('mobileKeyboard');
+          
+          if (fixedBottomSection) {
+            fixedBottomSection.style.display = 'block';
+            console.log('Mobile bottom section shown');
+          }
+          if (mobileKeyboard) {
+            mobileKeyboard.style.display = 'block';
+            console.log('Mobile keyboard shown');
+          }
+        }, 100);
+      }
+      
+      console.log('Game started successfully');
+    }
+
+    // Enhanced initialization with strict server requirement for date navigation
+    document.addEventListener('DOMContentLoaded', async function() {
+      
+      // Clear any loading states first
+      hideLoadingState();
+      
+      // Ensure modal is hidden
+      document.getElementById('startModal').style.display = 'none';
+      
+      // Make sure game container is visible
+      var gameContainer = document.getElementById('gameContainer');
+      gameContainer.classList.remove('game-hidden');
+      
+      // Remove modal classes
+      document.body.classList.remove('modal-open');
+      gameContainer.classList.remove('content-blur');
+      
+      // Add game active class - CRITICAL for mobile
+      document.body.classList.add('game-active');
+      
+      hasStartedGame = true;
+      
+      // Verify we have puzzle data
+      if (!gameState.puzzleAnswer || !gameState.categoryText || !gameState.words.length) {
+        console.error('Missing puzzle data in startGameDirectly:', {
+          answer: gameState.puzzleAnswer,
+          category: gameState.categoryText,
+          words: gameState.words
+        });
+        alert('Puzzle data not loaded. Please refresh the page.');
+        return;
+      }
+      
+      console.log('Building puzzle with data:', {
+        answer: gameState.puzzleAnswer,
+        category: gameState.categoryText,
+        words: gameState.words
+      });
+      
+      // Build puzzle if not already built
+      if (gameState.letterTiles.length === 0) {
+        buildPuzzle();
+        updateScore(0);
+      }
+      
+      startFoxTimer();
+      startTimeTracking();
+      
+      var hamburgerMenu = document.getElementById('hamburgerMenu');
+      if (hamburgerMenu) {
+        hamburgerMenu.style.display = 'block';
+      }
+      
+      var puzzleType = isCustomPuzzle ? 'custom' : 'daily';
+      trackPuzzleStart(puzzleType, gameState.categoryText);
+      
+      // Force mobile layout update
+      if (window.innerWidth <= 768) {
+        console.log('Mobile detected - ensuring mobile controls are visible');
+        setTimeout(() => {
+          const fixedBottomSection = document.getElementById('fixedBottomSection');
+          const mobileKeyboard = document.getElementById('mobileKeyboard');
+          
+          if (fixedBottomSection) {
+            fixedBottomSection.style.display = 'block';
+            console.log('Mobile bottom section shown');
+          }
+          if (mobileKeyboard) {
+            mobileKeyboard.style.display = 'block';
+            console.log('Mobile keyboard shown');
+          }
+        }, 100);
+      }
+      
+      console.log('Game started successfully');
+    }
+
+    // Enhanced initialization with strict server requirement for date navigation
+    document.addEventListener('DOMContentLoaded', async function() {
         
         // Clear cleanup timeout
         if (loadingCleanupTimeout) {
@@ -702,10 +856,89 @@
       }
     }
     
+    /* Enhanced Mobile Layout with Forced Visibility */
+    @media (max-width: 768px) {
+      body {
+        height: 100vh !important;
+        overflow: hidden !important;
+      }
+      
+      .game-container {
+        margin: 0 !important;
+        padding: 0.5rem !important;
+        border: none !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        width: 100% !important;
+        max-width: none !important;
+        background-color: #ffffff !important;
+        display: flex !important;
+        flex-direction: column !important;
+      }
+      
+      /* When game is not active */
+      body:not(.game-active) .game-container {
+        height: 100vh !important;
+        overflow-y: auto !important;
+      }
+      
+      /* When game is active - CRITICAL: Show mobile controls */
+      body.game-active .game-container {
+        height: calc(100vh - 300px) !important;
+        overflow-y: auto !important;
+      }
+      
+      body.game-active .fixed-bottom-section {
+        display: block !important;
+      }
+      
+      body.game-active .mobile-keyboard {
+        display: block !important;
+      }
+      
+      /* Hide desktop controls on mobile when game is active */
+      body.game-active .game-container .progress-section,
+      body.game-active .game-container .controls-section {
+        display: none !important;
+      }
+      
+      /* Mobile inline message */
+      .mobile-inline-message {
+        display: block !important;
+        font-size: 0.75rem !important;
+        font-weight: 600 !important;
+        color: #666 !important;
+        text-align: center !important;
+        flex: 1 !important;
+        padding: 0 0.5rem !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+      }
+      
+      .mobile-inline-message.success {
+        color: #00875a !important;
+      }
+      
+      .mobile-inline-message.error {
+        color: #c9372c !important;
+      }
+      
+      /* Mobile score elements */
+      #mobileScoreValue,
+        display: block !important;
+      }
+      
+      /* Hide desktop score elements on mobile */
+      #scoreValue,
+      #progressFill,
+      #hintRestartBtn {
+        display: none !important;
+      }
+    }
+    
     /* Mobile: Show mobile elements when game is active */
     @media (max-width: 768px) {
-      /* Basic mobile layout */
-      body {
         height: 100vh !important;
         overflow: hidden !important;
       }
@@ -3222,9 +3455,86 @@ body.modal-open {
       }
     }
 
+    // NEW: Enhanced mobile-optimized startGame function
+    function startGameDirectly() {
+      console.log('startGameDirectly() called - optimized for mobile');
+      
+      // Clear any loading states first
+      hideLoadingState();
+      
+      // Ensure modal is hidden
+      document.getElementById('startModal').style.display = 'none';
+      
+      // Make sure game container is visible
+      var gameContainer = document.getElementById('gameContainer');
+      gameContainer.classList.remove('game-hidden');
+      
+      // Remove modal classes
+      document.body.classList.remove('modal-open');
+      gameContainer.classList.remove('content-blur');
+      
+      // Add game active class - CRITICAL for mobile
+      document.body.classList.add('game-active');
+      
+      hasStartedGame = true;
+      
+      // Verify we have puzzle data
+      if (!gameState.puzzleAnswer || !gameState.categoryText || !gameState.words.length) {
+        console.error('Missing puzzle data in startGameDirectly:', {
+          answer: gameState.puzzleAnswer,
+          category: gameState.categoryText,
+          words: gameState.words
+        });
+        alert('Puzzle data not loaded. Please refresh the page.');
+        return;
+      }
+      
+      console.log('Building puzzle with data:', {
+        answer: gameState.puzzleAnswer,
+        category: gameState.categoryText,
+        words: gameState.words
+      });
+      
+      // Build puzzle if not already built
+      if (gameState.letterTiles.length === 0) {
+        buildPuzzle();
+        updateScore(0);
+      }
+      
+      startFoxTimer();
+      startTimeTracking();
+      
+      var hamburgerMenu = document.getElementById('hamburgerMenu');
+      if (hamburgerMenu) {
+        hamburgerMenu.style.display = 'block';
+      }
+      
+      var puzzleType = isCustomPuzzle ? 'custom' : 'daily';
+      trackPuzzleStart(puzzleType, gameState.categoryText);
+      
+      // Force mobile layout update
+      if (window.innerWidth <= 768) {
+        console.log('Mobile detected - ensuring mobile controls are visible');
+        setTimeout(() => {
+          const fixedBottomSection = document.getElementById('fixedBottomSection');
+          const mobileKeyboard = document.getElementById('mobileKeyboard');
+          
+          if (fixedBottomSection) {
+            fixedBottomSection.style.display = 'block';
+            console.log('Mobile bottom section shown');
+          }
+          if (mobileKeyboard) {
+            mobileKeyboard.style.display = 'block';
+            console.log('Mobile keyboard shown');
+          }
+        }, 100);
+      }
+      
+      console.log('Game started successfully');
+    }
+
     // Enhanced initialization with strict server requirement for date navigation
     document.addEventListener('DOMContentLoaded', async function() {
-      var urlParams = new URLSearchParams(window.location.search);
       var skipIntro = urlParams.get('skipIntro');
       var optimized = urlParams.get('optimized');
       
@@ -3741,6 +4051,25 @@ body.modal-open {
       
       var mobileMessage = document.getElementById('mobileMessage');
       if (mobileMessage) {
+        var mobileText = clueText || text;
+        if (mobileText.includes('Random letter revealed')) {
+          mobileText = 'Letter revealed (-1)';
+        } else if (mobileText.includes('Random word')) {
+          mobileText = 'Word revealed (-5)';
+        } else if (mobileText.includes('Not quite right')) {
+          mobileText = 'Try again (-2)';
+        } else if (mobileText.includes('Excellent')) {
+          mobileText = 'Correct!';
+        }
+        
+        mobileMessage.textContent = mobileText;
+        mobileMessage.className = 'mobile-inline-message ' + (className || '');
+        
+        setTimeout(function() {
+          mobileMessage.textContent = '';
+        }, 2500);
+      }
+    }
         var mobileText = clueText || text;
         if (mobileText.includes('Random letter revealed')) {
           mobileText = 'Letter revealed (-1)';
