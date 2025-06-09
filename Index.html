@@ -22,10 +22,57 @@
   <meta property="og:image:alt" content="Punzzle - Daily Word Puzzle Game">
   <meta property="og:site_name" content="Punzzle">
 
-body.modal-open {
-  overflow: hidden;
-}
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@punzzle">
+  <meta name="twitter:creator" content="@punzzle">
+  <meta name="twitter:url" content="https://punzzle.com/">
+  <meta name="twitter:title" content="Punzzle - Daily Word Puzzle Game">
+  <meta name="twitter:description" content="Find the pun that connects the categories! A new word puzzle every day where you solve clever puns by filling in missing letters.">
+  <meta name="twitter:image" content="https://punzzle.com/images/punzzle-preview.png">
+  <meta name="twitter:image:alt" content="Punzzle - Daily Word Puzzle Game">
 
+  <!-- Additional SEO meta tags -->
+  <meta name="description" content="Find the pun that connects the categories! A new word puzzle every day where you solve clever puns by filling in missing letters.">
+  <meta name="keywords" content="word puzzle, pun game, daily puzzle, word game, crossword, brain teaser">
+  <meta name="author" content="Punzzle">
+  <link rel="canonical" href="https://punzzle.com/">
+  
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-QLL4GXB1ZX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-QLL4GXB1ZX');
+  </script>
+  
+  <!-- Firebase (Compatibility Version) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="firebase-setup.js"></script>
+
+  <script>
+    // Global loading state tracking
+    let loadingStateActive = false;
+    let loadingCleanupTimeout = null;
+    
+    // Enhanced loading state management
+    function showLoadingState() {
+      try {
+        // Clear any existing cleanup timeout
+        if (loadingCleanupTimeout) {
+          clearTimeout(loadingCleanupTimeout);
+          loadingCleanupTimeout = null;
+        }
+        
+        // Prevent duplicate loading indicators
+        if (loadingStateActive || document.getElementById('loadingIndicator')) {
+          return;
+        }
+        
+        loadingStateActive = true;
+        
         // Create loading indicator
         const loadingDiv = document.createElement('div');
         loadingDiv.id = 'loadingIndicator';
@@ -266,9 +313,30 @@ body.modal-open {
   overflow: hidden;
 }
 
-.content-blur {
-  pointer-events: none;
-}
+@media (max-width: 768px) {
+  body.custom-preview .game-container {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    padding-top: 60px !important; /* Space for header */
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  
+  body.custom-preview .header {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    background-color: white !important;
+    z-index: 1000 !important;
+    padding: 0.5rem !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+    height: 60px !important; /* Fixed height */
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+  }
   
   body.custom-preview .game-title {
     font-size: 1.5rem !important;
@@ -1481,8 +1549,24 @@ body.modal-open {
         display: block !important;
       }
       
+      /* Fix for custom puzzle preview on mobile */
+      body.game-active .game-container {
+        height: calc(100vh - 284px);
+        max-height: calc(100vh - 284px);
+        overflow-y: auto;
+      }
+      
+      body.game-active .category-section {
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+      }
+      
+      body.game-active .puzzle-container {
+        overflow-y: auto;
+      }
+
       body.game-active .fixed-bottom-section {
-        display: block !important;
       }
       
       .game-container {
@@ -3799,10 +3883,9 @@ body.modal-open {
       trackNavigation('make_your_own');
       
       closeHamburgerMenu();
+      // Remove custom preview class when going back to create
+document.body.classList.remove('custom-preview');
       
-      document.getElementById('createWrapper').classList.add('active');
-      document.body.classList.add('modal-open');
-
       document.getElementById('createWrapper').classList.add('active');
       document.body.classList.add('modal-open');
       
@@ -3873,6 +3956,7 @@ body.modal-open {
 function showMainGame() {
   document.getElementById('createWrapper').classList.remove('active');
   document.body.classList.remove('modal-open');
+  document.body.classList.remove('custom-preview');
   
   document.getElementById('gameContainer').classList.remove('content-blur');
       document.getElementById('scoreCard').classList.remove('content-blur');
@@ -4258,10 +4342,12 @@ function showMainGame() {
       document.getElementById('dateDisplay').innerHTML = 
   '<a href="#" onclick="showMakeYourOwn(); return false;">← Back to Create</a> · Custom Punzzle';
 
+// Add custom preview class for mobile layout
+document.body.classList.add('custom-preview');
+
 if (!gameState.customHint) {
         document.getElementById('hintRestartBtn').textContent = 'Restart';
         document.getElementById('mobileHintRestartBtn').textContent = 'Restart';
-
       } else {
         document.getElementById('hintRestartBtn').textContent = 'Hint (-5)';
         document.getElementById('mobileHintRestartBtn').textContent = 'Hint (-5)';
@@ -4270,9 +4356,6 @@ if (!gameState.customHint) {
       document.getElementById('createWrapper').classList.remove('active');
       document.body.classList.remove('modal-open');
       document.getElementById('gameContainer').classList.remove('game-hidden', 'content-blur');
-      
-      // Add game-active class to show mobile controls
-      document.body.classList.add('game-active');
       
       if (!hasStartedGame) {
         document.getElementById('startModal').style.display = 'flex';
@@ -4523,4 +4606,4 @@ if (!gameState.customHint) {
     }
   </script>
 </body>
-</html> 
+</html>
