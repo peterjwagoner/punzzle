@@ -22,17 +22,13 @@
   <meta property="og:image:alt" content="Punzzle - Daily Word Puzzle Game">
   <meta property="og:site_name" content="Punzzle">
 
-  <!-- Twitter -->
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:site" content="@punzzle">
-  <meta name="twitter:creator" content="@punzzle">
-  <meta name="twitter:url" content="https://punzzle.com/">
-  <meta name="twitter:title" content="Punzzle - Daily Word Puzzle Game">
-  <meta name="twitter:description" content="Find the pun that connects the categories! A new word puzzle every day where you solve clever puns by filling in missing letters.">
-  <meta name="twitter:image" content="https://punzzle.com/images/punzzle-preview.png">
-  <meta name="twitter:image:alt" content="Punzzle - Daily Word Puzzle Game">
-
-  <!-- Additional SEO meta tags -->
+      if (!gameState.customHint) {
+        document.getElementById('hintRestartBtn').style.display = 'none';
+        document.getElementById('mobileHintRestartBtn').style.display = 'none';
+      } else {
+        document.getElementById('hintRestartBtn').textContent = 'Hint (-3)';
+        document.getElementById('mobileHintRestartBtn').textContent = 'Hint (-3)';
+      }
   <meta name="description" content="Find the pun that connects the categories! A new word puzzle every day where you solve clever puns by filling in missing letters.">
   <meta name="keywords" content="word puzzle, pun game, daily puzzle, word game, crossword, brain teaser">
   <meta name="author" content="Punzzle">
@@ -449,11 +445,10 @@
       text-decoration: none;
     }
     
-    .date-display a:hover {
-      text-decoration: underline;
+    function giveHint() {
+      updateScore(-3, 'Hint');
+      updateMessage('', '', gameState.customHint);
     }
-    
-    .modal-title {
       font-family: 'Headland One', serif;
       font-size: 2.1rem;
       font-weight: 400;
@@ -797,17 +792,15 @@
         left: 0.5rem;
       }
       
-      .header {
-        padding-left: 3rem;
+      if (!gameState.customHint) {
+        document.getElementById('hintRestartBtn').style.display = 'none';
+        document.getElementById('mobileHintRestartBtn').style.display = 'none';
+      } else {
+        var hintBtn = document.getElementById('hintRestartBtn');
+        var mobileHintBtn = document.getElementById('mobileHintRestartBtn');
+        if (hintBtn) { hintBtn.textContent = 'Hint (-3)'; hintBtn.classList.remove('disabled'); hintBtn.style.display = 'inline-flex'; }
+        if (mobileHintBtn) { mobileHintBtn.textContent = 'Hint (-3)'; mobileHintBtn.classList.remove('disabled'); mobileHintBtn.style.display = 'inline-flex'; }
       }
-      
-      .date-display {
-        padding-left: 2.5rem;
-        margin-left: -2.5rem;
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        text-align: center;
       }
     }
     
@@ -3093,13 +3086,13 @@ body.modal-open {
       if (!gameState.customHint) {
         var hintBtn = document.getElementById('hintRestartBtn');
         var mobileHintBtn = document.getElementById('mobileHintRestartBtn');
-        if (hintBtn) hintBtn.textContent = 'Restart';
-        if (mobileHintBtn) mobileHintBtn.textContent = 'Restart';
+        if (hintBtn) hintBtn.style.display = 'none';
+        if (mobileHintBtn) mobileHintBtn.style.display = 'none';
       } else {
         var hintBtn = document.getElementById('hintRestartBtn');
         var mobileHintBtn = document.getElementById('mobileHintRestartBtn');
-        if (hintBtn) hintBtn.textContent = 'Hint (-5)';
-        if (mobileHintBtn) mobileHintBtn.textContent = 'Hint (-5)';
+        if (hintBtn) { hintBtn.textContent = 'Hint (-3)'; hintBtn.style.display = 'inline-flex'; }
+        if (mobileHintBtn) { mobileHintBtn.textContent = 'Hint (-3)'; mobileHintBtn.style.display = 'inline-flex'; }
       }
       
       // Validate and clean words array
@@ -3298,24 +3291,23 @@ body.modal-open {
       
       if (!gameState.hintUsed) {
         trackFeatureUse('hint_used', 1);
-        trackPunzzleEvent('gameplay', 'hint_used', 'custom_hint');
+        trackPunzzleEvent('gameplay', 'hint_used', 'custom_hint_3pts');
         giveHint();
         gameState.hintUsed = true;
         
-        document.getElementById('hintRestartBtn').textContent = 'Restart';
-        document.getElementById('mobileHintRestartBtn').textContent = 'Restart';
-      } else {
-        trackFeatureUse('restart', 1);
-        trackPunzzleEvent('gameplay', 'game_action', 'restart_after_hint');
-        restartGame();
+        // Gray out the hint buttons after use
+        var hintBtn = document.getElementById('hintRestartBtn');
+        var mobileHintBtn = document.getElementById('mobileHintRestartBtn');
+        if (hintBtn) {
+          hintBtn.classList.add('disabled');
+          hintBtn.textContent = 'Hint used';
+        }
+        if (mobileHintBtn) {
+          mobileHintBtn.classList.add('disabled');
+          mobileHintBtn.textContent = 'Hint used';
+        }
       }
     }
-
-    function giveHint() {
-      updateScore(-5, 'Hint');
-      updateMessage('', '', gameState.customHint);
-    }
-
     function revealRandomLetter() {
       var hiddenTiles = gameState.letterTiles.filter(function(tile) {
         return !tile.classList.contains('revealed') && !tile.classList.contains('user-filled');
