@@ -557,6 +557,28 @@ body.modal-open {
 .content-blur {
   pointer-events: none;
 }
+  
+  body.custom-preview .game-title {
+    font-size: 1.5rem !important;
+    margin: 0 !important;
+  }
+  
+  body.custom-preview .date-display {
+    font-size: 0.75rem !important;
+    margin: 0 !important;
+  }
+  
+  body.custom-preview .fixed-bottom-section,
+  body.custom-preview .mobile-keyboard {
+    display: none !important;
+  }
+}
+    overflow: hidden;
+  }
+  
+  body.custom-preview .gameplay-example-section {
+    height: 100%;
+    overflow-y: auto;
   }
 }
 .content-blur {
@@ -1744,51 +1766,9 @@ body.modal-open {
         display: block !important;
       }
       
-      /* Preview mode adjustments for mobile */
-      body.preview-mode .game-container {
-        height: calc(100vh - 284px);
-        max-height: calc(100vh - 284px);
-        display: flex;
-        flex-direction: column;
-      }
-      
-      body.preview-mode .header {
-        flex-shrink: 0;
-        position: static;
-        display: block;
-        visibility: visible;
-        opacity: 1;
-        z-index: auto;
-      }
-      
-      body.preview-mode .category-section {
-        flex: 1;
-        min-height: 0;
-        overflow: hidden;
-      }
-      
-      body.preview-mode .gameplay-example-section {
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        min-height: 0;
-      }
-      
-      body.preview-mode .puzzle-container {
-        flex: 1;
-        min-height: 0;
-      }
-      
-      /* Ensure preview mode shows mobile controls when game is active */
-      body.preview-mode.game-active .mobile-keyboard {
-        display: block !important;
-      }
-      
-      body.preview-mode.game-active .fixed-bottom-section {
-        display: block !important;
-      }
-
       body.game-active .fixed-bottom-section {
+        display: block !important;
+      }
       
       .game-container {
         margin: 0;
@@ -1806,20 +1786,6 @@ body.modal-open {
       
       .game-container:not(.game-hidden) {
         height: calc(100vh - 284px);
-        padding-bottom: 0;
-      }
-
-      /* Ensure preview mode containers are properly sized */
-      body.preview-mode .game-container:not(.game-hidden) {
-        height: calc(100vh - 284px);
-        max-height: calc(100vh - 284px);
-        padding-bottom: 0;
-      }
-
-      /* Ensure preview mode containers are properly sized */
-      body.preview-mode .game-container:not(.game-hidden) {
-        height: calc(100vh - 284px);
-        max-height: calc(100vh - 284px);
         padding-bottom: 0;
       }
 
@@ -1867,12 +1833,13 @@ body.modal-open {
       
       .category-text {
         font-size: 0.75rem;
+        padding: 0.4rem 0.6rem;
+        margin-bottom: 0.25rem;
       }
-
-      body.game-active .game-container:not(.game-hidden) .progress-section,
-      body.game-active .game-container:not(.game-hidden) .controls-section {
-        display: none;
-      }
+      
+      .puzzle-container {
+        position: static;
+        transform: none;
         left: auto;
         right: auto;
         width: 100%;
@@ -4189,11 +4156,10 @@ body.modal-open {
     }
     
 function showMainGame() {
-  // Remove preview mode class when returning to main game
-  document.body.classList.remove('preview-mode');
-  
   document.getElementById('createWrapper').classList.remove('active');
   document.body.classList.remove('modal-open');
+  
+  document.getElementById('gameContainer').classList.remove('content-blur');
       document.getElementById('scoreCard').classList.remove('content-blur');
       
       savedFormData = null;
@@ -4546,11 +4512,6 @@ function showMainGame() {
       gameState.currentActiveTile = null;
       gameState.hintUsed = false;
       gameState.puzzleId = `custom-shared-${Date.now()}`;
-      
-      // Add preview mode class to body for mobile layout
-      if (window.innerWidth <= 768) {
-        document.body.classList.add('preview-mode');
-      }
       
       const customId = await saveCustomPuzzle(puzzleData);
       if (customId) {
