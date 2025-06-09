@@ -1558,11 +1558,11 @@
       .game-container {
         margin: 0;
         padding: 0.5rem;
-        padding-bottom: 0.5rem;
-        border: none;
-        box-shadow: none;
-        border-radius: 0;
-        width: 100%;
+      }
+      
+      .game-container:not(.game-hidden) {
+        height: calc(100vh - 284px);
+      }
         max-width: none;
         height: 100vh;
         display: flex;
