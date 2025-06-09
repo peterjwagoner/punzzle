@@ -2948,10 +2948,17 @@ body.modal-open {
       // Clear any loading states first
       hideLoadingState();
       
-      // Ensure modal is hidden
-      document.getElementById('startModal').style.display = 'none';
+      // Ensure hamburger menu is visible for custom puzzle previews
+      var hamburgerMenu = document.getElementById('hamburgerMenu');
+      if (hamburgerMenu && (sharedPuzzle || bonusId)) {
+        hamburgerMenu.style.display = 'block';
+        console.log('Custom puzzle: hamburger menu made visible');
+      }
       
-      // Make sure game container is visible
+      if (skipIntro === 'true') {
+        startGame();
+      } else {
+
       var gameContainer = document.getElementById('gameContainer');
       gameContainer.classList.remove('game-hidden');
       
@@ -2993,9 +3000,9 @@ body.modal-open {
       var hamburgerMenu = document.getElementById('hamburgerMenu');
       if (hamburgerMenu) {
         hamburgerMenu.style.display = 'block';
+        console.log('startGame: hamburger menu visibility set, isCustomPuzzle:', isCustomPuzzle);
       }
       var puzzleType = isCustomPuzzle ? 'custom' : 'daily';
-      trackPuzzleStart(puzzleType, gameState.categoryText);
       
       console.log('Game started successfully');
     }
