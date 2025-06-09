@@ -2934,9 +2934,13 @@ body.modal-open {
     function startGame() {
       console.log('startGame() called');
       
+      // Remove custom preview class when starting actual gameplay
+      document.body.classList.remove('custom-puzzle-preview');
+      
       // Clear any loading states first
       hideLoadingState();
       
+
       // Ensure modal is hidden
       document.getElementById('startModal').style.display = 'none';
       
@@ -4392,9 +4396,9 @@ if (!gameState.customHint) {
 
     function removeCustomPreviewClass() {
       document.body.classList.remove('custom-puzzle-preview');
+      document.body.classList.remove('custom-puzzle-preview');
       console.log('Removed custom-puzzle-preview class');
     }
-
     function copyPuzzleUrl() {
       var shareUrlInput = document.getElementById('shareUrlInput');
       var shareUrl = shareUrlInput.value;
