@@ -1588,8 +1588,7 @@
         background-color: transparent !important;
       }
       
-      /* Only apply small buttons during custom preview, not regular gameplay */
-      body.custom-puzzle-preview:not(.game-active) .button {
+      body.custom-puzzle-preview .button {
         font-size: 0.7rem !important;
         padding: 0.4rem 0.5rem !important;
         min-height: 36px !important;
@@ -2935,13 +2934,9 @@ body.modal-open {
     function startGame() {
       console.log('startGame() called');
       
-      // Remove custom preview class when starting actual gameplay
-      document.body.classList.remove('custom-puzzle-preview');
-      
       // Clear any loading states first
       hideLoadingState();
       
-
       // Ensure modal is hidden
       document.getElementById('startModal').style.display = 'none';
       
@@ -2955,10 +2950,6 @@ body.modal-open {
       
       // Add game active class
       document.body.classList.add('game-active');
-      
-      // Ensure custom preview class is removed during actual gameplay
-      document.body.classList.remove('custom-puzzle-preview');
-      console.log('Removed custom-puzzle-preview class from actual gameplay');
       
       hasStartedGame = true;
       
@@ -4401,9 +4392,9 @@ if (!gameState.customHint) {
 
     function removeCustomPreviewClass() {
       document.body.classList.remove('custom-puzzle-preview');
-      document.body.classList.remove('custom-puzzle-preview');
       console.log('Removed custom-puzzle-preview class');
     }
+
     function copyPuzzleUrl() {
       var shareUrlInput = document.getElementById('shareUrlInput');
       var shareUrl = shareUrlInput.value;
