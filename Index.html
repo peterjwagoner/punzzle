@@ -797,16 +797,16 @@
         left: 0.5rem;
       }
       
-      .header {
-        padding-left: 3rem;
+      /* Ensure normal button size during regular gameplay */
+      body.game-active .button {
+        font-size: 0.6rem !important;
+        padding: 0.3rem 0.4rem !important;
+        min-height: 32px !important;
       }
       
-      .date-display {
-        padding-left: 2.5rem;
-        margin-left: -2.5rem;
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
+      body.custom-puzzle-preview .puzzle-container {
+        margin-top: 0 !important;
+        padding-top: 1rem !important;
         text-align: center;
       }
     }
