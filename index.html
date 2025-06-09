@@ -116,138 +116,9 @@
       }
     }
 
-    // NEW: Enhanced mobile-optimized startGame function
-    function startGameDirectly() {
-      console.log('startGameDirectly() called');
-      
-      hideLoadingState();
-      document.getElementById('startModal').style.display = 'none';
-      
-      var gameContainer = document.getElementById('gameContainer');
-      gameContainer.classList.remove('game-hidden');
-      document.body.classList.remove('modal-open');
-      gameContainer.classList.remove('content-blur');
-      
-      // CRITICAL: Add game-active class for mobile controls
-      document.body.classList.add('game-active');
-      console.log('Added game-active class, body classes now:', document.body.classList.toString());
-      
-      hasStartedGame = true;
-      
-      // Call the original startGame logic
-      if (gameState.letterTiles.length === 0) {
-        buildPuzzle();
-        updateScore(0);
-      }
-      
-      // Let CSS handle the mobile controls via .game-active class
-      console.log('startGameDirectly completed');
-    }
-      if (window.innerWidth <= 768) {
-        console.log('FORCE: Immediately showing mobile controls');
-        const fixedBottomSection = document.getElementById('fixedBottomSection');
-        const mobileKeyboard = document.getElementById('mobileKeyboard');
-        
-        if (fixedBottomSection) {
-          fixedBottomSection.style.display = 'block';
-          fixedBottomSection.style.visibility = 'visible';
-          console.log('FORCE: Bottom section displayed');
-        }
-        if (mobileKeyboard) {
-          mobileKeyboard.style.display = 'block';
-          mobileKeyboard.style.visibility = 'visible';
-          console.log('FORCE: Mobile keyboard displayed');
-        }
-      }
-    }
-
-    // Enhanced initialization with strict server requirement for date navigation
-    document.addEventListener('DOMContentLoaded', async function() {
-      // DEBUG: Log mobile detection
-      console.log('=== MOBILE DEBUG ===');
-      console.log('Window width:', window.innerWidth);
-      console.log('User agent:', navigator.userAgent);
-      console.log('Is mobile width:', window.innerWidth <= 768);
-      console.log('Body classes at start:', document.body.classList.toString());
-      console.log('==================');
-      
-      var urlParams = new URLSearchParams(window.location.search);
-      var skipIntro = urlParams.get('skipIntro');
-      var optimized = urlParams.get('optimized');
-
-      // Ensure modal is hidden
-      document.getElementById('startModal').style.display = 'none';
-      
-      // Make sure game container is visible
-      var gameContainer = document.getElementById('gameContainer');
-      gameContainer.classList.remove('game-hidden');
-      
-      // Remove modal classes
-      document.body.classList.remove('modal-open');
-      gameContainer.classList.remove('content-blur');
-      
-      // Add game active class - CRITICAL for mobile
-      document.body.classList.add('game-active');
-      
-      hasStartedGame = true;
-      
-      // Verify we have puzzle data
-      if (!gameState.puzzleAnswer || !gameState.categoryText || !gameState.words.length) {
-        console.error('Missing puzzle data in startGameDirectly:', {
-          answer: gameState.puzzleAnswer,
-          category: gameState.categoryText,
-          words: gameState.words
-        });
-        alert('Puzzle data not loaded. Please refresh the page.');
-        return;
-      }
-      
-      console.log('Building puzzle with data:', {
-        answer: gameState.puzzleAnswer,
-        category: gameState.categoryText,
-        words: gameState.words
-      });
-      
-      // Build puzzle if not already built
-      if (gameState.letterTiles.length === 0) {
-        buildPuzzle();
-        updateScore(0);
-      }
-      
-      startFoxTimer();
-      startTimeTracking();
-      
-      var hamburgerMenu = document.getElementById('hamburgerMenu');
-      if (hamburgerMenu) {
-        hamburgerMenu.style.display = 'block';
-      }
-      
-      var puzzleType = isCustomPuzzle ? 'custom' : 'daily';
-      trackPuzzleStart(puzzleType, gameState.categoryText);
-      
-      // Force mobile layout update
-      if (window.innerWidth <= 768) {
-        console.log('Mobile detected - ensuring mobile controls are visible');
-        setTimeout(() => {
-          const fixedBottomSection = document.getElementById('fixedBottomSection');
-          const mobileKeyboard = document.getElementById('mobileKeyboard');
-          
-          if (fixedBottomSection) {
-            fixedBottomSection.style.display = 'block';
-            console.log('Mobile bottom section shown');
-          }
-          if (mobileKeyboard) {
-            mobileKeyboard.style.display = 'block';
-            console.log('Mobile keyboard shown');
-          }
-        }, 100);
-      }
-      
-      console.log('Game started successfully');
-    }
-
-    // Enhanced initialization with strict server requirement for date navigation
-    document.addEventListener('DOMContentLoaded', async function() {
+    function hideLoadingState() {
+      try {
+        loadingStateActive = false;
         
         // Clear cleanup timeout
         if (loadingCleanupTimeout) {
@@ -438,41 +309,13 @@
       overflow: hidden;
     }
     
-  body.modal-open {
-  overflow: hidden;
-}
+    body.modal-open {
+      overflow: hidden;
+    }
 
-@media (max-width: 768px) {
-.content-blur {
-  pointer-events: none;
-}
-  
-  body.custom-preview .game-title {
-    font-size: 1.5rem !important;
-    margin: 0 !important;
-  }
-  
-  body.custom-preview .date-display {
-    font-size: 0.75rem !important;
-    margin: 0 !important;
-  }
-  
-  body.custom-preview .fixed-bottom-section,
-  body.custom-preview .mobile-keyboard {
-    display: none !important;
-  }
-}
-    overflow: hidden;
-  }
-  
-  body.custom-preview .gameplay-example-section {
-    height: 100%;
-    overflow-y: auto;
-  }
-}
-.content-blur {
-  pointer-events: none;
-}
+    .content-blur {
+      pointer-events: none;
+    }
     
     .game-container {
       background-color: #ffffff;
@@ -485,16 +328,6 @@
       box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
       min-height: 520px;
       height: auto;
-      max-height: 600px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-    }
-      max-height: 600px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-    }
       max-height: calc(100vh - 2rem);
       overflow-y: auto;
       display: flex;
@@ -577,37 +410,6 @@
       text-align: center;
     }
     
-    .fixed-bottom-section {
-      position: fixed;
-      bottom: 180px;
-      left: 0;
-      right: 0;
-      background-color: white;
-      padding: 0.75rem 1rem;
-      z-index: 200;
-      display: none;
-      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-      border-top: 1px solid #e5e5e5;
-    }
-    
-    .mobile-keyboard {
-
-      font-family: 'Headland One', serif;
-      font-weight: 400;
-      font-size: 2.1rem;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      text-rendering: optimizeLegibility;
-      text-align: center;
-      margin-bottom: 0.5rem;
-      flex: 1;
-      display: block;
-      position: relative;
-      flex-direction: column;
-      min-height: 0;
-      overflow: visible;
-    }
-    
     .gameplay-example-section {
       background-color: #f8fafc;
       border: 1px solid #e5e5e5;
@@ -615,40 +417,6 @@
       padding: 0.75rem 1rem 1rem 1rem;
       text-align: center;
       flex: 0 1 auto;
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-      margin-bottom: 0.5rem;
-      justify-content: center;
-    }
-
-    @media (min-width: 769px) {
-      .game-container {
-        max-height: 600px;
-        height: auto;
-      }
-    }
-
-    .category-text {
-      justify-content: center;
-    }
-
-    @media (min-width: 769px) {
-      .gameplay-example-section {
-        max-height: 600px;
-        padding: 1.5rem 1.5rem 1.75rem 1.5rem;
-        margin-bottom: 1rem;
-      }
-      
-      .puzzle-container {
-        gap: 0.5rem;
-        margin: 1rem 0;
-        padding: 1rem;
-      }
-    }
-
-    .category-text {
-      font-size: 0.875rem;
       display: flex;
       flex-direction: column;
       min-height: 0;
@@ -714,660 +482,6 @@
       overflow: hidden;
     }
     
-    .fixed-bottom-section {
-      position: fixed;
-      bottom: 180px;
-      left: 0;
-      right: 0;
-      background-color: white;
-      padding: 0.75rem 1rem;
-      z-index: 200;
-      display: none;
-      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-      border-top: 1px solid #e5e5e5;
-    }
-    
-    .mobile-keyboard {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      width: 100%;
-      background-color: #f8f9fa;
-      padding: 12px;
-      z-index: 500;
-      display: none;
-      border-top: 1px solid #d0d0d0;
-    }
-    
-    /* Desktop: Hide mobile elements completely */
-    @media (min-width: 769px) {
-      .fixed-bottom-section,
-      .mobile-keyboard {
-        display: none !important;
-      }
-    }
-    
-    /* Mobile: Show mobile elements when game is active */
-    @media (max-width: 768px) {
-      body {
-
-      
-      /* Ensure desktop elements are visible */
-      .game-container .progress-section,
-      .game-container .controls-section {
-        display: flex !important;
-      }
-      
-      .game-container .progress-section {
-        display: block !important;
-      }
-      
-      /* Hide mobile-specific score elements */
-      #mobileScoreValue,
-      #mobileMessage,
-      #mobileProgressFill,
-      #mobileHintRestartBtn {
-        display: none !important;
-      }
-    }
-    
-    /* Enhanced Mobile Layout with Forced Visibility */
-    @media (max-width: 768px) {
-      body {
-        height: 100vh !important;
-        overflow: hidden !important;
-      }
-      
-      .game-container {
-        margin: 0 !important;
-        padding: 0.5rem !important;
-        border: none !important;
-        box-shadow: none !important;
-        border-radius: 0 !important;
-        width: 100% !important;
-        max-width: none !important;
-        background-color: #ffffff !important;
-        display: flex !important;
-        flex-direction: column !important;
-      }
-      
-      /* When game is not active */
-      body:not(.game-active) .game-container {
-        height: 100vh !important;
-        overflow-y: auto !important;
-      }
-      
-      /* When game is active - CRITICAL: Show mobile controls */
-      body.game-active .game-container {
-        height: calc(100vh - 300px) !important;
-        overflow-y: auto !important;
-      }
-      
-      body.game-active .fixed-bottom-section {
-        display: block !important;
-      }
-      
-      body.game-active .mobile-keyboard {
-        display: block !important;
-      }
-      
-      /* Force mobile keyboard visibility when needed */
-      body.game-active .fixed-bottom-section {
-        display: block !important;
-        position: fixed !important;
-        bottom: 164px !important;
-      }
-      
-      body.game-active .mobile-keyboard {
-        display: block !important;
-      }
-    }
-    
-    /* Fix mobile keyboard layout */
-      body.game-active .game-container .controls-section {
-        display: none !important;
-      }
-      
-      /* NUCLEAR OPTION: Force mobile controls to show */
-      .fixed-bottom-section {
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-      }
-      
-      .mobile-keyboard {
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-      }
-      
-      /* Mobile inline message */
-      .mobile-inline-message {
-        color: #c9372c !important;
-      }
-      
-      /* Mobile score elements */
-      #mobileScoreValue,
-        display: block !important;
-      }
-      
-      /* Hide desktop score elements on mobile */
-      #scoreValue,
-      #progressFill,
-      #hintRestartBtn {
-        display: none !important;
-      }
-    }
-    
-    /* Mobile: Show mobile elements when game is active */
-    @media (max-width: 768px) {
-        height: 100vh !important;
-        overflow: hidden !important;
-      }
-      
-      .game-container {
-        margin: 0 !important;
-        padding: 0.5rem !important;
-        border: none !important;
-        box-shadow: none !important;
-        border-radius: 0 !important;
-        width: 100% !important;
-        max-width: none !important;
-        background-color: #ffffff !important;
-        display: flex !important;
-        flex-direction: column !important;
-      }
-      
-      /* When game is not active */
-      body:not(.game-active) .game-container {
-        height: 100vh !important;
-        overflow-y: auto !important;
-      }
-      
-      /* When game is active - show mobile controls */
-      body.game-active .game-container {
-        height: calc(100vh - 300px) !important;
-        overflow-y: auto !important;
-      }
-      
-      body.game-active .fixed-bottom-section {
-        display: block !important;
-      }
-      
-      body.game-active .mobile-keyboard {
-        display: block !important;
-      }
-      
-      /* Hide desktop controls on mobile when game is active */
-      body.game-active .game-container .progress-section,
-      body.game-active .game-container .controls-section {
-        display: none !important;
-      }
-      
-      /* Mobile header */
-      .header {
-        padding: 0.5rem 0 !important;
-        margin-bottom: 0.5rem !important;
-        flex-shrink: 0 !important;
-      }
-      
-      /* Mobile hamburger menu positioning */
-      .hamburger-menu {
-        top: 0.5rem !important;
-        left: 0.5rem !important;
-      }
-      
-      .header {
-        padding-left: 3rem !important;
-      }
-      
-      .date-display {
-        padding-left: 2.5rem !important;
-        margin-left: -2.5rem !important;
-        text-align: center !important;
-      }
-      
-      /* Mobile gameplay section */
-      .gameplay-example-section {
-        flex: 1 !important;
-        display: flex !important;
-        flex-direction: column !important;
-        padding: 0.5rem !important;
-        min-height: 200px !important;
-      }
-      
-      /* Mobile puzzle container */
-      .puzzle-container {
-        flex: 1 !important;
-        display: flex !important;
-        flex-direction: column !important;
-        justify-content: center !important;
-        align-items: center !important;
-        gap: 0.5rem !important;
-        padding: 1rem 0 !important;
-      }
-      
-      /* Mobile tiles */
-      .tile {
-        width: 40px !important;
-        height: 40px !important;
-        font-size: 1rem !important;
-      }
-      
-      .tiles-medium .tile {
-        width: 36px !important;
-        height: 36px !important;
-        font-size: 0.9rem !important;
-      }
-      
-      .tiles-small .tile {
-        width: 32px !important;
-        height: 32px !important;
-        font-size: 0.8rem !important;
-      }
-      
-      /* Mobile message area */
-      .message-area {
-        display: none !important;
-      }
-      
-      /* Mobile inline message */
-      .mobile-inline-message {
-        display: block !important;
-        font-size: 0.75rem !important;
-        font-weight: 600 !important;
-        color: #666 !important;
-        text-align: center !important;
-        flex: 1 !important;
-        padding: 0 0.5rem !important;
-        white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-      }
-      
-      .mobile-inline-message.success {
-        color: #00875a !important;
-      }
-      
-      .mobile-inline-message.error {
-        color: #c9372c !important;
-      }
-      
-      /* Hide desktop score elements on mobile */
-      #scoreValue,
-      #progressFill,
-      #hintRestartBtn {
-        display: none !important;
-      }
-      
-      /* Show mobile score elements */
-      #mobileScoreValue,
-      #mobileProgressFill,
-      #mobileHintRestartBtn {
-        display: block !important;
-      }
-    }
-    
-    /* Mobile keyboard styling */
-    @media (max-width: 768px) {
-      .keyboard-row {
-        display: flex;
-        justify-content: center;
-        gap: 4px;
-        margin-bottom: 6px;
-      }
-      
-      .keyboard-row:last-child {
-        margin-bottom: 0;
-      }
-      
-      .key-btn {
-        background-color: white;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-        padding: 12px 8px;
-        font-size: 16px;
-        font-weight: 600;
-        color: #333;
-        cursor: pointer;
-
-      .mobile-keyboard {
-        display: none !important;
-      }
-    }
-    
-    /* Mobile: Show mobile elements only when game is active */
-    @media (max-width: 768px) {
-      body.game-active .fixed-bottom-section {
-        display: block !important;
-      }
-      
-      body.game-active .mobile-keyboard {
-        display: block !important;
-      }
-      
-      /* Hide desktop controls on mobile when game is active */
-      body.game-active .game-container .progress-section,
-      body.game-active .game-container .controls-section {
-        display: none !important;
-      }
-      
-      /* Adjust game container for mobile controls */
-      body.game-active .game-container {
-        padding-bottom: 0 !important;
-        margin-bottom: 0 !important;
-        height: calc(100vh - 300px) !important;
-        overflow-y: auto !important;
-      }
-      
-      /* Ensure proper spacing for mobile layout */
-      body.game-active .gameplay-example-section {
-        flex: 1;
-        min-height: 0;
-        overflow: visible;
-      }
-    }
-    
-    /* Fix mobile keyboard layout */
-    @media (max-width: 768px) {
-      .mobile-keyboard {
-        background-color: #f8f9fa;
-      }
-      
-      .keyboard-row {
-        display: flex;
-        justify-content: center;
-        gap: 4px;
-        margin-bottom: 6px;
-      }
-      
-      .keyboard-row:last-child {
-        margin-bottom: 0;
-      }
-      
-      .key-btn {
-        background-color: white;
-        border: 1px solid #d0d0d0;
-        border-radius: 6px;
-        padding: 12px 8px;
-        font-size: 16px;
-        font-weight: 600;
-        color: #333;
-        cursor: pointer;
-        transition: all 0.1s ease;
-        text-align: center;
-        user-select: none;
-        -webkit-user-select: none;
-        flex: 1;
-        min-width: 0;
-        max-width: 36px;
-      }
-      
-      .key-btn.special {
-        background-color: #326891;
-        color: white;
-        border-color: #326891;
-        flex: 1.5;
-        max-width: 54px;
-      }
-      
-      .key-btn:active,
-      .key-btn.pressed {
-        background-color: #e0e0e0;
-        transform: scale(0.95);
-      }
-      
-      .key-btn.special:active,
-      .key-btn.special.pressed {
-        background-color: #2a5a78;
-      }
-      
-      .key-spacer {
-        flex: 0.3;
-      }
-    }
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        min-height: 0;
-        overflow: visible;
-        padding: 1rem;
-      }
-      
-      /* Puzzle container adjustments */
-      .puzzle-container {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 1rem 0;
-      }
-      
-      /* Message area for mobile */
-      .message-area {
-        min-height: 2rem;
-        margin: 0.5rem 0;
-      }
-    }
-    
-    /* Fix hamburger menu positioning on mobile */
-    @media (max-width: 768px) {
-      .hamburger-menu {
-        top: 1rem;
-        left: 1rem;
-        z-index: 2000;
-      }
-      
-      .header {
-        padding-left: 4rem;
-      }
-      
-      .date-display {
-        padding-left: 3rem;
-        margin-left: -3rem;
-        text-align: center;
-      }
-    }
-      display: none;
-      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-      border-top: 1px solid #e5e5e5;
-    }
-    
-    .mobile-keyboard {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      width: 100%;
-      background-color: white;
-      padding: 12px;
-      z-index: 500;
-      display: none;
-      border-top: 1px solid #d0d0d0;
-    }
-    
-    /* Desktop: Hide mobile elements */
-    @media (min-width: 769px) {
-      .fixed-bottom-section,
-      .mobile-keyboard {
-        display: none !important;
-      }
-    }
-    
-    /* Mobile: Show mobile elements only when game is active */
-    @media (max-width: 768px) {
-      body.game-active .fixed-bottom-section {
-        display: block !important;
-      }
-      
-      body.game-active .mobile-keyboard {
-        display: block !important;
-      }
-      
-      /* Hide desktop controls on mobile when game is active */
-      body.game-active .game-container .progress-section,
-      body.game-active .game-container .controls-section {
-        display: none !important;
-      }
-      
-      /* Adjust game container for mobile controls */
-      body.game-active .game-container {
-        padding-bottom: 0 !important;
-        margin-bottom: 0 !important;
-        height: calc(100vh - 300px) !important;
-        overflow-y: auto !important;
-      }
-      
-      /* Ensure proper spacing for mobile layout */
-      body.game-active .gameplay-example-section {
-        flex: 1;
-        min-height: 0;
-        overflow: visible;
-      }
-    }
-    
-    /* Fix mobile keyboard layout */
-    @media (max-width: 768px) {
-      .mobile-keyboard {
-        background-color: #f8f9fa;
-      }
-      
-      .keyboard-row {
-        display: flex;
-        justify-content: center;
-        gap: 4px;
-        margin-bottom: 6px;
-      }
-      
-      .keyboard-row:last-child {
-        margin-bottom: 0;
-      }
-      
-      .key-btn {
-        background-color: white;
-        border: 1px solid #d0d0d0;
-        border-radius: 6px;
-        padding: 12px 8px;
-        font-size: 16px;
-        font-weight: 600;
-        color: #333;
-        cursor: pointer;
-        transition: all 0.1s ease;
-        text-align: center;
-        user-select: none;
-        flex: 1;
-        min-width: 0;
-        max-width: 36px;
-      }
-      
-      .key-btn.special {
-        background-color: #326891;
-        color: white;
-        border-color: #326891;
-        flex: 1.5;
-        max-width: 54px;
-      }
-      
-      .key-btn:active,
-      .key-btn.pressed {
-        background-color: #e0e0e0;
-        transform: scale(0.95);
-      }
-      
-      .key-btn.special:active,
-      .key-btn.special.pressed {
-        background-color: #2a5a78;
-      }
-      
-      .key-spacer {
-        flex: 0.3;
-      }
-    }
-    
-    /* Ensure mobile layout works properly */
-    @media (max-width: 768px) {
-      body {
-        height: 100vh;
-        overflow: hidden;
-      }
-      
-      .game-container {
-        margin: 0;
-        padding: 1rem;
-        border: none;
-        box-shadow: none;
-        border-radius: 0;
-        width: 100%;
-        max-width: none;
-        height: 100vh;
-        display: flex;
-        flex-direction: column;
-      }
-      
-      /* When game is not active, show normal layout */
-      body:not(.game-active) .game-container {
-        height: auto;
-        min-height: 100vh;
-      }
-      
-      /* Header adjustments for mobile */
-      .header {
-        padding: 1rem 0 0.5rem 0;
-        margin-bottom: 0.5rem;
-        position: relative;
-        background-color: #ffffff;
-        z-index: 10;
-      }
-      
-      /* Gameplay section adjustments */
-      .gameplay-example-section {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        min-height: 0;
-        overflow: visible;
-        padding: 1rem;
-      }
-      
-      /* Puzzle container adjustments */
-      .puzzle-container {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 1rem 0;
-      }
-      
-      /* Message area for mobile */
-      .message-area {
-        min-height: 2rem;
-        margin: 0.5rem 0;
-      }
-    }
-    
-    /* Fix hamburger menu positioning on mobile */
-    @media (max-width: 768px) {
-      .hamburger-menu {
-        top: 1rem;
-        left: 1rem;
-        z-index: 2000;
-      }
-      
-      .header {
-        padding-left: 4rem;
-      }
-      
-      .date-display {
-        padding-left: 3rem;
-        margin-left: -3rem;
-        text-align: center;
-      }
-    }
     .tile.revealed {
       background-color: #326891;
       border-color: #326891;
@@ -1594,26 +708,6 @@
       top: 1rem;
       left: 1rem;
       z-index: 2000;
-    }
-    
-    @media (max-width: 768px) {
-      .hamburger-menu {
-        top: 0.5rem;
-        left: 0.5rem;
-      }
-      
-      .header {
-        padding-left: 3rem;
-      }
-      
-      .date-display {
-        padding-left: 2.5rem;
-        margin-left: -2.5rem;
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        text-align: center;
-      }
     }
     
     .hamburger-button {
@@ -2163,20 +1257,9 @@
       display: none;
     }
 
-    @media (min-width: 769px) {
-      .game-container {
-        background-color: #ffffff;
-        border: 1px solid #e5e5e5;
-        border-radius: 8px;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        max-width: 500px;
-        margin: 2rem auto;
-      }
-    }
-
-    @media (max-width: 768px) {
-      body {
-        height: 100vh;
+    .preview-section {
+      background-color: #f8fafc;
+      border: 1px solid #e5e5e5;
       border-radius: 6px;
       padding: 1rem;
       margin-top: 1rem;
@@ -2242,84 +1325,6 @@
       display: none;
     }
 
-    .fixed-bottom-section {
-      position: fixed;
-      bottom: 164px;
-      left: 0;
-      right: 0;
-      background-color: white;
-      padding: 0.5rem;
-      padding-bottom: 0.5rem;
-      z-index: 200;
-      display: none;
-      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.0);
-      height: 120px;
-    }
-    
-    .mobile-keyboard {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      width: 100%;
-      background-color: #fafafa;
-      padding: 8px;
-      z-index: 500;
-      display: none;
-    }
-    
-    .keyboard-row {
-      display: flex;
-      justify-content: center;
-      gap: 6px;
-      margin-bottom: 8px;
-    }
-
-    .keyboard-row:last-child {
-      margin-bottom: 0;
-    }
-
-    .key-btn {
-      background-color: white;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      padding: 12px 4px;
-      font-size: clamp(0.8rem, 2.2vw, 1rem);
-      font-weight: 600;
-      color: #333;
-      cursor: pointer;
-      transition: all 0.1s ease;
-      text-align: center;
-      user-select: none;
-      -webkit-user-select: none;
-      flex: 1;
-      min-width: 0;
-      position: relative;
-      transform: scale(1);
-    }
-
-    .key-btn.pressed {
-      background-color: #e0e0e0;
-      transform: scale(0.95);
-    }
-    
-    .key-btn.special {
-      background-color: #326891;
-      color: white;
-      border-color: #326891;
-      flex: 1.5;
-      font-size: clamp(0.7rem, 2vw, 0.9rem);
-    }
-
-    .key-btn.special.pressed {
-      background-color: #2a5a78;
-    }
-    
-    .key-spacer {
-      flex: 0.5;
-      max-width: 18px;
-    }
-
     .loading {
       display: inline-block;
       width: 20px;
@@ -2334,7 +1339,187 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+
+    .copyright-footer {
+      display: none; /* Hidden by default (mobile) */
+    }
+
+    /* Desktop-specific styles */
+    @media (min-width: 769px) {
+      .game-container {
+        max-height: 600px;
+        height: auto;
+      }
       
+      .gameplay-example-section {
+        max-height: 600px;
+        padding: 1.5rem 1.5rem 1.75rem 1.5rem;
+        margin-bottom: 1rem;
+      }
+      
+      .puzzle-container {
+        gap: 0.5rem;
+        margin: 1rem 0;
+        padding: 1rem;
+      }
+      
+      .copyright-footer {
+        display: block;
+        position: fixed;
+        bottom: 1rem;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 0.75rem;
+        color: #666;
+        text-align: center;
+        z-index: 100;
+        pointer-events: none;
+      }
+      
+      /* Desktop: Hide mobile elements completely */
+      .fixed-bottom-section,
+      .mobile-keyboard {
+        display: none !important;
+      }
+      
+      /* Desktop: Always show controls */
+      .game-container .progress-section,
+      .game-container .controls-section {
+        display: flex !important;
+      }
+      
+      .game-container .progress-section {
+        display: block !important;
+      }
+    }
+
+    /* Mobile-specific styles - ENHANCED FOR PROPER MOBILE SUPPORT */
+    @media (max-width: 768px) {
+      body {
+        height: 100vh !important;
+        overflow: hidden !important;
+      }
+      
+      .hamburger-menu {
+        top: 0.5rem !important;
+        left: 0.5rem !important;
+      }
+      
+      .header {
+        padding-left: 3rem !important;
+        padding: 0.5rem 0 !important;
+        margin-bottom: 0.5rem !important;
+        flex-shrink: 0 !important;
+      }
+      
+      .date-display {
+        padding-left: 2.5rem !important;
+        margin-left: -2.5rem !important;
+        text-align: center !important;
+      }
+      
+      .game-container {
+        margin: 0 !important;
+        padding: 0.5rem !important;
+        border: none !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        width: 100% !important;
+        max-width: none !important;
+        background-color: #ffffff !important;
+        display: flex !important;
+        flex-direction: column !important;
+        min-height: 100vh !important;
+      }
+      
+      /* When game is not active */
+      body:not(.game-active) .game-container {
+        height: 100vh !important;
+        overflow-y: auto !important;
+      }
+      
+      /* Mobile gameplay section */
+      .gameplay-example-section {
+        flex: 1 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        padding: 0.5rem !important;
+        min-height: 200px !important;
+        overflow: visible !important;
+      }
+      
+      /* Mobile puzzle container */
+      .puzzle-container {
+        flex: 1 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        align-items: center !important;
+        gap: 0.5rem !important;
+        padding: 1rem 0 !important;
+      }
+      
+      /* Mobile tiles */
+      .tile {
+        width: 40px !important;
+        height: 40px !important;
+        font-size: 1rem !important;
+      }
+      
+      .tiles-medium .tile {
+        width: 36px !important;
+        height: 36px !important;
+        font-size: 0.9rem !important;
+      }
+      
+      .tiles-small .tile {
+        width: 32px !important;
+        height: 32px !important;
+        font-size: 0.8rem !important;
+      }
+      
+      /* Mobile message area */
+      .message-area {
+        display: none !important;
+      }
+      
+      /* Mobile inline message */
+      .mobile-inline-message {
+        display: block !important;
+        font-size: 0.75rem !important;
+        font-weight: 600 !important;
+        color: #666 !important;
+        text-align: center !important;
+        flex: 1 !important;
+        padding: 0 0.5rem !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+      }
+      
+      .mobile-inline-message.success {
+        color: #00875a !important;
+      }
+      
+      .mobile-inline-message.error {
+        color: #c9372c !important;
+      }
+      
+      /* Hide desktop score elements on mobile */
+      #scoreValue,
+      #progressFill,
+      #hintRestartBtn {
+        display: none !important;
+      }
+      
+      /* Show mobile score elements */
+      #mobileScoreValue,
+      #mobileProgressFill,
+      #mobileHintRestartBtn {
+        display: block !important;
+      }
+      
+      /* Create form adjustments for mobile */
       .create-container {
         width: 100%;
         padding: 1.5rem 1rem;
@@ -2394,33 +1579,67 @@
         padding: 0.75rem 0.5rem;
         font-size: 0.8rem;
       }
-
-      /* Regular mobile gameplay buttons - smaller for better UX */
-      body.game-active .button {
-        font-size: 0.75rem !important;
-        padding: 0.5rem 0.75rem !important;
-        min-height: 40px !important;
+      
+      #morePunzzlesContent {
+        padding: 2rem 1rem !important;
       }
       
-      /* Mobile: Hide desktop controls when mobile controls are active */
-      .game-container:not(.game-hidden) .progress-section,
-      .game-container:not(.game-hidden) .controls-section {
-        display: none;
+      .modal-button {
+        font-size: 0.8rem !important;
+      }
+    }
+
+    /* CRITICAL MOBILE STYLES FOR GAME ACTIVE STATE */
+    .fixed-bottom-section {
+      position: fixed;
+      bottom: 180px;
+      left: 0;
+      right: 0;
+      background-color: white;
+      padding: 0.75rem 1rem;
+      z-index: 200;
+      display: none;
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+      border-top: 1px solid #e5e5e5;
+      height: 120px;
+    }
+    
+    .mobile-keyboard {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      width: 100%;
+      background-color: #fafafa;
+      padding: 8px;
+      z-index: 500;
+      display: none;
+      border-top: 1px solid #d0d0d0;
+    }
+
+    /* Mobile: Show mobile elements when game is active */
+    @media (max-width: 768px) {
+      /* When game is active - show mobile controls and adjust height */
+      body.game-active .game-container {
+        height: calc(100vh - 300px) !important;
+        overflow-y: auto !important;
       }
       
-      /* Desktop: Always show controls */
-      @media (min-width: 769px) {
-        .game-container:not(.game-hidden) .progress-section,
-        .game-container:not(.game-hidden) .controls-section {
-          display: flex !important;
-        }
-        
-        .game-container:not(.game-hidden) .progress-section {
-          display: block !important;
-        }
+      body.game-active .fixed-bottom-section {
+        display: block !important;
       }
-
-      .fixed-bottom-section .progress-section {
+      
+      body.game-active .mobile-keyboard {
+        display: block !important;
+      }
+      
+      /* Hide desktop controls on mobile when game is active */
+      body.game-active .game-container .progress-section,
+      body.game-active .game-container .controls-section {
+        display: none !important;
+      }
+      
+      /* Fixed bottom section styling */
       .fixed-bottom-section .progress-section {
         margin-bottom: 0.75rem;
         padding: 0;
@@ -2450,62 +1669,100 @@
         margin-bottom: 0;
       }
       
-      #morePunzzlesContent {
-        padding: 2rem 1rem !important;
+      /* Mobile keyboard styling */
+      .keyboard-row {
+        display: flex;
+        justify-content: center;
+        gap: 6px;
+        margin-bottom: 8px;
+      }
+
+      .keyboard-row:last-child {
+        margin-bottom: 0;
+      }
+
+      .key-btn {
+        background-color: white;
+        border: 1px solid #d0d0d0;
+        border-radius: 6px;
+        padding: 12px 4px;
+        font-size: clamp(0.8rem, 2.2vw, 1rem);
+        font-weight: 600;
+        color: #333;
+        cursor: pointer;
+        transition: all 0.1s ease;
+        text-align: center;
+        user-select: none;
+        -webkit-user-select: none;
+        flex: 1;
+        min-width: 0;
+        position: relative;
+        transform: scale(1);
+      }
+
+      .key-btn.pressed {
+        background-color: #e0e0e0;
+        transform: scale(0.95);
       }
       
-      .modal-button {
-        font-size: 0.8rem !important;
+      .key-btn.special {
+        background-color: #326891;
+        color: white;
+        border-color: #326891;
+        flex: 1.5;
+        font-size: clamp(0.7rem, 2vw, 0.9rem);
+      }
+
+      .key-btn.special.pressed {
+        background-color: #2a5a78;
+      }
+      
+      .key-spacer {
+        flex: 0.5;
+        max-width: 18px;
       }
     }
-  </style>
-  
-  <style>
-.create-container,
-#createContainer,
-#feedbackContainer,
-#faqContainer {
-  -webkit-overflow-scrolling: touch;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-}
 
-/* Only add padding when these are actually modal dialogs */
-.create-wrapper.active .create-container,
-#feedbackWrapper.active #feedbackContainer,
-#faqWrapper.active #faqContainer {
-  /* Add some padding at top/bottom for easier scrolling */
-  padding-top: 3rem;
-  padding-bottom: 6rem;
-}
-
-/* Prevent body scroll when modal is open */
-body.modal-open {
-  overflow: hidden;
-}
-
-    .copyright-footer {
-      display: none; /* Hidden by default (mobile) */
-    }
-
-    /* Show only on desktop (769px and above) */
-    @media (min-width: 769px) {
-      .copyright-footer {
-        display: block;
-        position: fixed;
-        bottom: 1rem;
-        left: 50%;
-        transform: translateX(-50%);
-        font-size: 0.75rem;
-        color: #666;
-        text-align: center;
-        z-index: 100;
-        pointer-events: none;
+    /* Additional mobile styles for better compatibility */
+    @media (max-width: 768px) {
+      body.custom-preview .game-title {
+        font-size: 1.5rem !important;
+        margin: 0 !important;
+      }
+      
+      body.custom-preview .date-display {
+        font-size: 0.75rem !important;
+        margin: 0 !important;
+      }
+      
+      body.custom-preview .fixed-bottom-section,
+      body.custom-preview .mobile-keyboard {
+        display: none !important;
+      }
+      
+      body.custom-preview .gameplay-example-section {
+        height: 100%;
+        overflow-y: auto;
       }
     }
-  </style>
-  
-  <style>
+
+    .create-container,
+    #createContainer,
+    #feedbackContainer,
+    #faqContainer {
+      -webkit-overflow-scrolling: touch;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
+
+    /* Only add padding when these are actually modal dialogs */
+    .create-wrapper.active .create-container,
+    #feedbackWrapper.active #feedbackContainer,
+    #faqWrapper.active #faqContainer {
+      /* Add some padding at top/bottom for easier scrolling */
+      padding-top: 3rem;
+      padding-bottom: 6rem;
+    }
   </style>
   
   <script>
@@ -3378,86 +2635,11 @@ body.modal-open {
       }
     }
 
-    // NEW: Enhanced mobile-optimized startGame function
-    function startGameDirectly() {
-      console.log('startGameDirectly() called - optimized for mobile');
-      
-      // Clear any loading states first
-      hideLoadingState();
-      
-      // Ensure modal is hidden
-      document.getElementById('startModal').style.display = 'none';
-      
-      // Make sure game container is visible
-      var gameContainer = document.getElementById('gameContainer');
-      gameContainer.classList.remove('game-hidden');
-      
-      // Remove modal classes
-      document.body.classList.remove('modal-open');
-      gameContainer.classList.remove('content-blur');
-      
-      // Add game active class - CRITICAL for mobile
-      document.body.classList.add('game-active');
-      
-      hasStartedGame = true;
-      
-      // Verify we have puzzle data
-      if (!gameState.puzzleAnswer || !gameState.categoryText || !gameState.words.length) {
-        console.error('Missing puzzle data in startGameDirectly:', {
-          answer: gameState.puzzleAnswer,
-          category: gameState.categoryText,
-          words: gameState.words
-        });
-        alert('Puzzle data not loaded. Please refresh the page.');
-        return;
-      }
-      
-      console.log('Building puzzle with data:', {
-        answer: gameState.puzzleAnswer,
-        category: gameState.categoryText,
-        words: gameState.words
-      });
-      
-      // Build puzzle if not already built
-      if (gameState.letterTiles.length === 0) {
-        buildPuzzle();
-        updateScore(0);
-      }
-      
-      startFoxTimer();
-      startTimeTracking();
-      
-      var hamburgerMenu = document.getElementById('hamburgerMenu');
-      if (hamburgerMenu) {
-        hamburgerMenu.style.display = 'block';
-      }
-      
-      var puzzleType = isCustomPuzzle ? 'custom' : 'daily';
-      trackPuzzleStart(puzzleType, gameState.categoryText);
-      
-      // Force mobile layout update
-      if (window.innerWidth <= 768) {
-        console.log('Mobile detected - ensuring mobile controls are visible');
-        setTimeout(() => {
-          const fixedBottomSection = document.getElementById('fixedBottomSection');
-          const mobileKeyboard = document.getElementById('mobileKeyboard');
-          
-          if (fixedBottomSection) {
-            fixedBottomSection.style.display = 'block';
-            console.log('Mobile bottom section shown');
-          }
-          if (mobileKeyboard) {
-            mobileKeyboard.style.display = 'block';
-            console.log('Mobile keyboard shown');
-          }
-        }, 100);
-      }
-      
-      console.log('Game started successfully');
-    }
-
-    // Enhanced initialization with strict server requirement for date navigation
+    // ENHANCED INITIALIZATION - This is the key fix for mobile support
     document.addEventListener('DOMContentLoaded', async function() {
+      console.log('=== DOMContentLoaded fired ===');
+      
+      var urlParams = new URLSearchParams(window.location.search);
       var skipIntro = urlParams.get('skipIntro');
       var optimized = urlParams.get('optimized');
       
@@ -3517,7 +2699,7 @@ body.modal-open {
           hideLoadingState();
           
           if (skipIntro === 'true') {
-            startGame();
+            startGameDirectly(); // Use the new mobile-optimized function
           } else {
             document.getElementById('startModal').style.display = 'flex';
           }
@@ -3562,7 +2744,7 @@ body.modal-open {
           hideLoadingState();
           
           if (skipIntro === 'true') {
-            startGame();
+            startGameDirectly(); // Use the new mobile-optimized function
           } else {
             document.getElementById('startModal').style.display = 'flex';
             var hamburgerMenu = document.getElementById('hamburgerMenu');
@@ -3621,29 +2803,10 @@ body.modal-open {
         return;
       }
       
-      // Show intro or start game  
+      // Show intro or start game - ENHANCED FOR MOBILE  
       if (skipIntro === 'true') {
         console.log('Skipping intro, starting game directly');
-        console.log('About to call startGameDirectly()');
-        // Ensure game container is visible before starting
-        var gameContainer = document.getElementById('gameContainer');
-        if (gameContainer) {
-          gameContainer.classList.remove('game-hidden');
-          console.log('Game container made visible for skipIntro');
-          console.log('Game container classes:', gameContainer.classList.toString());
-        }
-        
-        // Force mobile class for debugging
-        if (window.innerWidth <= 768) {
-          document.body.classList.add('game-active');
-          console.log('FORCE: Added game-active class for mobile debugging');
-          console.log('Body classes after force:', document.body.classList.toString());
-        }
-        
-        startGameDirectly(); // Use the new optimized function
-      } else {
-        }
-        startGame();
+        startGameDirectly(); // Use the new mobile-optimized function
       } else {
         console.log('Showing intro modal');
         document.getElementById('startModal').style.display = 'flex';
@@ -3660,6 +2823,83 @@ body.modal-open {
     });
 
     testPreviewImage();
+
+    // NEW MOBILE-OPTIMIZED GAME START FUNCTION - This is the key fix
+    function startGameDirectly() {
+      console.log('startGameDirectly() called - optimized for mobile');
+      
+      // Clear any loading states first
+      hideLoadingState();
+      
+      // Ensure modal is hidden
+      document.getElementById('startModal').style.display = 'none';
+      
+      // Make sure game container is visible
+      var gameContainer = document.getElementById('gameContainer');
+      gameContainer.classList.remove('game-hidden');
+      
+      // Remove modal classes
+      document.body.classList.remove('modal-open');
+      gameContainer.classList.remove('content-blur');
+      
+      // Add game active class - CRITICAL for mobile
+      document.body.classList.add('game-active');
+      
+      hasStartedGame = true;
+      
+      // Verify we have puzzle data
+      if (!gameState.puzzleAnswer || !gameState.categoryText || !gameState.words.length) {
+        console.error('Missing puzzle data in startGameDirectly:', {
+          answer: gameState.puzzleAnswer,
+          category: gameState.categoryText,
+          words: gameState.words
+        });
+        alert('Puzzle data not loaded. Please refresh the page.');
+        return;
+      }
+      
+      console.log('Building puzzle with data:', {
+        answer: gameState.puzzleAnswer,
+        category: gameState.categoryText,
+        words: gameState.words
+      });
+      
+      // Build puzzle if not already built
+      if (gameState.letterTiles.length === 0) {
+        buildPuzzle();
+        updateScore(0);
+      }
+      
+      startFoxTimer();
+      startTimeTracking();
+      
+      var hamburgerMenu = document.getElementById('hamburgerMenu');
+      if (hamburgerMenu) {
+        hamburgerMenu.style.display = 'block';
+      }
+      var puzzleType = isCustomPuzzle ? 'custom' : 'daily';
+      trackPuzzleStart(puzzleType, gameState.categoryText);
+      
+      // Force mobile layout update
+      if (window.innerWidth <= 768) {
+        console.log('Mobile detected - ensuring mobile controls are visible');
+        setTimeout(() => {
+          const fixedBottomSection = document.getElementById('fixedBottomSection');
+          const mobileKeyboard = document.getElementById('mobileKeyboard');
+          
+          if (fixedBottomSection) {
+            fixedBottomSection.style.display = 'block';
+            console.log('Mobile bottom section shown');
+          }
+          if (mobileKeyboard) {
+            mobileKeyboard.style.display = 'block';
+            console.log('Mobile keyboard shown');
+          }
+        }, 100);
+      }
+      
+      console.log('Game started successfully with mobile optimizations');
+    }
 
     function startGame() {
       console.log('startGame() called');
@@ -3987,25 +3227,6 @@ body.modal-open {
       
       var mobileMessage = document.getElementById('mobileMessage');
       if (mobileMessage) {
-        var mobileText = clueText || text;
-        if (mobileText.includes('Random letter revealed')) {
-          mobileText = 'Letter revealed (-1)';
-        } else if (mobileText.includes('Random word')) {
-          mobileText = 'Word revealed (-5)';
-        } else if (mobileText.includes('Not quite right')) {
-          mobileText = 'Try again (-2)';
-        } else if (mobileText.includes('Excellent')) {
-          mobileText = 'Correct!';
-        }
-        
-        mobileMessage.textContent = mobileText;
-        mobileMessage.className = 'mobile-inline-message ' + (className || '');
-        
-        setTimeout(function() {
-          mobileMessage.textContent = '';
-        }, 2500);
-      }
-    }
         var mobileText = clueText || text;
         if (mobileText.includes('Random letter revealed')) {
           mobileText = 'Letter revealed (-1)';
@@ -4715,14 +3936,14 @@ body.modal-open {
       savedFormData = null;
     }
     
-function showMainGame() {
-  document.getElementById('createWrapper').classList.remove('active');
-  document.body.classList.remove('modal-open');
-  
-  // Remove custom preview class when returning to main game
-  removeCustomPreviewClass();
-  
-  document.getElementById('gameContainer').classList.remove('content-blur');
+    function showMainGame() {
+      document.getElementById('createWrapper').classList.remove('active');
+      document.body.classList.remove('modal-open');
+      
+      // Remove custom preview class when returning to main game
+      removeCustomPreviewClass();
+      
+      document.getElementById('gameContainer').classList.remove('content-blur');
       
       savedFormData = null;
       
@@ -5111,10 +4332,9 @@ function showMainGame() {
       document.getElementById('dateDisplay').innerHTML = 
         'Custom Punzzle · <a href="#" onclick="copyPuzzleUrl(); return false;">Copy link</a>';
 
-if (!gameState.customHint) {
+      if (!gameState.customHint) {
         document.getElementById('hintRestartBtn').textContent = 'Restart';
         document.getElementById('mobileHintRestartBtn').textContent = 'Restart';
-
       } else {
         document.getElementById('hintRestartBtn').textContent = 'Hint (-5)';
         document.getElementById('mobileHintRestartBtn').textContent = 'Hint (-5)';
