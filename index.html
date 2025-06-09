@@ -463,12 +463,6 @@
     
     .mobile-keyboard {
 
-      font-family: 'Headland One', serif;
-      font-weight: 400;
-      font-size: 2.1rem;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      text-rendering: optimizeLegibility;
       text-align: center;
       margin-bottom: 0.5rem;
       flex: 1;
@@ -614,6 +608,71 @@
     /* Desktop: Hide mobile elements completely */
     @media (min-width: 769px) {
       .fixed-bottom-section,
+      .mobile-keyboard {
+        display: none !important;
+      }
+    }
+    
+    /* Mobile: Basic responsive layout - don't force visibility */
+    @media (max-width: 768px) {
+      body {
+        height: 100vh;
+        overflow: hidden;
+      }
+      
+      .game-container {
+        margin: 0;
+        padding: 0.5rem;
+        border: none;
+        box-shadow: none;
+        border-radius: 0;
+        width: 100%;
+        max-width: none;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+      
+      /* When game is active - show mobile controls and adjust height */
+      body.game-active .game-container {
+        height: calc(100vh - 300px);
+      }
+      
+      body.game-active .fixed-bottom-section {
+        display: block;
+      }
+      
+      body.game-active .mobile-keyboard {
+        display: block;
+      }
+      
+      /* Hide desktop controls on mobile when game is active */
+      body.game-active .game-container .progress-section,
+      body.game-active .game-container .controls-section {
+        display: none;
+      }
+      
+      .keyboard-row {
+        display: flex;
+        justify-content: center;
+        gap: 4px;
+        margin-bottom: 6px;
+      }
+      
+      .keyboard-row:last-child {
+        margin-bottom: 0;
+      }
+      
+      .key-btn {
+        background-color: white;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        padding: 12px 8px;
+        font-size: 16px;
+        font-weight: 600;
+        color: #333;
+        cursor: pointer;
+
       .mobile-keyboard {
         display: none !important;
       }
@@ -971,26 +1030,6 @@
         flex: 0.3;
       }
     }
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        min-height: 0;
-        overflow: visible;
-        padding: 1rem;
-      }
-      
-      /* Puzzle container adjustments */
-      .puzzle-container {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 1rem 0;
-      }
-      
-      /* Message area for mobile */
       .message-area {
         min-height: 2rem;
         margin: 0.5rem 0;
