@@ -816,9 +816,15 @@
       flex: 1;
     }
     
+    .button.hint-used {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+    
     .button:hover {
       background-color: #f8fafc;
       color: #1a1a1a;
+
     }
     
     .hamburger-menu {
@@ -3463,8 +3469,8 @@
         giveHint();
         gameState.hintUsed = true;
         
-        document.getElementById('hintRestartBtn').textContent = 'Restart';
-        document.getElementById('mobileHintRestartBtn').textContent = 'Restart';
+        document.getElementById('hintRestartBtn').classList.add('hint-used');
+        document.getElementById('mobileHintRestartBtn').classList.add('hint-used');
       } else {
         trackFeatureUse('restart', 1);
         trackPunzzleEvent('gameplay', 'game_action', 'restart_after_hint');
