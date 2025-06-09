@@ -448,27 +448,21 @@
       text-align: center;
     }
     
-    @media (min-width: 769px) {
-      .date-display {
-        margin-bottom: 1.5rem;
-      }
-    }
-      color: #326891;
-      text-decoration: none;
+    .fixed-bottom-section {
+      position: fixed;
+      bottom: 180px;
+      left: 0;
+      right: 0;
+      background-color: white;
+      padding: 0.75rem 1rem;
+      z-index: 200;
+      display: none;
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+      border-top: 1px solid #e5e5e5;
     }
     
-    .date-display a:hover {
-      text-decoration: underline;
-    }
-    
-    .modal-title {
-      font-family: 'Headland One', serif;
-      font-size: 2.1rem;
-      font-weight: 400;
-      margin: 0 0 1rem 0;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      text-rendering: optimizeLegibility;
+    .mobile-keyboard {
+
     }
     
     .scorecard-title {
@@ -597,14 +591,588 @@
       overflow: hidden;
     }
     
-    .tile.hidden {
-      color: transparent;
-      background-color: #f8fafc;
-      border-color: #d0d0d0;
-      visibility: visible;
-      opacity: 1;
+    .fixed-bottom-section {
+      position: fixed;
+      bottom: 180px;
+      left: 0;
+      right: 0;
+      background-color: white;
+      padding: 0.75rem 1rem;
+      z-index: 200;
+      display: none;
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+      border-top: 1px solid #e5e5e5;
     }
     
+    .mobile-keyboard {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      width: 100%;
+      background-color: #f8f9fa;
+      padding: 12px;
+      z-index: 500;
+      display: none;
+      border-top: 1px solid #d0d0d0;
+    }
+    
+    /* Desktop: Hide mobile elements completely */
+    @media (min-width: 769px) {
+      .fixed-bottom-section,
+      .mobile-keyboard {
+        display: none !important;
+      }
+      
+      /* Ensure desktop elements are visible */
+      .game-container .progress-section,
+      .game-container .controls-section {
+        display: flex !important;
+      }
+      
+      .game-container .progress-section {
+        display: block !important;
+      }
+      
+      /* Hide mobile-specific score elements */
+      #mobileScoreValue,
+      #mobileMessage,
+      #mobileProgressFill,
+      #mobileHintRestartBtn {
+        display: none !important;
+      }
+    }
+    
+    /* Mobile: Show mobile elements when game is active */
+    @media (max-width: 768px) {
+      /* Basic mobile layout */
+      body {
+        height: 100vh !important;
+        overflow: hidden !important;
+      }
+      
+      .game-container {
+        margin: 0 !important;
+        padding: 0.5rem !important;
+        border: none !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        width: 100% !important;
+        max-width: none !important;
+        background-color: #ffffff !important;
+        display: flex !important;
+        flex-direction: column !important;
+      }
+      
+      /* When game is not active */
+      body:not(.game-active) .game-container {
+        height: 100vh !important;
+        overflow-y: auto !important;
+      }
+      
+      /* When game is active - show mobile controls */
+      body.game-active .game-container {
+        height: calc(100vh - 300px) !important;
+        overflow-y: auto !important;
+      }
+      
+      body.game-active .fixed-bottom-section {
+        display: block !important;
+      }
+      
+      body.game-active .mobile-keyboard {
+        display: block !important;
+      }
+      
+      /* Hide desktop controls on mobile when game is active */
+      body.game-active .game-container .progress-section,
+      body.game-active .game-container .controls-section {
+        display: none !important;
+      }
+      
+      /* Mobile header */
+      .header {
+        padding: 0.5rem 0 !important;
+        margin-bottom: 0.5rem !important;
+        flex-shrink: 0 !important;
+      }
+      
+      /* Mobile hamburger menu positioning */
+      .hamburger-menu {
+        top: 0.5rem !important;
+        left: 0.5rem !important;
+      }
+      
+      .header {
+        padding-left: 3rem !important;
+      }
+      
+      .date-display {
+        padding-left: 2.5rem !important;
+        margin-left: -2.5rem !important;
+        text-align: center !important;
+      }
+      
+      /* Mobile gameplay section */
+      .gameplay-example-section {
+        flex: 1 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        padding: 0.5rem !important;
+        min-height: 200px !important;
+      }
+      
+      /* Mobile puzzle container */
+      .puzzle-container {
+        flex: 1 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        align-items: center !important;
+        gap: 0.5rem !important;
+        padding: 1rem 0 !important;
+      }
+      
+      /* Mobile tiles */
+      .tile {
+        width: 40px !important;
+        height: 40px !important;
+        font-size: 1rem !important;
+      }
+      
+      .tiles-medium .tile {
+        width: 36px !important;
+        height: 36px !important;
+        font-size: 0.9rem !important;
+      }
+      
+      .tiles-small .tile {
+        width: 32px !important;
+        height: 32px !important;
+        font-size: 0.8rem !important;
+      }
+      
+      /* Mobile message area */
+      .message-area {
+        display: none !important;
+      }
+      
+      /* Mobile inline message */
+      .mobile-inline-message {
+        display: block !important;
+        font-size: 0.75rem !important;
+        font-weight: 600 !important;
+        color: #666 !important;
+        text-align: center !important;
+        flex: 1 !important;
+        padding: 0 0.5rem !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+      }
+      
+      .mobile-inline-message.success {
+        color: #00875a !important;
+      }
+      
+      .mobile-inline-message.error {
+        color: #c9372c !important;
+      }
+      
+      /* Hide desktop score elements on mobile */
+      #scoreValue,
+      #progressFill,
+      #hintRestartBtn {
+        display: none !important;
+      }
+      
+      /* Show mobile score elements */
+      #mobileScoreValue,
+      #mobileProgressFill,
+      #mobileHintRestartBtn {
+        display: block !important;
+      }
+    }
+    
+    /* Mobile keyboard styling */
+    @media (max-width: 768px) {
+      .keyboard-row {
+        display: flex;
+        justify-content: center;
+        gap: 4px;
+        margin-bottom: 6px;
+      }
+      
+      .keyboard-row:last-child {
+        margin-bottom: 0;
+      }
+      
+      .key-btn {
+        background-color: white;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        padding: 12px 8px;
+        font-size: 16px;
+        font-weight: 600;
+        color: #333;
+        cursor: pointer;
+
+      .mobile-keyboard {
+        display: none !important;
+      }
+    }
+    
+    /* Mobile: Show mobile elements only when game is active */
+    @media (max-width: 768px) {
+      body.game-active .fixed-bottom-section {
+        display: block !important;
+      }
+      
+      body.game-active .mobile-keyboard {
+        display: block !important;
+      }
+      
+      /* Hide desktop controls on mobile when game is active */
+      body.game-active .game-container .progress-section,
+      body.game-active .game-container .controls-section {
+        display: none !important;
+      }
+      
+      /* Adjust game container for mobile controls */
+      body.game-active .game-container {
+        padding-bottom: 0 !important;
+        margin-bottom: 0 !important;
+        height: calc(100vh - 300px) !important;
+        overflow-y: auto !important;
+      }
+      
+      /* Ensure proper spacing for mobile layout */
+      body.game-active .gameplay-example-section {
+        flex: 1;
+        min-height: 0;
+        overflow: visible;
+      }
+    }
+    
+    /* Fix mobile keyboard layout */
+    @media (max-width: 768px) {
+      .mobile-keyboard {
+        background-color: #f8f9fa;
+      }
+      
+      .keyboard-row {
+        display: flex;
+        justify-content: center;
+        gap: 4px;
+        margin-bottom: 6px;
+      }
+      
+      .keyboard-row:last-child {
+        margin-bottom: 0;
+      }
+      
+      .key-btn {
+        background-color: white;
+        border: 1px solid #d0d0d0;
+        border-radius: 6px;
+        padding: 12px 8px;
+        font-size: 16px;
+        font-weight: 600;
+        color: #333;
+        cursor: pointer;
+        transition: all 0.1s ease;
+        text-align: center;
+        user-select: none;
+        -webkit-user-select: none;
+        flex: 1;
+        min-width: 0;
+        max-width: 36px;
+      }
+      
+      .key-btn.special {
+        background-color: #326891;
+        color: white;
+        border-color: #326891;
+        flex: 1.5;
+        max-width: 54px;
+      }
+      
+      .key-btn:active,
+      .key-btn.pressed {
+        background-color: #e0e0e0;
+        transform: scale(0.95);
+      }
+      
+      .key-btn.special:active,
+      .key-btn.special.pressed {
+        background-color: #2a5a78;
+      }
+      
+      .key-spacer {
+        flex: 0.3;
+      }
+    }
+
+    .loading {
+
+      /* When game is not active, show normal layout */
+      body:not(.game-active) .game-container {
+        height: auto;
+        min-height: 100vh;
+      }
+      
+      /* Header adjustments for mobile */
+      .header {
+        padding: 1rem 0 0.5rem 0;
+        margin-bottom: 0.5rem;
+        position: relative;
+        background-color: #ffffff;
+        z-index: 10;
+      }
+      
+      /* Gameplay section adjustments */
+      .gameplay-example-section {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        overflow: visible;
+        padding: 1rem;
+      }
+      
+      /* Puzzle container adjustments */
+      .puzzle-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 1rem 0;
+      }
+      
+      /* Message area for mobile */
+      .message-area {
+        min-height: 2rem;
+        margin: 0.5rem 0;
+      }
+    }
+    
+    /* Fix hamburger menu positioning on mobile */
+    @media (max-width: 768px) {
+      .hamburger-menu {
+        top: 1rem;
+        left: 1rem;
+        z-index: 2000;
+      }
+      
+      .header {
+        padding-left: 4rem;
+      }
+      
+      .date-display {
+        padding-left: 3rem;
+        margin-left: -3rem;
+        text-align: center;
+      }
+    }
+      display: none;
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+      border-top: 1px solid #e5e5e5;
+    }
+    
+    .mobile-keyboard {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      width: 100%;
+      background-color: white;
+      padding: 12px;
+      z-index: 500;
+      display: none;
+      border-top: 1px solid #d0d0d0;
+    }
+    
+    /* Desktop: Hide mobile elements */
+    @media (min-width: 769px) {
+      .fixed-bottom-section,
+      .mobile-keyboard {
+        display: none !important;
+      }
+    }
+    
+    /* Mobile: Show mobile elements only when game is active */
+    @media (max-width: 768px) {
+      body.game-active .fixed-bottom-section {
+        display: block !important;
+      }
+      
+      body.game-active .mobile-keyboard {
+        display: block !important;
+      }
+      
+      /* Hide desktop controls on mobile when game is active */
+      body.game-active .game-container .progress-section,
+      body.game-active .game-container .controls-section {
+        display: none !important;
+      }
+      
+      /* Adjust game container for mobile controls */
+      body.game-active .game-container {
+        padding-bottom: 0 !important;
+        margin-bottom: 0 !important;
+        height: calc(100vh - 300px) !important;
+        overflow-y: auto !important;
+      }
+      
+      /* Ensure proper spacing for mobile layout */
+      body.game-active .gameplay-example-section {
+        flex: 1;
+        min-height: 0;
+        overflow: visible;
+      }
+    }
+    
+    /* Fix mobile keyboard layout */
+    @media (max-width: 768px) {
+      .mobile-keyboard {
+        background-color: #f8f9fa;
+      }
+      
+      .keyboard-row {
+        display: flex;
+        justify-content: center;
+        gap: 4px;
+        margin-bottom: 6px;
+      }
+      
+      .keyboard-row:last-child {
+        margin-bottom: 0;
+      }
+      
+      .key-btn {
+        background-color: white;
+        border: 1px solid #d0d0d0;
+        border-radius: 6px;
+        padding: 12px 8px;
+        font-size: 16px;
+        font-weight: 600;
+        color: #333;
+        cursor: pointer;
+        transition: all 0.1s ease;
+        text-align: center;
+        user-select: none;
+        flex: 1;
+        min-width: 0;
+        max-width: 36px;
+      }
+      
+      .key-btn.special {
+        background-color: #326891;
+        color: white;
+        border-color: #326891;
+        flex: 1.5;
+        max-width: 54px;
+      }
+      
+      .key-btn:active,
+      .key-btn.pressed {
+        background-color: #e0e0e0;
+        transform: scale(0.95);
+      }
+      
+      .key-btn.special:active,
+      .key-btn.special.pressed {
+        background-color: #2a5a78;
+      }
+      
+      .key-spacer {
+        flex: 0.3;
+      }
+    }
+    
+    /* Ensure mobile layout works properly */
+    @media (max-width: 768px) {
+      body {
+        height: 100vh;
+        overflow: hidden;
+      }
+      
+      .game-container {
+        margin: 0;
+        padding: 1rem;
+        border: none;
+        box-shadow: none;
+        border-radius: 0;
+        width: 100%;
+        max-width: none;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+      
+      /* When game is not active, show normal layout */
+      body:not(.game-active) .game-container {
+        height: auto;
+        min-height: 100vh;
+      }
+      
+      /* Header adjustments for mobile */
+      .header {
+        padding: 1rem 0 0.5rem 0;
+        margin-bottom: 0.5rem;
+        position: relative;
+        background-color: #ffffff;
+        z-index: 10;
+      }
+      
+      /* Gameplay section adjustments */
+      .gameplay-example-section {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        overflow: visible;
+        padding: 1rem;
+      }
+      
+      /* Puzzle container adjustments */
+      .puzzle-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 1rem 0;
+      }
+      
+      /* Message area for mobile */
+      .message-area {
+        min-height: 2rem;
+        margin: 0.5rem 0;
+      }
+    }
+    
+    /* Fix hamburger menu positioning on mobile */
+    @media (max-width: 768px) {
+      .hamburger-menu {
+        top: 1rem;
+        left: 1rem;
+        z-index: 2000;
+      }
+      
+      .header {
+        padding-left: 4rem;
+      }
+      
+      .date-display {
+        padding-left: 3rem;
+        margin-left: -3rem;
+        text-align: center;
+      }
+    }
     .tile.revealed {
       background-color: #326891;
       border-color: #326891;
@@ -1571,221 +2139,6 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
-
-    @media (max-width: 768px) {
-      body {
-        height: 100vh;
-        overflow: hidden;
-      }
-      
-      body.game-active .mobile-keyboard {
-        display: block !important;
-      }
-      
-      body.game-active .fixed-bottom-section {
-        display: block !important;
-      }
-      
-      /* Mobile Custom Puzzle Preview Layout */
-      body.custom-puzzle-preview .header {
-        position: sticky !important;
-        top: 0 !important;
-        z-index: 100 !important;
-        background-color: white !important;
-        box-shadow: none !important;
-        margin-bottom: 0 !important;
-        padding: 0.5rem !important;
-      }
-        margin-bottom: 0 !important;
-        padding: 0.5rem !important;
-      }
-
-      
-
-      body.custom-puzzle-preview .game-container {
-        padding-top: 100px !important;
-        height: calc(100vh - 284px) !important;
-      }
-      
-      
-      .game-container {
-        margin: 0;
-        padding: 0.5rem;
-        padding-bottom: 0.5rem;
-        border: none;
-        box-shadow: none;
-        border-radius: 0;
-
-        border-radius: 0;
-        width: 100%;
-        max-width: none;
-        height: 100vh;
-        display: flex;
-        flex-direction: column;
-      }
-    }
-
-    @media (min-width: 769px) {
-      .game-container {
-        background-color: #ffffff !important;
-        border: 1px solid #e5e5e5 !important;
-        border-radius: 8px !important;
-        margin: 1rem !important;
-        padding: 1rem 1rem 0.75rem 1rem !important;
-        width: calc(100% - 2rem) !important;
-        max-width: 500px !important;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
-        min-height: 520px !important;
-        max-height: 600px !important;
-      }
-    }
-        padding-bottom: 0;
-      }
-
-      .header {
-        padding: 0.5rem 0;
-        margin-bottom: 0.5rem;
-        position: sticky;
-        top: 0;
-        background-color: #ffffff;
-      }
-      
-      body.custom-puzzle-preview .category-text {
-        margin-top: 0 !important;
-      }
-      
-      body.custom-puzzle-preview .mobile-keyboard {
-        background-color: #fafafa !important;
-      }
-      
-      body.custom-puzzle-preview .button {
-        padding: 0.4rem 0.5rem !important;
-        min-height: 36px !important;
-      }
-      
-      body.custom-puzzle-preview .puzzle-container {
-        margin-top: 0 !important;
-        padding-top: 1rem !important;
-      }
-      
-      body.custom-puzzle-preview .puzzle-container {
-        margin-top: 0 !important;
-        padding: 0.4rem 0.5rem;
-        min-height: 36px;
-      }
-
-      .category-section {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        margin-bottom: 0.5rem;
-        overflow: hidden;
-      }
-
-      .gameplay-example-section {
-        padding: 0.5rem;
-        padding-top: 0.25rem;
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        min-height: 0;
-        overflow: hidden;
-        justify-content: flex-start;
-      }
-      
-      .category-text {
-        font-size: 0.75rem;
-        padding: 0.4rem 0.6rem;
-        margin-bottom: 0.25rem;
-      }
-      
-      .puzzle-container {
-        position: static;
-        transform: none;
-        left: auto;
-        right: auto;
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-start;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.5rem 0 1rem 0;
-        margin: 0;
-      }
-
-      .word-group {
-        width: auto;
-        margin: 0 auto;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 0.3rem;
-      }
-
-      .tile {
-        width: 42px;
-        height: 42px;
-        font-size: 1rem;
-      }
-      
-      .tiles-medium .tile {
-        width: 36px;
-        height: 36px;
-        font-size: 0.9rem;
-      }
-      
-      .tiles-small .tile {
-        width: 30px;
-        height: 30px;
-        font-size: 0.8rem;
-      }
-
-      .message-area {
-        display: none;
-      }
-
-      }
-
-      .mobile-inline-message {
-        font-size: 0.7rem;
-        font-weight: 600;
-        color: #666;
-        text-align: center;
-        flex: 1;
-        padding: 0 0.5rem;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      
-      .mobile-inline-message.success {
-        color: #00875a;
-      }
-      
-      /* Custom puzzle preview mode layout fixes */
-      body.custom-puzzle-preview {
-        background-color: rgb(255, 255, 255) !important;
-      }
-      
-      body.custom-puzzle-preview .gameplay-example-section {
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-      }
-      
-      body.custom-puzzle-preview .gameplay-example-section {
-        flex: 1;
-        max-height: calc(100vh - 00px);
-        min-height: 0;
-        overflow: hidden;
-        overflow-y: auto;
-      }
-      
-      .create-wrapper {
-        align-items: flex-start;
-        padding-top: 1rem;
-      }
       
       .create-container {
         width: 100%;
