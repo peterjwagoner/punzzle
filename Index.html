@@ -1533,6 +1533,24 @@
         display: block !important;
       }
       
+      /* Mobile Custom Puzzle Preview Layout */
+      body.custom-puzzle-preview .header {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        z-index: 1000 !important;
+        background-color: white !important;
+        border-bottom: 1px solid #e5e5e5 !important;
+        padding: 0.5rem !important;
+      }
+      
+      body.custom-puzzle-preview .game-container {
+        padding-top: 100px !important;
+        height: calc(100vh - 284px) !important;
+      }
+      
+      
       .game-container {
         margin: 0;
         padding: 0.5rem;
@@ -3940,8 +3958,10 @@ function showMainGame() {
   document.getElementById('createWrapper').classList.remove('active');
   document.body.classList.remove('modal-open');
   
+  // Remove custom preview class when returning to main game
+  removeCustomPreviewClass();
+  
   document.getElementById('gameContainer').classList.remove('content-blur');
-      document.getElementById('scoreCard').classList.remove('content-blur');
       
       savedFormData = null;
       
@@ -4291,6 +4311,12 @@ function showMainGame() {
       gameState.hintUsed = false;
       gameState.puzzleId = `custom-shared-${Date.now()}`;
       
+      // Add mobile preview class for proper layout
+      if (window.innerWidth <= 768 || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+        document.body.classList.add('custom-puzzle-preview');
+        console.log('Added custom-puzzle-preview class for mobile layout');
+      }
+      
       const customId = await saveCustomPuzzle(puzzleData);
       if (customId) {
         gameState.puzzleId = `custom-${customId}`;
@@ -4350,6 +4376,11 @@ if (!gameState.customHint) {
       if (hamburgerMenu) {
         hamburgerMenu.style.display = 'none';
       }
+    }
+
+    function removeCustomPreviewClass() {
+      document.body.classList.remove('custom-puzzle-preview');
+      console.log('Removed custom-puzzle-preview class');
     }
 
     function copyPuzzleUrl() {
