@@ -639,11 +639,17 @@
       transition: opacity 0.1s ease-out, transform 0.1s ease-out;
       min-width: 56px;
       text-align: center;
-      transform-origin: center bottom;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+
+    .modal-title {
+      font-family: 'Headland One', serif;
+      font-weight: 400;
     }
     
-    .key-popup.active {
-      opacity: 1;
+    .modal-content p {
+      color: #666666;
+
       transform: scale(1) translateX(-50%);
     }
     
@@ -970,7 +976,15 @@
     
     .scorecard-title {
       font-family: 'Headland One', serif;
+      font-weight: 400;
       -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    
+    .create-container .header-logo {
+      width: 50px;
+      height: 50px;
+
       -moz-osx-font-smoothing: grayscale;
     }
     
@@ -2089,12 +2103,16 @@
         </a>
         <h1 class="game-title">FAQ</h1>
       </div>
+      </div>
+      <div class="scorecard-logo-container">
+        <a href="/" style="text-decoration: none;">
+          <img src="https://punzzle.com/images/foxholefox.png" alt="Punzzle Fox" class="scorecard-logo">
+        </a>
+        <div class="scorecard-url"><a href="/" style="text-decoration: none; color: inherit;">Punzzle.com</a></div>
+      </div>
+      <h2 class="modal-title scorecard-title" id="scoreCardTitle" style="margin-top: 0; margin-bottom: 1rem; position: relative; z-index: 10; font-weight: 400;">You got it!</h2>
 
-      <div style="margin-top: 2rem; text-align: center;">
-        <div class="form-group">
-          <p style="font-weight: 600; color: #1a1a1a; margin-bottom: 0.5rem;">Q: What's the Fox's name?</p>
-          <p style="color: #666; margin-bottom: 0;">A: Oliver.</p>
-        </div>
+      <div class="modal-content" style="margin-top: 1rem;">
       </div>
       <div class="create-actions" style="margin-top: 3rem;">
         <button type="button" class="create-btn" onclick="closeFAQ()">Close</button>
