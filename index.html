@@ -1756,6 +1756,21 @@
         height: 100%;
         overflow-y: auto;
       }
+      
+      /* Ensure header stays at top on preview */
+      body.custom-preview .header {
+        position: sticky !important;
+        top: 0 !important;
+        background-color: #ffffff !important;
+        z-index: 100 !important;
+        border-bottom: 1px solid #e5e5e5 !important;
+        margin-bottom: 0.5rem !important;
+      }
+      
+      body.custom-preview .game-container {
+        padding-top: 0 !important;
+        overflow-y: auto !important;
+      }
     }
 
     .create-container,
