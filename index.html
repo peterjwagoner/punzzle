@@ -2181,7 +2181,7 @@
     <div class="controls-section">
       <button onclick="revealRandomLetter()" class="button">Random Letter (-1)</button>
       <button onclick="revealRandomWord()" class="button">Random Word (-5)</button>
-      <button onclick="handleHintOrRestart()" class="button" id="hintRestartBtn">Hint (-5)</button>
+      <button onclick="handleHintOrRestart()" class="button" id="hintRestartBtn">Hint (-3)</button>
     </div>
   </div>
 
@@ -2201,7 +2201,7 @@
     <div class="controls-section">
       <button onclick="revealRandomLetter()" class="button">Random Letter (-1)</button>
       <button onclick="revealRandomWord()" class="button">Random Word (-5)</button>
-      <button onclick="handleHintOrRestart()" class="button" id="mobileHintRestartBtn">Hint (-5)</button>
+      <button onclick="handleHintOrRestart()" class="button" id="mobileHintRestartBtn">Hint (-3)</button>
     </div>
   </div>
 
@@ -3082,8 +3082,8 @@
       } else {
         var hintBtn = document.getElementById('hintRestartBtn');
         var mobileHintBtn = document.getElementById('mobileHintRestartBtn');
-        if (hintBtn) hintBtn.textContent = 'Hint (-5)';
-        if (mobileHintBtn) mobileHintBtn.textContent = 'Hint (-5)';
+        if (hintBtn) hintBtn.textContent = 'Hint (3)';
+        if (mobileHintBtn) mobileHintBtn.textContent = 'Hint (-3)';
       }
       
       // Validate and clean words array
@@ -3296,7 +3296,7 @@
     }
 
     function giveHint() {
-      updateScore(-5, 'Hint');
+      updateScore(-3, 'Hint');
       updateMessage('', '', gameState.customHint);
     }
 
@@ -3544,8 +3544,8 @@
         document.getElementById('hintRestartBtn').textContent = 'Restart';
         document.getElementById('mobileHintRestartBtn').textContent = 'Restart';
       } else {
-        document.getElementById('hintRestartBtn').textContent = 'Hint (-5)';
-        document.getElementById('mobileHintRestartBtn').textContent = 'Hint (-5)';
+        document.getElementById('hintRestartBtn').textContent = 'Hint (-3)';
+        document.getElementById('mobileHintRestartBtn').textContent = 'Hint (-3)';
       }
       
       if (gameState.currentActiveTile) {
@@ -4376,8 +4376,8 @@
         document.getElementById('hintRestartBtn').textContent = 'Restart';
         document.getElementById('mobileHintRestartBtn').textContent = 'Restart';
       } else {
-        document.getElementById('hintRestartBtn').textContent = 'Hint (-5)';
-        document.getElementById('mobileHintRestartBtn').textContent = 'Hint (-5)';
+        document.getElementById('hintRestartBtn').textContent = 'Hint (-3)';
+        document.getElementById('mobileHintRestartBtn').textContent = 'Hint (-3)';
       }
       
       document.getElementById('createWrapper').classList.remove('active');
