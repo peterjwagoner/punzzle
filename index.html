@@ -440,12 +440,11 @@
       text-align: center;
     }
     
-    .message-area {
-      min-height: 4rem;
+    .puzzle-container {
       display: flex;
       flex-direction: column;
-      justify-content: center;
-
+      align-items: center;
+      gap: 0.25rem;
       margin: 0.5rem 0;
       padding: 0.5rem;
       flex: 1;
@@ -557,9 +556,9 @@
       margin-top: auto;
       margin-bottom: 0.5rem;
       flex-shrink: 0;
-      padding: 0.75rem 1.5rem;
-      width: 100%;
+      padding: 0.5rem;
     }
+    
     .message {
       font-size: 0.875rem;
       font-weight: 600;
@@ -1593,7 +1592,7 @@
     /* CRITICAL MOBILE STYLES FOR GAME ACTIVE STATE */
     .fixed-bottom-section {
       position: fixed;
-      bottom: 140px;
+      bottom: 80px;
       left: 0;
       right: 0;
       background-color: white;
@@ -1615,9 +1614,11 @@
       padding: 8px;
       z-index: 500;
       display: none;
+      border-top: 1px solid #d0d0d0;
     }
 
     /* Mobile: Show mobile elements when game is active */
+    @media (max-width: 768px) {
       /* When game is active - show mobile controls and adjust height */
       body.game-active .game-container {
         height: calc(100vh - 284px) !important;
@@ -2182,7 +2183,7 @@
     <div class="controls-section">
       <button onclick="revealRandomLetter()" class="button">Random Letter (-1)</button>
       <button onclick="revealRandomWord()" class="button">Random Word (-5)</button>
-      <button onclick="handleHintOrRestart()" class="button" id="hintRestartBtn">Hint (-3)</button>
+      <button onclick="handleHintOrRestart()" class="button" id="hintRestartBtn">Hint (-5)</button>
     </div>
   </div>
 
@@ -2202,7 +2203,7 @@
     <div class="controls-section">
       <button onclick="revealRandomLetter()" class="button">Random Letter (-1)</button>
       <button onclick="revealRandomWord()" class="button">Random Word (-5)</button>
-      <button onclick="handleHintOrRestart()" class="button" id="mobileHintRestartBtn">Hint (-3)</button>
+      <button onclick="handleHintOrRestart()" class="button" id="mobileHintRestartBtn">Hint (-5)</button>
     </div>
   </div>
 
@@ -2354,7 +2355,7 @@
       },
       {
         answer: "CELINE DIJON",
-        categories: "POP STAR + CONDIMENTS",
+        categories: "POP STARS + CONDIMENTS",
         words: ["CELINE", "DIJON"],
         hint: "My heart will go on... this sandwich"
       },
@@ -3083,8 +3084,8 @@
       } else {
         var hintBtn = document.getElementById('hintRestartBtn');
         var mobileHintBtn = document.getElementById('mobileHintRestartBtn');
-        if (hintBtn) hintBtn.textContent = 'Hint (3)';
-        if (mobileHintBtn) mobileHintBtn.textContent = 'Hint (-3)';
+        if (hintBtn) hintBtn.textContent = 'Hint (-5)';
+        if (mobileHintBtn) mobileHintBtn.textContent = 'Hint (-5)';
       }
       
       // Validate and clean words array
@@ -3297,7 +3298,7 @@
     }
 
     function giveHint() {
-      updateScore(-3, 'Hint');
+      updateScore(-5, 'Hint');
       updateMessage('', '', gameState.customHint);
     }
 
@@ -3545,8 +3546,8 @@
         document.getElementById('hintRestartBtn').textContent = 'Restart';
         document.getElementById('mobileHintRestartBtn').textContent = 'Restart';
       } else {
-        document.getElementById('hintRestartBtn').textContent = 'Hint (-3)';
-        document.getElementById('mobileHintRestartBtn').textContent = 'Hint (-3)';
+        document.getElementById('hintRestartBtn').textContent = 'Hint (-5)';
+        document.getElementById('mobileHintRestartBtn').textContent = 'Hint (-5)';
       }
       
       if (gameState.currentActiveTile) {
@@ -4377,8 +4378,8 @@
         document.getElementById('hintRestartBtn').textContent = 'Restart';
         document.getElementById('mobileHintRestartBtn').textContent = 'Restart';
       } else {
-        document.getElementById('hintRestartBtn').textContent = 'Hint (-3)';
-        document.getElementById('mobileHintRestartBtn').textContent = 'Hint (-3)';
+        document.getElementById('hintRestartBtn').textContent = 'Hint (-5)';
+        document.getElementById('mobileHintRestartBtn').textContent = 'Hint (-5)';
       }
       
       document.getElementById('createWrapper').classList.remove('active');
