@@ -3398,11 +3398,6 @@ body.modal-open {
           console.log('Game container made visible for skipIntro');
         }
         startGame();
-        // Ensure hamburger menu is visible when skipping intro
-        var hamburgerMenu = document.getElementById('hamburgerMenu');
-        if (hamburgerMenu) {
-          hamburgerMenu.style.display = 'block';
-        }
       } else {
         console.log('Showing intro modal');
         document.getElementById('startModal').style.display = 'flex';
@@ -3412,7 +3407,6 @@ body.modal-open {
         }
         document.body.classList.add('modal-open');
         document.getElementById('gameContainer').classList.add('content-blur');
-      }
       }
       
       setupCreateForm();
@@ -3434,16 +3428,9 @@ body.modal-open {
       var gameContainer = document.getElementById('gameContainer');
       gameContainer.classList.remove('game-hidden');
       
-      // Ensure hamburger menu is visible
-      var hamburgerMenu = document.getElementById('hamburgerMenu');
-      if (hamburgerMenu) {
-        hamburgerMenu.style.display = 'block';
-      }
-      
       // Remove modal classes
       document.body.classList.remove('modal-open');
       gameContainer.classList.remove('content-blur');
-
       
       // Add game active class
       document.body.classList.add('game-active');
@@ -3476,6 +3463,10 @@ body.modal-open {
       startFoxTimer();
       startTimeTracking();
       
+      var hamburgerMenu = document.getElementById('hamburgerMenu');
+      if (hamburgerMenu) {
+        hamburgerMenu.style.display = 'block';
+      }
       var puzzleType = isCustomPuzzle ? 'custom' : 'daily';
       trackPuzzleStart(puzzleType, gameState.categoryText);
       
