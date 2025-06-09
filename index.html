@@ -1673,8 +1673,8 @@
       .keyboard-row {
         display: flex;
         justify-content: center;
-        gap: 3px;
-        margin-bottom: 4px;
+        gap: 4px;
+        margin-bottom: 6px;
       }
 
       .keyboard-row:last-child {
@@ -1684,9 +1684,9 @@
       .key-btn {
         background-color: white;
         border: 1px solid #d0d0d0;
-        border-radius: 4px;
-        padding: 6px 2px;
-        font-size: 0.85rem;
+        border-radius: 6px;
+        padding: 8px 4px;
+        font-size: clamp(0.8rem, 2.2vw, 1rem);
         font-weight: 600;
         color: #333;
         cursor: pointer;
@@ -1696,10 +1696,9 @@
         -webkit-user-select: none;
         flex: 1;
         min-width: 0;
-        max-width: 32px;
         position: relative;
         transform: scale(1);
-        height: 32px;
+        height: 40px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -1715,8 +1714,7 @@
         color: white;
         border-color: #326891;
         flex: 1.5;
-        max-width: 48px;
-        font-size: 0.75rem;
+        font-size: clamp(0.7rem, 2vw, 0.9rem);
       }
 
       .key-btn.special.pressed {
@@ -1724,8 +1722,16 @@
       }
       
       .key-spacer {
-        flex: 0.3;
-        max-width: 12px;
+        flex: 0.5;
+        max-width: 18px;
+      }
+      
+      /* Make mobile control buttons smaller */
+      .fixed-bottom-section .button {
+        font-size: 0.65rem !important;
+        padding: 0.4rem 0.5rem !important;
+        min-height: 32px !important;
+        line-height: 1.2 !important;
       }
     }
 
