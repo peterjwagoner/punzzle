@@ -1906,9 +1906,14 @@
       body.custom-preview .game-container {
         padding-top: 0 !important;
         overflow-y: auto !important;
+        display: flex !important;
+      }
+      
+      /* Force visibility in preview mode */
+      body:has([href*="preview=true"]) .game-container {
+        display: flex !important;
       }
     }
-
     .create-container,
     #createContainer,
     #feedbackContainer,
