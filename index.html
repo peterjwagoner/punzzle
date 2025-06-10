@@ -1783,16 +1783,20 @@
         justify-content: space-between;
         align-items: center;
         margin-bottom: 0.75rem;
+        gap: 0.25rem;
       }
       
       .fixed-bottom-section .score-label {
-        flex: 1;
+        flex: 0 0 auto;
         text-align: left;
+        min-width: 40px;
       }
       
       .fixed-bottom-section .score-value {
-        flex: 1;
+        flex: 0 0 auto;
         text-align: right;
+        min-width: 25px;
+      }
       }
 
       .fixed-bottom-section .controls-section {
@@ -2947,7 +2951,12 @@
           
           document.getElementById('categoryText').textContent = gameState.categoryText;
           document.getElementById('dateDisplay').innerHTML = 
-            '<a href="' + window.location.origin + window.location.pathname + '?skipIntro=true">Today\'s Punzzle</a> · Shared Puzzle';
+            '<a href="' + window.location.origin + window.location.pathname + '?skipIntro=true">Today\'s Punzzle</a> · ' + (isPreview ? 'Preview Mode' : 'Shared Puzzle');
+          
+          hideLoadingState();
+          if (gameContainer) {
+            gameContainer.classList.remove('game-hidden');
+          }
           
           hideLoadingState();
           
@@ -3012,7 +3021,7 @@
       }
       
       // Show intro or start game - ENHANCED FOR MOBILE  
-      if (skipIntro === 'true') {
+      if (skipIntro === 'true' || isPreview) {
         console.log('Skipping intro, starting game directly');
         startGameDirectly(); // Use the new mobile-optimized function
       } else {
@@ -3451,7 +3460,7 @@
         
         setTimeout(function() {
           mobileMessage.textContent = '';
-        }, 2500);
+        }, 25000);
       }
     }
 
