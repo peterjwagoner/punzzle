@@ -2911,9 +2911,9 @@
           hideLoadingState();
           
           if (skipIntro === 'true' || isPreview) {
-            // For preview mode, we need to ensure the game container is visible first
-            var gameContainer = document.getElementById('gameContainer');
-            if (gameContainer) {
+            startGameDirectly(); // Use the new mobile-optimized function
+          } else {
+            document.getElementById('startModal').style.display = 'flex';
               gameContainer.classList.remove('game-hidden');
             }
             document.body.classList.add('game-active');
