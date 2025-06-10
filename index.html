@@ -2928,9 +2928,11 @@
         if (sharedPuzzle) {
           isCustomPuzzle = true;
           
+          console.log('Processing shared puzzle, isPreview:', isPreview);
           var puzzleData = JSON.parse(atob(sharedPuzzle));
           gameState.puzzleAnswer = puzzleData.answer;
           gameState.categoryText = puzzleData.categories;
+
           gameState.words = puzzleData.words;
           gameState.customHint = puzzleData.hint || null;
           
@@ -2969,8 +2971,9 @@
           
           hideLoadingState();
           
-          if (skipIntro === 'true') {
+          if (skipIntro === 'true' || isPreview) {
             startGameDirectly(); // Use the new mobile-optimized function
+            console.log('Should start game directly for preview');
           } else {
             document.getElementById('startModal').style.display = 'flex';
             var hamburgerMenu = document.getElementById('hamburgerMenu');
