@@ -2949,26 +2949,24 @@
             }
           }
           
+          // Ensure game container is visible BEFORE we do anything else
+          var gameContainer = document.getElementById('gameContainer');
+          if (gameContainer) {
+            gameContainer.classList.remove('game-hidden');
+            console.log('Making game container visible for shared puzzle...');
+          } else {
+            console.error('Game container not found!');
+          }
+          
           document.getElementById('categoryText').textContent = gameState.categoryText;
           document.getElementById('dateDisplay').innerHTML = 
             '<a href="' + window.location.origin + window.location.pathname + '?skipIntro=true">Today\'s Punzzle</a> · ' + (isPreview ? 'Preview Mode' : 'Shared Puzzle');
           
-          // Ensure game container is visible before hiding loading state
-          var gameContainer = document.getElementById('gameContainer');
-          if (gameContainer) {
-            gameContainer.classList.remove('game-hidden');
-            console.log('Game container made visible for shared puzzle');
-          }
-          
           hideLoadingState();
           
-          if (skipIntro === 'true' || isPreview) {
+          if (skipIntro === 'true') {
             startGameDirectly(); // Use the new mobile-optimized function
           } else {
-            // Ensure container stays visible even when showing modal
-            if (gameContainer) {
-              gameContainer.classList.remove('game-hidden');
-            }
             document.getElementById('startModal').style.display = 'flex';
             var hamburgerMenu = document.getElementById('hamburgerMenu');
             if (hamburgerMenu) {
