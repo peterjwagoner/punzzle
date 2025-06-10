@@ -1619,17 +1619,19 @@
       /* Mobile inline message */
       .mobile-inline-message {
         display: block !important;
-        font-size: 0.75rem !important;
+        font-size: 0.7rem !important;
         font-weight: 600 !important;
         color: #666 !important;
         text-align: center !important;
         flex: 1 !important;
         padding: 0 0.5rem !important;
-        white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
+        white-space: normal !important;
+        line-height: 1.2 !important;
+        word-wrap: break-word !important;
+        min-height: 1.2rem !important;
       }
       
+
       .mobile-inline-message.success {
         color: #00875a !important;
       }
@@ -1729,9 +1731,14 @@
       left: 0;
       right: 0;
       background-color: white;
-      padding: 0.75rem 1rem;
+      padding: 0.5rem 1rem;
       z-index: 200;
       display: none;
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.0);
+      height: auto;
+      min-height: 100px;
+      max-height: 140px;
+    }
       box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.0);
       height: 120px;
     }
@@ -1783,20 +1790,16 @@
         justify-content: space-between;
         align-items: center;
         margin-bottom: 0.75rem;
-        gap: 0.25rem;
       }
       
       .fixed-bottom-section .score-label {
-        flex: 0 0 auto;
+        flex: 1;
         text-align: left;
-        min-width: 40px;
       }
       
       .fixed-bottom-section .score-value {
-        flex: 0 0 auto;
+        flex: 1;
         text-align: right;
-        min-width: 25px;
-      }
       }
 
       .fixed-bottom-section .controls-section {
@@ -2910,16 +2913,12 @@
           
           hideLoadingState();
           
-          if (skipIntro === 'true' || isPreview) {
+          if (skipIntro === 'true') {
             startGameDirectly(); // Use the new mobile-optimized function
           } else {
             document.getElementById('startModal').style.display = 'flex';
-              gameContainer.classList.remove('game-hidden');
-            }
-            document.body.classList.add('game-active');
-            startGameDirectly(); // Use the new mobile-optimized function
-          } else {
-            document.getElementById('startModal').style.display = 'flex';
+          }
+          setupCreateForm();
           return;
         }
         
@@ -2927,29 +2926,15 @@
         if (sharedPuzzle) {
           isCustomPuzzle = true;
           
-          var puzzleData;
-          try {
-            puzzleData = JSON.parse(atob(sharedPuzzle));
-            console.log('Decoded puzzle data:', puzzleData);
-          } catch (e) {
-            console.error('Failed to decode puzzle data:', e);
-            throw new Error('Invalid puzzle data');
-          }
+          var puzzleData = JSON.parse(atob(sharedPuzzle));
           gameState.puzzleAnswer = puzzleData.answer;
           gameState.categoryText = puzzleData.categories;
           gameState.words = puzzleData.words;
-          gameState.words = puzzleData.words;
           gameState.customHint = puzzleData.hint || null;
-          
-          // Log the puzzle data to verify it's loaded
-          console.log('Loaded shared puzzle data:', {
-            answer: gameState.puzzleAnswer,
-            categories: gameState.categoryText,
-            words: gameState.words
-          });
           
           const tempId = 'shared-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
           gameState.puzzleId = `custom-${tempId}`;
+          
           if (optimized !== 'true') {
             try {
               const customId = await saveCustomPuzzle(puzzleData);
@@ -2969,12 +2954,7 @@
           
           document.getElementById('categoryText').textContent = gameState.categoryText;
           document.getElementById('dateDisplay').innerHTML = 
-            '<a href="' + window.location.origin + window.location.pathname + '?skipIntro=true">Today\'s Punzzle</a> · ' + (isPreview ? 'Preview Mode' : 'Shared Puzzle');
-          
-          hideLoadingState();
-          if (gameContainer) {
-            gameContainer.classList.remove('game-hidden');
-          }
+            '<a href="' + window.location.origin + window.location.pathname + '?skipIntro=true">Today\'s Punzzle</a> · Shared Puzzle';
           
           hideLoadingState();
           
@@ -3039,7 +3019,7 @@
       }
       
       // Show intro or start game - ENHANCED FOR MOBILE  
-      if (skipIntro === 'true' || isPreview) {
+      if (skipIntro === 'true') {
         console.log('Skipping intro, starting game directly');
         startGameDirectly(); // Use the new mobile-optimized function
       } else {
@@ -3088,17 +3068,6 @@
           answer: gameState.puzzleAnswer,
           category: gameState.categoryText,
           words: gameState.words
-        });
-        
-        // Try to decode from URL if missing
-        var urlParams = new URLSearchParams(window.location.search);
-        var sharedPuzzle = urlParams.get('puzzle');
-        if (sharedPuzzle) {
-          console.error('Puzzle param exists but data not loaded:', sharedPuzzle);
-        }
-        alert('Puzzle data not loaded. Please refresh the page.');
-        return;
-      }
         });
         alert('Puzzle data not loaded. Please refresh the page.');
         return;
@@ -3489,7 +3458,7 @@
         
         setTimeout(function() {
           mobileMessage.textContent = '';
-        }, 25000);
+        }, 850000);
       }
     }
 
