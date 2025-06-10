@@ -2935,19 +2935,24 @@
           gameState.puzzleId = `custom-${tempId}`;
           
           if (optimized !== 'true') {
-            try {
-              const customId = await saveCustomPuzzle(puzzleData);
-              if (customId) {
-                gameState.puzzleId = `custom-${customId}`;
-                trackCustomPuzzleView(customId);
-                trackPunzzleEvent('shared_puzzle_opened', 'user_generated', gameState.categoryText);
+            // Skip Firebase save for preview mode to avoid Safari issues
+            if (!isPreview) {
+              try {
+                const customId = await saveCustomPuzzle(puzzleData);
+                if (customId) {
+                  gameState.puzzleId = `custom-${customId}`;
+                  trackCustomPuzzleView(customId);
+                  trackPunzzleEvent('shared_puzzle_opened', 'user_generated', gameState.categoryText);
+                }
+                
+                const customTitle = `Punzzle: ${gameState.categoryText}`;
+                const customDescription = `Can you solve this custom Punzzle? Categories: ${gameState.categoryText}. Find the pun that connects them!`;
+                updateMetaTags(customTitle, customDescription);
+              } catch (error) {
+                console.error('Error processing shared puzzle:', error);
               }
-              
-              const customTitle = `Punzzle: ${gameState.categoryText}`;
-              const customDescription = `Can you solve this custom Punzzle? Categories: ${gameState.categoryText}. Find the pun that connects them!`;
-              updateMetaTags(customTitle, customDescription);
-            } catch (error) {
-              console.error('Error processing shared puzzle:', error);
+            }
+          }
             }
           }
           
