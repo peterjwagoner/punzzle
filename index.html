@@ -2910,12 +2910,16 @@
           
           hideLoadingState();
           
-          if (skipIntro === 'true') {
+          if (skipIntro === 'true' || isPreview) {
+            // For preview mode, we need to ensure the game container is visible first
+            var gameContainer = document.getElementById('gameContainer');
+            if (gameContainer) {
+              gameContainer.classList.remove('game-hidden');
+            }
+            document.body.classList.add('game-active');
             startGameDirectly(); // Use the new mobile-optimized function
           } else {
             document.getElementById('startModal').style.display = 'flex';
-          }
-          setupCreateForm();
           return;
         }
         
@@ -2923,15 +2927,29 @@
         if (sharedPuzzle) {
           isCustomPuzzle = true;
           
-          var puzzleData = JSON.parse(atob(sharedPuzzle));
+          var puzzleData;
+          try {
+            puzzleData = JSON.parse(atob(sharedPuzzle));
+            console.log('Decoded puzzle data:', puzzleData);
+          } catch (e) {
+            console.error('Failed to decode puzzle data:', e);
+            throw new Error('Invalid puzzle data');
+          }
           gameState.puzzleAnswer = puzzleData.answer;
           gameState.categoryText = puzzleData.categories;
           gameState.words = puzzleData.words;
+          gameState.words = puzzleData.words;
           gameState.customHint = puzzleData.hint || null;
+          
+          // Log the puzzle data to verify it's loaded
+          console.log('Loaded shared puzzle data:', {
+            answer: gameState.puzzleAnswer,
+            categories: gameState.categoryText,
+            words: gameState.words
+          });
           
           const tempId = 'shared-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
           gameState.puzzleId = `custom-${tempId}`;
-          
           if (optimized !== 'true') {
             try {
               const customId = await saveCustomPuzzle(puzzleData);
@@ -3070,6 +3088,17 @@
           answer: gameState.puzzleAnswer,
           category: gameState.categoryText,
           words: gameState.words
+        });
+        
+        // Try to decode from URL if missing
+        var urlParams = new URLSearchParams(window.location.search);
+        var sharedPuzzle = urlParams.get('puzzle');
+        if (sharedPuzzle) {
+          console.error('Puzzle param exists but data not loaded:', sharedPuzzle);
+        }
+        alert('Puzzle data not loaded. Please refresh the page.');
+        return;
+      }
         });
         alert('Puzzle data not loaded. Please refresh the page.');
         return;
