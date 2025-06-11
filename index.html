@@ -2923,11 +2923,9 @@
         if (sharedPuzzle) {
           isCustomPuzzle = true;
           
-          console.log('Processing shared puzzle, isPreview:', isPreview);
           var puzzleData = JSON.parse(atob(sharedPuzzle));
           gameState.puzzleAnswer = puzzleData.answer;
           gameState.categoryText = puzzleData.categories;
-
           gameState.words = puzzleData.words;
           gameState.customHint = puzzleData.hint || null;
           
@@ -2935,45 +2933,30 @@
           gameState.puzzleId = `custom-${tempId}`;
           
           if (optimized !== 'true') {
-            // Skip Firebase save for preview mode to avoid Safari issues
-            if (!isPreview) {
-              try {
-                const customId = await saveCustomPuzzle(puzzleData);
-                if (customId) {
-                  gameState.puzzleId = `custom-${customId}`;
-                  trackCustomPuzzleView(customId);
-                  trackPunzzleEvent('shared_puzzle_opened', 'user_generated', gameState.categoryText);
-                }
-                
-                const customTitle = `Punzzle: ${gameState.categoryText}`;
-                const customDescription = `Can you solve this custom Punzzle? Categories: ${gameState.categoryText}. Find the pun that connects them!`;
-                updateMetaTags(customTitle, customDescription);
-              } catch (error) {
-                console.error('Error processing shared puzzle:', error);
+            try {
+              const customId = await saveCustomPuzzle(puzzleData);
+              if (customId) {
+                gameState.puzzleId = `custom-${customId}`;
+                trackCustomPuzzleView(customId);
+                trackPunzzleEvent('shared_puzzle_opened', 'user_generated', gameState.categoryText);
               }
+              
+              const customTitle = `Punzzle: ${gameState.categoryText}`;
+              const customDescription = `Can you solve this custom Punzzle? Categories: ${gameState.categoryText}. Find the pun that connects them!`;
+              updateMetaTags(customTitle, customDescription);
+            } catch (error) {
+              console.error('Error processing shared puzzle:', error);
             }
-          }
-            }
-          }
-          
-          // Ensure game container is visible BEFORE we do anything else
-          var gameContainer = document.getElementById('gameContainer');
-          if (gameContainer) {
-            gameContainer.classList.remove('game-hidden');
-            console.log('Making game container visible for shared puzzle...');
-          } else {
-            console.error('Game container not found!');
           }
           
           document.getElementById('categoryText').textContent = gameState.categoryText;
           document.getElementById('dateDisplay').innerHTML = 
-            '<a href="' + window.location.origin + window.location.pathname + '?skipIntro=true">Today\'s Punzzle</a> · ' + (isPreview ? 'Preview Mode' : 'Shared Puzzle');
+            '<a href="' + window.location.origin + window.location.pathname + '?skipIntro=true">Today\'s Punzzle</a> · Shared Puzzle';
           
           hideLoadingState();
           
-          if (skipIntro === 'true' || isPreview) {
+          if (skipIntro === 'true') {
             startGameDirectly(); // Use the new mobile-optimized function
-            console.log('Should start game directly for preview');
           } else {
             document.getElementById('startModal').style.display = 'flex';
             var hamburgerMenu = document.getElementById('hamburgerMenu');
