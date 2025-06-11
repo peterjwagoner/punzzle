@@ -2928,11 +2928,12 @@
           gameState.categoryText = puzzleData.categories;
           gameState.words = puzzleData.words;
           gameState.customHint = puzzleData.hint || null;
+          gameState.isPreview = isPreview;
           
           const tempId = 'shared-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
           gameState.puzzleId = `custom-${tempId}`;
           
-          if (optimized !== 'true') {
+          if (optimized !== 'true' && !isPreview) {
             try {
               const customId = await saveCustomPuzzle(puzzleData);
               if (customId) {
@@ -2950,12 +2951,26 @@
           }
           
           document.getElementById('categoryText').textContent = gameState.categoryText;
-          document.getElementById('dateDisplay').innerHTML = 
-            '<a href="' + window.location.origin + window.location.pathname + '?skipIntro=true">Today\'s Punzzle</a> · Shared Puzzle';
+          
+          // Update date display based on preview mode
+          if (isPreview) {
+            document.getElementById('dateDisplay').innerHTML = 
+              '<a href="' + window.location.origin + window.location.pathname + '?skipIntro=true">Today\'s Punzzle</a> · Preview Mode';
+            
+            // Add custom preview class for mobile adjustments
+            document.body.classList.add('custom-preview');
+          } else {
+            document.getElementById('dateDisplay').innerHTML = 
+              '<a href="' + window.location.origin + window.location.pathname + '?skipIntro=true">Today\'s Punzzle</a> · Shared Puzzle';
+          }
           
           hideLoadingState();
           
-          if (skipIntro === 'true') {
+          // Make sure game container is visible
+          var gameContainer = document.getElementById('gameContainer');
+          gameContainer.classList.remove('game-hidden');
+          
+          if (skipIntro === 'true' || isPreview) {
             startGameDirectly(); // Use the new mobile-optimized function
           } else {
             document.getElementById('startModal').style.display = 'flex';
