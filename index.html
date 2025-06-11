@@ -451,25 +451,27 @@
       justify-content: center;
       min-height: 0;
       overflow: hidden;
+      container-type: inline-size;
+      container-name: puzzle;
     }
     
     .word-group {
       display: flex;
       gap: 0.25rem;
       justify-content: center;
-      flex-wrap: nowrap;
+      flex-wrap: wrap;
       max-width: 100%;
       padding: 0.25rem;
       margin: 0 auto;
     }
     
     .tile {
-      width: clamp(32px, 6vw, 48px);
-      height: clamp(32px, 6vw, 48px);
+      width: 48px;
+      height: 48px;
       background-color: #ffffff;
       border: 2px solid #d3d6da;
       border-radius: 4px;
-      font-size: clamp(0.8rem, 2vw, 1.2rem);
+      font-size: 1.2rem;
       font-weight: 400;
       display: flex;
       justify-content: center;
@@ -480,6 +482,7 @@
       transition: all 0.2s ease;
       position: relative;
       overflow: hidden;
+      flex-shrink: 0;
     }
     
     .tile.revealed {
@@ -528,16 +531,65 @@
       object-fit: contain;
     }
 
+    /* Dynamic tile sizing based on available space */
+    .tiles-large .tile {
+      width: 48px;
+      height: 48px;
+      font-size: 1.2rem;
+    }
+
     .tiles-medium .tile {
-      width: clamp(28px, 5vw, 40px);
-      height: clamp(28px, 5vw, 40px);
-      font-size: clamp(0.7rem, 1.8vw, 1rem);
+      width: 40px;
+      height: 40px;
+      font-size: 1rem;
     }
     
     .tiles-small .tile {
-      width: clamp(24px, 4vw, 32px);
-      height: clamp(24px, 4vw, 32px);
-      font-size: clamp(0.6rem, 1.5vw, 0.9rem);
+      width: 32px;
+      height: 32px;
+      font-size: 0.9rem;
+    }
+    
+    .tiles-tiny .tile {
+      width: 28px;
+      height: 28px;
+      font-size: 0.8rem;
+    }
+
+    /* Responsive tile sizing */
+    @media (max-width: 400px) {
+      .tile {
+        width: 36px;
+        height: 36px;
+        font-size: 1rem;
+      }
+      
+      .tiles-medium .tile {
+        width: 32px;
+        height: 32px;
+        font-size: 0.9rem;
+      }
+      
+      .tiles-small .tile {
+        width: 28px;
+        height: 28px;
+        font-size: 0.8rem;
+      }
+      
+      .tiles-tiny .tile {
+        width: 24px;
+        height: 24px;
+        font-size: 0.7rem;
+      }
+    }
+
+    /* Container-query-like behavior for puzzle container */
+    @container puzzle (max-width: 300px) {
+      .tile {
+        width: 28px;
+        height: 28px;
+        font-size: 0.8rem;
+      }
     }
     
     .progress-section {
@@ -1592,23 +1644,35 @@
         padding: 1rem 0 !important;
       }
       
-      /* Mobile tiles */
+      /* Mobile tiles - smaller defaults */
       .tile {
-        width: 40px !important;
-        height: 40px !important;
-        font-size: 1rem !important;
+        width: 36px !important;
+        height: 36px !important;
+        font-size: 0.95rem !important;
+      }
+      
+      .tiles-large .tile {
+        width: 36px !important;
+        height: 36px !important;
+        font-size: 0.95rem !important;
       }
       
       .tiles-medium .tile {
-        width: 36px !important;
-        height: 36px !important;
-        font-size: 0.9rem !important;
+        width: 32px !important;
+        height: 32px !important;
+        font-size: 0.85rem !important;
       }
       
       .tiles-small .tile {
-        width: 32px !important;
-        height: 32px !important;
-        font-size: 0.8rem !important;
+        width: 28px !important;
+        height: 28px !important;
+        font-size: 0.75rem !important;
+      }
+      
+      .tiles-tiny .tile {
+        width: 24px !important;
+        height: 24px !important;
+        font-size: 0.65rem !important;
       }
       
       /* Mobile message area */
@@ -3342,11 +3406,31 @@
       
       console.log('Puzzle stats:', { totalLetters, maxWordLength });
       
+      // Enhanced sizing logic based on puzzle dimensions and viewport
       var sizeClass = '';
-      if (totalLetters > 20 || maxWordLength > 8) {
+      var viewportWidth = window.innerWidth;
+      var containerWidth = container.offsetWidth || viewportWidth - 32; // fallback with padding
+      
+      // Calculate approximate space needed per tile (including gaps)
+      var tileSpace = 52; // 48px tile + 4px gap
+      var maxRowWidth = maxWordLength * tileSpace;
+      
+      // Determine size class based on puzzle complexity and available space
+      if (totalLetters > 25 || maxWordLength > 10 || maxRowWidth > containerWidth) {
+        sizeClass = 'tiles-tiny';
+      } else if (totalLetters > 20 || maxWordLength > 8 || maxRowWidth > containerWidth * 0.9) {
         sizeClass = 'tiles-small';
-      } else if (totalLetters > 15 || maxWordLength > 6) {
+      } else if (totalLetters > 15 || maxWordLength > 6 || maxRowWidth > containerWidth * 0.8) {
         sizeClass = 'tiles-medium';
+      } else {
+        sizeClass = 'tiles-large';
+      }
+      
+      // Additional check for very small screens
+      if (viewportWidth < 400 && (maxWordLength > 7 || totalLetters > 18)) {
+        sizeClass = 'tiles-tiny';
+      } else if (viewportWidth < 400 && (maxWordLength > 6 || totalLetters > 15)) {
+        sizeClass = 'tiles-small';
       }
       
       if (sizeClass) {
@@ -3756,7 +3840,7 @@
       }
       
       var container = document.getElementById('puzzleContainer');
-      container.classList.remove('tiles-small', 'tiles-medium');
+      container.classList.remove('tiles-small', 'tiles-medium', 'tiles-large', 'tiles-tiny');
       
       updateMessage('');
       
