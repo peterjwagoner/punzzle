@@ -452,7 +452,7 @@
       min-height: 0;
       overflow: hidden;
       container-type: inline-size;
-      container-name: puzzle;
+      width: 100%;
     }
     
     .word-group {
@@ -463,6 +463,71 @@
       max-width: 100%;
       padding: 0.25rem;
       margin: 0 auto;
+    }
+    
+    /* Container-based responsive sizing */
+    @container (max-width: 450px) {
+      .tile {
+        width: 42px;
+        height: 42px;
+        font-size: 1.1rem;
+      }
+      
+      .tiles-medium .tile {
+        width: 36px;
+        height: 36px;
+        font-size: 0.95rem;
+      }
+      
+      .tiles-small .tile {
+        width: 30px;
+        height: 30px;
+        font-size: 0.85rem;
+      }
+      
+      .tiles-tiny .tile {
+        width: 26px;
+        height: 26px;
+        font-size: 0.75rem;
+      }
+      
+      .tiles-micro .tile {
+        width: 22px;
+        height: 22px;
+        font-size: 0.65rem;
+      }
+    }
+    
+    @container (max-width: 350px) {
+      .tile {
+        width: 36px;
+        height: 36px;
+        font-size: 1rem;
+      }
+      
+      .tiles-medium .tile {
+        width: 32px;
+        height: 32px;
+        font-size: 0.9rem;
+      }
+      
+      .tiles-small .tile {
+        width: 28px;
+        height: 28px;
+        font-size: 0.8rem;
+      }
+      
+      .tiles-tiny .tile {
+        width: 24px;
+        height: 24px;
+        font-size: 0.7rem;
+      }
+      
+      .tiles-micro .tile {
+        width: 20px;
+        height: 20px;
+        font-size: 0.6rem;
+      }
     }
     
     .tile {
@@ -531,13 +596,6 @@
       object-fit: contain;
     }
 
-    /* Dynamic tile sizing based on available space */
-    .tiles-large .tile {
-      width: 48px;
-      height: 48px;
-      font-size: 1.2rem;
-    }
-
     .tiles-medium .tile {
       width: 40px;
       height: 40px;
@@ -555,41 +613,11 @@
       height: 28px;
       font-size: 0.8rem;
     }
-
-    /* Responsive tile sizing */
-    @media (max-width: 400px) {
-      .tile {
-        width: 36px;
-        height: 36px;
-        font-size: 1rem;
-      }
-      
-      .tiles-medium .tile {
-        width: 32px;
-        height: 32px;
-        font-size: 0.9rem;
-      }
-      
-      .tiles-small .tile {
-        width: 28px;
-        height: 28px;
-        font-size: 0.8rem;
-      }
-      
-      .tiles-tiny .tile {
-        width: 24px;
-        height: 24px;
-        font-size: 0.7rem;
-      }
-    }
-
-    /* Container-query-like behavior for puzzle container */
-    @container puzzle (max-width: 300px) {
-      .tile {
-        width: 28px;
-        height: 28px;
-        font-size: 0.8rem;
-      }
+    
+    .tiles-micro .tile {
+      width: 24px;
+      height: 24px;
+      font-size: 0.7rem;
     }
     
     .progress-section {
@@ -1644,35 +1672,35 @@
         padding: 1rem 0 !important;
       }
       
-      /* Mobile tiles - smaller defaults */
+      /* Mobile tiles - responsive sizing */
       .tile {
-        width: 36px !important;
-        height: 36px !important;
-        font-size: 0.95rem !important;
-      }
-      
-      .tiles-large .tile {
-        width: 36px !important;
-        height: 36px !important;
-        font-size: 0.95rem !important;
+        width: min(40px, 10vw) !important;
+        height: min(40px, 10vw) !important;
+        font-size: min(1rem, 3vw) !important;
       }
       
       .tiles-medium .tile {
-        width: 32px !important;
-        height: 32px !important;
-        font-size: 0.85rem !important;
+        width: min(36px, 9vw) !important;
+        height: min(36px, 9vw) !important;
+        font-size: min(0.9rem, 2.8vw) !important;
       }
       
       .tiles-small .tile {
-        width: 28px !important;
-        height: 28px !important;
-        font-size: 0.75rem !important;
+        width: min(32px, 8vw) !important;
+        height: min(32px, 8vw) !important;
+        font-size: min(0.8rem, 2.5vw) !important;
       }
       
       .tiles-tiny .tile {
-        width: 24px !important;
-        height: 24px !important;
-        font-size: 0.65rem !important;
+        width: min(28px, 7vw) !important;
+        height: min(28px, 7vw) !important;
+        font-size: min(0.75rem, 2.2vw) !important;
+      }
+      
+      .tiles-micro .tile {
+        width: min(24px, 6vw) !important;
+        height: min(24px, 6vw) !important;
+        font-size: min(0.65rem, 2vw) !important;
       }
       
       /* Mobile message area */
@@ -3397,39 +3425,39 @@
       gameState.words = validWords;
       console.log('✓ Using validated words:', gameState.words);
       
+      // Calculate puzzle dimensions and determine appropriate size class
       var totalLetters = 0;
       var maxWordLength = 0;
+      var totalWords = gameState.words.length;
+      
       gameState.words.forEach(function(word) {
         totalLetters += word.length;
         maxWordLength = Math.max(maxWordLength, word.length);
       });
       
-      console.log('Puzzle stats:', { totalLetters, maxWordLength });
+      console.log('Puzzle stats:', { totalLetters, maxWordLength, totalWords });
       
-      // Enhanced sizing logic based on puzzle dimensions and viewport
+      // Clear any existing size classes
+      container.classList.remove('tiles-medium', 'tiles-small', 'tiles-tiny', 'tiles-micro');
+      
+      // Determine size class based on puzzle complexity
       var sizeClass = '';
-      var viewportWidth = window.innerWidth;
-      var containerWidth = container.offsetWidth || viewportWidth - 32; // fallback with padding
       
-      // Calculate approximate space needed per tile (including gaps)
-      var tileSpace = 52; // 48px tile + 4px gap
-      var maxRowWidth = maxWordLength * tileSpace;
-      
-      // Determine size class based on puzzle complexity and available space
-      if (totalLetters > 25 || maxWordLength > 10 || maxRowWidth > containerWidth) {
+      // More aggressive sizing based on total letters and max word length
+      if (totalLetters > 25 || maxWordLength > 10) {
+        sizeClass = 'tiles-micro';
+      } else if (totalLetters > 20 || maxWordLength > 8) {
         sizeClass = 'tiles-tiny';
-      } else if (totalLetters > 20 || maxWordLength > 8 || maxRowWidth > containerWidth * 0.9) {
+      } else if (totalLetters > 15 || maxWordLength > 6) {
         sizeClass = 'tiles-small';
-      } else if (totalLetters > 15 || maxWordLength > 6 || maxRowWidth > containerWidth * 0.8) {
+      } else if (totalLetters > 12 || maxWordLength > 5) {
         sizeClass = 'tiles-medium';
-      } else {
-        sizeClass = 'tiles-large';
       }
       
-      // Additional check for very small screens
-      if (viewportWidth < 400 && (maxWordLength > 7 || totalLetters > 18)) {
-        sizeClass = 'tiles-tiny';
-      } else if (viewportWidth < 400 && (maxWordLength > 6 || totalLetters > 15)) {
+      // Also consider number of words for multi-word puzzles
+      if (totalWords >= 4 && sizeClass === '') {
+        sizeClass = 'tiles-medium';
+      } else if (totalWords >= 4 && sizeClass === 'tiles-medium') {
         sizeClass = 'tiles-small';
       }
       
@@ -3487,8 +3515,60 @@
         }
         
         console.log('✓ Puzzle built successfully with', gameState.letterTiles.length, 'tiles');
+        
+        // Dynamic resize check after puzzle is built
+        setTimeout(function() {
+          adjustTileSizeToFit();
+        }, 200);
+        
         console.log('=== buildPuzzle() completed ===');
       }, 100);
+    }
+    
+    // Dynamic tile size adjustment function
+    function adjustTileSizeToFit() {
+      var container = document.getElementById('puzzleContainer');
+      if (!container) return;
+      
+      var wordGroups = container.querySelectorAll('.word-group');
+      if (wordGroups.length === 0) return;
+      
+      // Check if any word group is overflowing
+      var needsResize = false;
+      var containerWidth = container.offsetWidth - 32; // Account for padding
+      
+      wordGroups.forEach(function(group) {
+        if (group.scrollWidth > containerWidth || group.offsetWidth > containerWidth) {
+          needsResize = true;
+        }
+      });
+      
+      if (needsResize) {
+        console.log('Tiles overflowing, applying smaller size class');
+        
+        // Check current size and apply next smaller size
+        if (!container.classList.contains('tiles-micro')) {
+          if (!container.classList.contains('tiles-tiny')) {
+            if (!container.classList.contains('tiles-small')) {
+              if (!container.classList.contains('tiles-medium')) {
+                container.classList.add('tiles-medium');
+              } else {
+                container.classList.remove('tiles-medium');
+                container.classList.add('tiles-small');
+              }
+            } else {
+              container.classList.remove('tiles-small');
+              container.classList.add('tiles-tiny');
+            }
+          } else {
+            container.classList.remove('tiles-tiny');
+            container.classList.add('tiles-micro');
+          }
+          
+          // Check again after resize
+          setTimeout(adjustTileSizeToFit, 50);
+        }
+      }
     }
 
     function setActiveTile(tile) {
@@ -3840,7 +3920,7 @@
       }
       
       var container = document.getElementById('puzzleContainer');
-      container.classList.remove('tiles-small', 'tiles-medium', 'tiles-large', 'tiles-tiny');
+      container.classList.remove('tiles-small', 'tiles-medium', 'tiles-tiny', 'tiles-micro');
       
       updateMessage('');
       
@@ -4096,6 +4176,7 @@
       var form = document.getElementById('morePunzzlesForm');
       if (form) {
         form.addEventListener('submit', function(e) {
+          // Don't prevent default - let the form submit normally to Kit
           trackPunzzleEvent('email_signup', 'engagement', 'more_puzzles_modal');
           
           var submitBtn = form.querySelector('button[type="submit"]');
@@ -4103,14 +4184,8 @@
           submitBtn.textContent = 'Subscribing...';
           submitBtn.disabled = true;
           
-          setTimeout(function() {
-            alert('Thanks for signing up! Check your email for your first bonus Punzzle.');
-            closeMorePunzzlesModal();
-            
-            submitBtn.textContent = originalText;
-            submitBtn.disabled = false;
-            form.reset();
-          }, 2000);
+          // The form will submit normally to Kit's servers
+          // No need for setTimeout or manual handling
         });
       }
     }
