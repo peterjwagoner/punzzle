@@ -41,6 +41,2392 @@
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-QLL4GXB1ZX"></script>
   <script>
+    // Define randomizeCategory immediately to ensure it's available
+    window.randomizeCategory = function(categoryNumber) {
+      var categoryList = [
+        "Movie stars", "TV Shows", "Cartoons", "Famous Athletes", "Video Games",
+        "Sitcom Characters", "Superheroes", "Supervillains", "Oscar-Winning Films", "Reality Shows",
+        "Celebrity Couples", "Book Titles", "Tourist Attractions", "Countries", "Capital Cities",
+        "U.S. States", "National Parks", "Places in Europe", "Places You Swim", "Cities with Subways",
+        "Islands", "Airports", "Childhood Snacks", "Condiments", "Fast Food Chains", "Types of Pasta",
+        "Fruits", "Vegetables", "Desserts", "Breakfast Foods", "Pizza Toppings",
+        "Cocktails", "Candy Bars", "Spices or Herbs", "Non-Alcoholic Beverages", "Foods That Are Red",
+        "Summer Activities", "School Supplies", "Hobbies", "Ways to Get Around", "Housework or Chores",
+        "Board Games", "Party Themes", "Things That Are Round", "Things That Are Sticky", "Things with Wheels",
+        "Things That Make Noise", "Things That Can Break", "Things That Are Cold", "Things with Stripes",
+        "Things That Float", "Things You Keep Hidden", "Things You Can't Touch", "Classic Costumes",
+        "Halloween Candies", "Christmas Songs", "Thanksgiving Foods", "New Year's Resolutions",
+        "Birthday Traditions", "Party Decorations", "Costumes for Couples", "Dangerous Animals",
+        "Zoo Animals", "Dog Breeds", "Sea Creatures", "Birds", "Farm Animals", "Things Found in a Forest",
+        "Bugs or Insects", "Diseases", "Types of Doctors", "Weather", "Body Parts", "Planets",
+        "Inventions", "Types of Transportation", "Genres of Music", "School Subjects", "Famous Scientists"
+      ];
+      
+      var randomIndex = Math.floor(Math.random() * categoryList.length);
+      var randomCategory = categoryList[randomIndex];
+      
+      if (categoryNumber === 1) {
+        document.getElementById('category1Input').value = randomCategory;
+      } else if (categoryNumber === 2) {
+        document.getElementById('category2Input').value = randomCategory;
+      }
+      
+      if (typeof validateAndPreview === 'function') {
+        validateAndPreview();
+      }
+      
+      if (typeof trackPunzzleEvent === 'function') {
+        trackPunzzleEvent('random_category_used', 'feature_use', 'category_' + categoryNumber);
+      }
+    };
+
+
+    // Global variables
+    var isCustomPuzzle = false;
+    var hasStartedGame = false;
+
+    // Array of fallback puzzles
+    var puzzleDatabase = [
+      {
+        answer: "GAME OF SCONES",
+        categories: "HBO SHOWS + PASTRIES",
+        words: ["GAME OF", "SCONES"],
+        hint: "Winter is crumbing!"
+      },
+      {
+        answer: "NEIL PATRICK CARROTS",
+        categories: "ACTORS + VEGETABLES",
+        words: ["NEIL", "PATRICK", "CARROTS"],
+        hint: "A former child star"
+      },
+      {
+        answer: "CELINE DIJON",
+        categories: "POP STARS + CONDIMENTS",
+        words: ["CELINE", "DIJON"],
+        hint: "My heart will go on... this sandwich"
+      },
+      {
+        answer: "CRAZY RICH RAISINS",
+        categories: "ROMANTIC COMEDIES + SNACKS",
+        words: ["CRAZY", "RICH", "RAISINS"],
+        hint: "A wealthy dried fruit?"
+      }
+    ];
+
+    // Function to get puzzle index based on date
+    function getPuzzleIndexForDate(date) {
+      var startDate = new Date('2024-01-01');
+      var daysDiff = Math.floor((date - startDate) / (1000 * 60 * 60 * 24));
+      return Math.abs(daysDiff) % puzzleDatabase.length;
+    }
+
+    // Enhanced puzzle loading with robust fallback
+    async function loadPuzzleFromServer(date) {
+      console.log('Attempting to load puzzle from server for date:', date.toISOString().split('T')[0]);
+      
+      // Check if Firebase is available
+      if (typeof PuzzleDB === 'undefined' || !PuzzleDB || !PuzzleDB.getDailyPuzzle) {
+        console.log('PuzzleDB not available');
+        throw new Error('PuzzleDB not available');
+      }
+      
+      try {
+        const puzzle = await Promise.race([
+          PuzzleDB.getDailyPuzzle(date),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Server request timeout')), 5000))
+        ]);
+        
+        if (!puzzle) {
+          throw new Error('No puzzle found on server for this date');
+        }
+        
+        console.log('Server puzzle loaded successfully:', puzzle.categories);
+        return puzzle;
+      } catch (error) {
+        console.log('Server request failed:', error.message);
+        throw error;
+      }
+    }
+
+    // Enhanced function to load puzzle by date with smart fallback strategy
+    async function loadPuzzleByDate(date) {
+      console.log('=== loadPuzzleByDate() called for date:', date.toISOString().split('T')[0]);
+      
+      // Reset game state before loading new puzzle
+      console.log('Resetting game state...');
+      gameState.score = 10;
+      gameState.puzzleAnswer = "";
+      gameState.categoryText = "";
+      gameState.words = [];
+      gameState.letterTiles = [];
+      gameState.currentActiveTile = null;
+      gameState.penalties = [];
+      gameState.completedWithHints = false;
+      gameState.hintUsed = false;
+      gameState.customHint = null;
+      gameState.puzzleDate = null;
+      gameState.puzzleId = null;
+      
+      var puzzle = null;
+      var usesFallback = false;
+      
+      try {
+        console.log('Trying to load from server...');
+        puzzle = await loadPuzzleFromServer(date);
+        console.log('✓ Successfully loaded puzzle from server:', puzzle.categories);
+        
+      } catch (error) {
+        console.log('✗ Server load failed:', error.message);
+        console.log('Using fallback puzzle...');
+        
+        // Use fallback puzzle
+        const puzzleIndex = getPuzzleIndexForDate(date);
+        puzzle = puzzleDatabase[puzzleIndex];
+        usesFallback = true;
+        
+        console.log('✓ Fallback puzzle selected:', {
+          index: puzzleIndex,
+          categories: puzzle ? puzzle.categories : 'null',
+          answer: puzzle ? puzzle.answer : 'null'
+        });
+      }
+      
+      if (!puzzle) {
+        console.error('✗ No puzzle available (both server and fallback failed)');
+        throw new Error('No puzzle available (server and fallback both failed)');
+      }
+      
+      console.log('Setting game state with puzzle:', puzzle);
+      
+      // Set game state
+      gameState.puzzleAnswer = puzzle.answer;
+      gameState.categoryText = puzzle.categories;
+      gameState.words = puzzle.words;
+      gameState.customHint = puzzle.hint;
+      gameState.puzzleDate = date.toISOString().split('T')[0];
+      gameState.puzzleId = `daily-${gameState.puzzleDate}`;
+      
+      console.log('Game state updated:', {
+        answer: gameState.puzzleAnswer,
+        category: gameState.categoryText,
+        words: gameState.words,
+        hint: gameState.customHint
+      });
+      
+      // Update UI elements
+      var categoryElement = document.getElementById('categoryText');
+      var dateDisplayElement = document.getElementById('dateDisplay');
+      
+      if (!categoryElement) {
+        console.error('✗ Category element not found!');
+        throw new Error('Category UI element not found');
+      }
+      
+      if (!dateDisplayElement) {
+        console.error('✗ Date display element not found!');
+        throw new Error('Date display UI element not found');
+      }
+      
+      console.log('Updating UI elements...');
+      categoryElement.textContent = gameState.categoryText;
+      
+      // Format date for display
+      var dateString = date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+      
+      var prevDate = new Date(date);
+      prevDate.setDate(prevDate.getDate() - 1);
+      var prevDateParam = prevDate.toISOString().split('T')[0];
+      
+      var dateDisplayText = dateString;
+      if (usesFallback) {
+        // Only show (Demo) if not in private browsing
+        if (typeof window.isPrivateBrowsing !== 'undefined' && window.isPrivateBrowsing) {
+          // In private browsing, don't add (Demo) label for better UX
+        } else {
+          dateDisplayText += ' (Demo)';
+        }
+      }
+      
+      // Add Previous link to existing date display
+      var prevLinkHtml = '<a href="?date=' + prevDateParam + '&skipIntro=true">Previous</a> · ';
+      
+      dateDisplayElement.innerHTML = 
+        prevLinkHtml + dateDisplayText;
+      
+      console.log('✓ UI updated successfully');
+      console.log('=== loadPuzzleByDate() completed successfully');
+      return true;
+    }
+
+    // Game State
+    var gameState = {
+      score: 10,
+      puzzleAnswer: "",
+      categoryText: "",
+      words: [],
+      letterTiles: [],
+      currentActiveTile: null,
+      penalties: [],
+      completedWithHints: false,
+      hintUsed: false,
+      foxInterval: null,
+      currentFoxTile: null,
+      customHint: null,
+      puzzleDate: null,
+      puzzleId: null,
+      isBonus: false,
+      isPreview: false
+    };
+
+    // Google Analytics Enhanced Tracking
+    function trackPunzzleEvent(action, category, label, value) {
+      if (typeof gtag !== 'undefined') {
+        gtag('event', action, {
+          'event_category': category,
+          'event_label': label,
+          'value': value
+        });
+      }
+    }
+
+    function trackPuzzleStart(puzzleType, categories) {
+      trackPunzzleEvent('puzzle_start', puzzleType, categories);
+    }
+
+    async function trackPuzzleComplete(puzzleType, score, timeSpent, completed) {
+      trackPunzzleEvent('puzzle_complete', puzzleType, 'score_' + score, score);
+      if (timeSpent) {
+        trackPunzzleEvent('game_time', puzzleType, 'seconds', Math.round(timeSpent));
+      }
+      if (completed) {
+        trackPunzzleEvent('puzzle_solved', puzzleType, 'success', 1);
+      } else {
+        trackPunzzleEvent('puzzle_abandoned', puzzleType, 'with_hints', 1);
+      }
+      
+      if (!gameState.isPreview) {
+        const analyticsData = {
+          puzzleId: gameState.puzzleId || 'unknown',
+          puzzleType: puzzleType,
+          score: score,
+          completed: completed,
+          completedWithHints: gameState.completedWithHints || false,
+          timeSpent: Math.round(timeSpent),
+          hints: gameState.penalties.filter(p => p.reason === 'Hint').length,
+          randomLetters: gameState.penalties.filter(p => p.reason === 'Random letter').length,
+          randomWords: gameState.penalties.filter(p => p.reason === 'Random word').length,
+          incorrectGuesses: gameState.penalties.filter(p => p.reason === 'Incorrect answer').length,
+          categories: gameState.categoryText,
+          answer: gameState.puzzleAnswer,
+          date: gameState.puzzleDate || new Date().toISOString().split('T')[0],
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        
+        try {
+          if (typeof db !== 'undefined' && db.collection) {
+            await db.collection('gameStats').add(analyticsData);
+          }
+          
+          if (puzzleType === 'custom' && gameState.puzzleId && gameState.puzzleId.startsWith('custom-')) {
+            const customId = gameState.puzzleId.replace('custom-', '');
+            
+            if (typeof AnalyticsDB !== 'undefined' && AnalyticsDB && AnalyticsDB.trackCustomPuzzle) {
+              await AnalyticsDB.trackCustomPuzzle(customId, analyticsData);
+            }
+          }
+        } catch (error) {
+          console.error('Error tracking completion:', error);
+        }
+      }
+    }
+
+    function trackFeatureUse(feature, value) {
+      trackPunzzleEvent('feature_use', 'gameplay', feature, value);
+    }
+
+    function trackNavigation(link) {
+      trackPunzzleEvent('navigation', 'links', link);
+      
+      if (link === 'make_your_own') {
+        trackPunzzleEvent('feature_use', 'user_generated', 'opened_creator');
+      } else if (link === 'previous') {
+        trackPunzzleEvent('navigation', 'archive', 'previous_puzzle');
+      } else if (link === 'feedback_form') {
+        trackPunzzleEvent('engagement', 'feedback', 'opened_form');
+      }
+    }
+
+    function trackError(error) {
+      trackPunzzleEvent('error', 'gameplay', error);
+    }
+
+    function trackCustomPuzzle(action) {
+      trackPunzzleEvent('custom_puzzle', 'user_generated', action);
+    }
+
+    // Time tracking
+    var startTime = null;
+    
+    function startTimeTracking() {
+      startTime = Date.now();
+    }
+    
+    function getElapsedTime() {
+      return startTime ? (Date.now() - startTime) / 1000 : 0;
+    }
+
+    async function trackCustomPuzzleView(puzzleId) {
+      try {
+        if (typeof db !== 'undefined' && db.collection) {
+          const docRef = db.collection('customPuzzleStats').doc(puzzleId);
+          const doc = await docRef.get();
+          
+          if (doc.exists) {
+            await docRef.update({
+              views: firebase.firestore.FieldValue.increment(1),
+              lastViewed: firebase.firestore.FieldValue.serverTimestamp()
+            });
+          } else {
+            await docRef.set({
+              views: 1,
+              plays: 0,
+              completed: 0,
+              shares: 0,
+              playedAnother: 0,
+              totalScore: 0,
+              firstViewed: firebase.firestore.FieldValue.serverTimestamp(),
+              lastViewed: firebase.firestore.FieldValue.serverTimestamp()
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error tracking custom puzzle view:', error);
+      }
+    }
+
+    // ENHANCED INITIALIZATION - This is the key fix for mobile support
+    document.addEventListener('DOMContentLoaded', async function() {
+      console.log('=== DOMContentLoaded fired ===');
+      
+      var urlParams = new URLSearchParams(window.location.search);
+      var skipIntro = urlParams.get('skipIntro');
+      var optimized = urlParams.get('optimized');
+      
+      var pageType = 'daily';
+      if (urlParams.get('puzzle')) pageType = 'custom_shared';
+      if (urlParams.get('bonus')) pageType = 'bonus';
+      if (urlParams.get('date')) pageType = 'archive';
+      
+      trackPunzzleEvent('page_view', pageType, document.referrer || 'direct');
+      
+      var sharedPuzzle = urlParams.get('puzzle');
+      var bonusId = urlParams.get('bonus');
+      var dateParam = urlParams.get('date');
+      var isPreview = urlParams.get('preview') === 'true';
+      
+      // Always show loading when we need to fetch data
+      var needsLoading = bonusId || sharedPuzzle || dateParam || (typeof PuzzleDB !== 'undefined');
+      
+      if (needsLoading) {
+        showLoadingState();
+      }
+      
+      try {
+        // Handle bonus puzzle
+        if (bonusId) {
+          isCustomPuzzle = true;
+          
+          if (typeof PuzzleDB !== 'undefined' && PuzzleDB.getBonusPuzzle) {
+            const bonusPuzzle = await PuzzleDB.getBonusPuzzle(bonusId);
+            
+            if (bonusPuzzle) {
+              gameState.puzzleAnswer = bonusPuzzle.answer;
+              gameState.categoryText = bonusPuzzle.categories;
+              gameState.words = bonusPuzzle.words;
+              gameState.customHint = bonusPuzzle.hint || null;
+              gameState.puzzleId = `bonus-${bonusId}`;
+              gameState.isBonus = true;
+              gameState.isPreview = isPreview;
+              
+              document.getElementById('categoryText').textContent = gameState.categoryText;
+              document.getElementById('dateDisplay').innerHTML = 
+                '<a href="' + window.location.origin + window.location.pathname + '?skipIntro=true">Today\'s Punzzle</a> · ' +
+                (isPreview ? 'Preview Mode' : 'Bonus Puzzle');
+            } else {
+              hideLoadingState();
+              alert('This bonus puzzle is no longer available.');
+              window.location.href = window.location.origin + window.location.pathname;
+              return;
+            }
+          } else {
+            hideLoadingState();
+            alert('Unable to load bonus puzzle. Please try again later.');
+            window.location.href = window.location.origin + window.location.pathname;
+            return;
+          }
+          
+          hideLoadingState();
+          
+          if (skipIntro === 'true') {
+            startGameDirectly(); // Use the new mobile-optimized function
+          } else {
+            document.getElementById('startModal').style.display = 'flex';
+          }
+          setupCreateForm();
+          return;
+        }
+        
+        // Handle shared custom puzzle
+        if (sharedPuzzle) {
+          isCustomPuzzle = true;
+          
+          var puzzleData = JSON.parse(atob(sharedPuzzle));
+          gameState.puzzleAnswer = puzzleData.answer;
+          gameState.categoryText = puzzleData.categories;
+          gameState.words = puzzleData.words;
+          gameState.customHint = puzzleData.hint || null;
+          
+          const tempId = 'shared-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+          gameState.puzzleId = `custom-${tempId}`;
+          
+          if (optimized !== 'true') {
+            try {
+              const customId = await saveCustomPuzzle(puzzleData);
+              if (customId) {
+                gameState.puzzleId = `custom-${customId}`;
+                trackCustomPuzzleView(customId);
+                trackPunzzleEvent('shared_puzzle_opened', 'user_generated', gameState.categoryText);
+              }
+              
+              const customTitle = `Punzzle: ${gameState.categoryText}`;
+              const customDescription = `Can you solve this custom Punzzle? Categories: ${gameState.categoryText}. Find the pun that connects them!`;
+              updateMetaTags(customTitle, customDescription);
+            } catch (error) {
+              console.error('Error processing shared puzzle:', error);
+            }
+          }
+          
+          // Ensure game container is visible BEFORE we do anything else
+          var gameContainer = document.getElementById('gameContainer');
+          if (gameContainer) {
+            gameContainer.classList.remove('game-hidden');
+            console.log('Making game container visible for shared puzzle...');
+          } else {
+            console.error('Game container not found!');
+          }
+          
+          document.getElementById('categoryText').textContent = gameState.categoryText;
+          document.getElementById('dateDisplay').innerHTML = 
+            '<a href="' + window.location.origin + window.location.pathname + '?skipIntro=true">Today\'s Punzzle</a> · ' + (isPreview ? 'Preview Mode' : 'Shared Puzzle');
+          
+          hideLoadingState();
+          
+          if (skipIntro === 'true') {
+            startGameDirectly(); // Use the new mobile-optimized function
+          } else {
+            document.getElementById('startModal').style.display = 'flex';
+            var hamburgerMenu = document.getElementById('hamburgerMenu');
+            if (hamburgerMenu) {
+              hamburgerMenu.style.display = 'none';
+            }
+          }
+          setupCreateForm();
+          return;
+        }
+        
+        // Load puzzle based on date - try server first, fallback to local
+        var puzzleDate = dateParam ? new Date(dateParam + 'T00:00:00') : new Date();
+        
+        try {
+          await loadPuzzleByDate(puzzleDate);
+          console.log('✓ Puzzle loaded successfully');
+          
+        } catch (error) {
+          console.error('✗ All puzzle loading methods failed:', error);
+          hideLoadingState();
+          
+          // Show the specific error for debugging
+          console.error('Error details:', {
+            message: error.message,
+            stack: error.stack,
+            puzzleDate: puzzleDate,
+            gameState: gameState
+          });
+          
+          alert('Unable to load puzzle: ' + error.message + '. Please refresh the page and try again.');
+          return;
+        }
+        
+        // Ensure game container is visible and properly set up
+        var gameContainer = document.getElementById('gameContainer');
+        if (gameContainer) {
+          console.log('Making game container visible...');
+          gameContainer.classList.remove('game-hidden');
+          console.log('✓ Game container is now visible');
+        } else {
+          console.error('✗ Game container not found!');
+          alert('Game container missing. Please refresh the page.');
+          return;
+        }
+        
+        // Clear loading state after puzzle is loaded
+        hideLoadingState();
+        
+      } catch (error) {
+        console.error('Error during initialization:', error);
+        hideLoadingState();
+        
+        // Show error message instead of silent fallback
+        alert('Error loading puzzle. Please refresh the page and try again.');
+        return;
+      }
+      
+      // Show intro or start game - ENHANCED FOR MOBILE  
+      if (skipIntro === 'true') {
+        console.log('Skipping intro, starting game directly');
+        startGameDirectly(); // Use the new mobile-optimized function
+      } else {
+        console.log('Showing intro modal');
+        document.getElementById('startModal').style.display = 'flex';
+        var hamburgerMenu = document.getElementById('hamburgerMenu');
+        if (hamburgerMenu) {
+          hamburgerMenu.style.display = 'none';
+        }
+        document.body.classList.add('modal-open');
+        document.getElementById('gameContainer').classList.add('content-blur');
+      }
+      
+      setupCreateForm();
+    });
+
+    testPreviewImage();
+
+    // NEW MOBILE-OPTIMIZED GAME START FUNCTION - This is the key fix
+    function startGameDirectly() {
+      console.log('startGameDirectly() called - optimized for mobile');
+      
+      // Clear any loading states first
+      hideLoadingState();
+      
+      // Ensure modal is hidden
+      document.getElementById('startModal').style.display = 'none';
+      
+      // Make sure game container is visible
+      var gameContainer = document.getElementById('gameContainer');
+      gameContainer.classList.remove('game-hidden');
+      
+      // Remove modal classes
+      document.body.classList.remove('modal-open');
+      gameContainer.classList.remove('content-blur');
+      
+      // Add game active class - CRITICAL for mobile
+      document.body.classList.add('game-active');
+      
+      hasStartedGame = true;
+      
+      // Verify we have puzzle data
+      if (!gameState.puzzleAnswer || !gameState.categoryText || !gameState.words.length) {
+        console.error('Missing puzzle data in startGameDirectly:', {
+          answer: gameState.puzzleAnswer,
+          category: gameState.categoryText,
+          words: gameState.words
+        });
+        alert('Puzzle data not loaded. Please refresh the page.');
+        return;
+      }
+      
+      console.log('Building puzzle with data:', {
+        answer: gameState.puzzleAnswer,
+        category: gameState.categoryText,
+        words: gameState.words
+      });
+      
+      // Build puzzle if not already built
+      if (gameState.letterTiles.length === 0) {
+        buildPuzzle();
+        updateScore(0);
+      }
+      
+      startFoxTimer();
+      startTimeTracking();
+      
+      var hamburgerMenu = document.getElementById('hamburgerMenu');
+      if (hamburgerMenu) {
+        hamburgerMenu.style.display = 'block';
+      }
+      var puzzleType = isCustomPuzzle ? 'custom' : 'daily';
+      trackPuzzleStart(puzzleType, gameState.categoryText);
+      
+      // Force mobile layout update
+      if (window.innerWidth <= 768) {
+        console.log('Mobile detected - ensuring mobile controls are visible');
+        setTimeout(() => {
+          const fixedBottomSection = document.getElementById('fixedBottomSection');
+          const mobileKeyboard = document.getElementById('mobileKeyboard');
+          
+          if (fixedBottomSection) {
+            fixedBottomSection.style.display = 'block';
+            console.log('Mobile bottom section shown');
+          }
+          if (mobileKeyboard) {
+            mobileKeyboard.style.display = 'block';
+            console.log('Mobile keyboard shown');
+          }
+        }, 100);
+      }
+      
+      console.log('Game started successfully with mobile optimizations');
+    }
+
+    function startGame() {
+      console.log('startGame() called');
+      
+      // Clear any loading states first
+      hideLoadingState();
+      
+      // Ensure modal is hidden
+      document.getElementById('startModal').style.display = 'none';
+      
+      // Make sure game container is visible
+      var gameContainer = document.getElementById('gameContainer');
+      gameContainer.classList.remove('game-hidden');
+      
+      // Remove modal classes
+      document.body.classList.remove('modal-open');
+      gameContainer.classList.remove('content-blur');
+      
+      // Add game active class
+      document.body.classList.add('game-active');
+      
+      hasStartedGame = true;
+      
+      // Verify we have puzzle data
+      if (!gameState.puzzleAnswer || !gameState.categoryText || !gameState.words.length) {
+        console.error('Missing puzzle data in startGame:', {
+          answer: gameState.puzzleAnswer,
+          category: gameState.categoryText,
+          words: gameState.words
+        });
+        alert('Puzzle data not loaded. Please refresh the page.');
+        return;
+      }
+      
+      console.log('Building puzzle with data:', {
+        answer: gameState.puzzleAnswer,
+        category: gameState.categoryText,
+        words: gameState.words
+      });
+      
+      // Build puzzle if not already built
+      if (gameState.letterTiles.length === 0) {
+        buildPuzzle();
+        updateScore(0);
+      }
+      
+      startFoxTimer();
+      startTimeTracking();
+      
+      var hamburgerMenu = document.getElementById('hamburgerMenu');
+      if (hamburgerMenu) {
+        hamburgerMenu.style.display = 'block';
+      }
+      var puzzleType = isCustomPuzzle ? 'custom' : 'daily';
+      trackPuzzleStart(puzzleType, gameState.categoryText);
+      
+      console.log('Game started successfully');
+    }
+
+    function startFoxTimer() {
+      if (gameState.foxInterval) {
+        clearInterval(gameState.foxInterval);
+      }
+      
+      setTimeout(function() {
+        showFoxPopup();
+        
+        gameState.foxInterval = setInterval(function() {
+          showFoxPopup();
+        }, 40000);
+      }, 15000);
+    }
+
+    function stopFoxTimer() {
+      if (gameState.foxInterval) {
+        clearInterval(gameState.foxInterval);
+        gameState.foxInterval = null;
+      }
+    }
+
+    function showFoxPopup() {
+      if (gameState.completedWithHints || 
+          document.getElementById('scoreCard').style.display === 'flex' ||
+          document.getElementById('startModal').style.display === 'flex') {
+        return;
+      }
+      
+      var emptyTiles = gameState.letterTiles.filter(function(tile) {
+        return tile.classList.contains('hidden') && 
+               !tile.classList.contains('revealed') && 
+               !tile.classList.contains('user-filled');
+      });
+      
+      if (emptyTiles.length === 0) return;
+      
+      if (gameState.currentFoxTile && gameState.currentFoxTile.querySelector('.fox-popup')) {
+        return;
+      }
+      
+      if (gameState.currentFoxTile) {
+        var existingFox = gameState.currentFoxTile.querySelector('.fox-popup');
+        if (existingFox) {
+          existingFox.remove();
+        }
+      }
+      
+      var randomTile = emptyTiles[Math.floor(Math.random() * emptyTiles.length)];
+      gameState.currentFoxTile = randomTile;
+      
+      var foxPopup = document.createElement('div');
+      foxPopup.className = 'fox-popup';
+      foxPopup.innerHTML = '<img src="https://punzzle.com/images/oliversurprise.png" alt="Oliver Fox">';
+      
+      randomTile.appendChild(foxPopup);
+      
+      trackFeatureUse('fox_popup_shown', 1);
+      
+      setTimeout(function() {
+        foxPopup.classList.add('active');
+      }, 50);
+      
+      setTimeout(function() {
+        foxPopup.classList.remove('active');
+        
+        setTimeout(function() {
+          if (foxPopup.parentNode) {
+            foxPopup.remove();
+          }
+          gameState.currentFoxTile = null;
+        }, 800);
+      }, 3350);
+    }
+
+    function buildPuzzle() {
+      console.log('=== buildPuzzle() called ===');
+      console.log('Game state words:', gameState.words);
+      console.log('Game state answer:', gameState.puzzleAnswer);
+      console.log('Game state category:', gameState.categoryText);
+      
+      var container = document.getElementById('puzzleContainer');
+      if (!container) {
+        console.error('✗ Puzzle container not found!');
+        return;
+      }
+      
+      container.innerHTML = '';
+      gameState.letterTiles = [];
+      
+      // Update hint/restart buttons
+      if (!gameState.customHint) {
+        var hintBtn = document.getElementById('hintRestartBtn');
+        var mobileHintBtn = document.getElementById('mobileHintRestartBtn');
+        if (hintBtn) hintBtn.textContent = 'Restart';
+        if (mobileHintBtn) mobileHintBtn.textContent = 'Restart';
+      } else {
+        var hintBtn = document.getElementById('hintRestartBtn');
+        var mobileHintBtn = document.getElementById('mobileHintRestartBtn');
+        if (hintBtn) hintBtn.textContent = 'Hint (-3)';
+        if (mobileHintBtn) mobileHintBtn.textContent = 'Hint (-3)';
+      }
+      
+      // Validate and clean words array
+      if (!gameState.words || !Array.isArray(gameState.words) || gameState.words.length === 0) {
+        console.error('✗ Invalid or missing words array:', gameState.words);
+        
+        // Try to reconstruct words from answer if possible
+        if (gameState.puzzleAnswer) {
+          console.log('Attempting to reconstruct words from answer:', gameState.puzzleAnswer);
+          // For fallback puzzles, we know the word structure
+          if (gameState.puzzleAnswer === "GAME OF SCONES") {
+            gameState.words = ["GAME OF", "SCONES"];
+          } else if (gameState.puzzleAnswer === "NEIL PATRICK CARROTS") {
+            gameState.words = ["NEIL", "PATRICK", "CARROTS"];
+          } else if (gameState.puzzleAnswer === "CELINE DIJON") {
+            gameState.words = ["CELINE", "DIJON"];
+          } else if (gameState.puzzleAnswer === "CRAZY RICH RAISINS") {
+            gameState.words = ["CRAZY", "RICH", "RAISINS"];
+          } else {
+            // Last resort: split by spaces
+            gameState.words = gameState.puzzleAnswer.split(' ');
+          }
+          console.log('Reconstructed words:', gameState.words);
+        } else {
+          console.error('✗ Cannot reconstruct words - no answer available');
+          return;
+        }
+      }
+      
+      // Validate each word
+      var validWords = [];
+      gameState.words.forEach(function(word, index) {
+        if (!word || typeof word !== 'string' || word.trim().length === 0) {
+          console.error('✗ Invalid word at index', index, ':', word);
+        } else {
+          validWords.push(word.trim());
+        }
+      });
+      
+      if (validWords.length === 0) {
+        console.error('✗ No valid words found');
+        return;
+      }
+      
+      gameState.words = validWords;
+      console.log('✓ Using validated words:', gameState.words);
+      
+      var totalLetters = 0;
+      var maxWordLength = 0;
+      gameState.words.forEach(function(word) {
+        totalLetters += word.length;
+        maxWordLength = Math.max(maxWordLength, word.length);
+      });
+      
+      console.log('Puzzle stats:', { totalLetters, maxWordLength });
+      
+      var sizeClass = '';
+      if (totalLetters > 20 || maxWordLength > 8) {
+        sizeClass = 'tiles-small';
+      } else if (totalLetters > 15 || maxWordLength > 6) {
+        sizeClass = 'tiles-medium';
+      }
+      
+      if (sizeClass) {
+        container.classList.add(sizeClass);
+        console.log('Applied size class:', sizeClass);
+      }
+      
+      gameState.words.forEach(function(word, wordIndex) {
+        console.log('Creating word group for word', wordIndex, ':', word);
+        
+        var wordGroup = document.createElement('div');
+        wordGroup.className = 'word-group';
+        
+        for (var i = 0; i < word.length; i++) {
+          var letter = word[i];
+          var tile = document.createElement('div');
+          tile.className = 'tile hidden';
+          tile.textContent = '';
+          tile.dataset.letter = letter;
+          
+          tile.addEventListener('click', function() {
+            if (!this.classList.contains('revealed')) {
+              setActiveTile(this);
+            }
+          });
+          
+          gameState.letterTiles.push(tile);
+          wordGroup.appendChild(tile);
+        }
+        
+        container.appendChild(wordGroup);
+      });
+
+      console.log('✓ Created', gameState.letterTiles.length, 'tiles total');
+
+      setTimeout(function() {
+        console.log('Revealing initial tiles...');
+        var shuffled = gameState.letterTiles.slice().sort(function() { return Math.random() - 0.5; });
+        
+        for (var i = 0; i < Math.min(3, shuffled.length); i++) {
+          var tile = shuffled[i];
+          tile.classList.add('revealed');
+          tile.classList.remove('hidden');
+          tile.textContent = tile.dataset.letter;
+          console.log('Revealed tile:', tile.dataset.letter);
+        }
+        
+        var firstEmpty = gameState.letterTiles.find(function(tile) {
+          return !tile.classList.contains('revealed');
+        });
+        if (firstEmpty) {
+          setActiveTile(firstEmpty);
+          console.log('✓ Set active tile');
+        }
+        
+        console.log('✓ Puzzle built successfully with', gameState.letterTiles.length, 'tiles');
+        console.log('=== buildPuzzle() completed ===');
+      }, 100);
+    }
+
+    function setActiveTile(tile) {
+      if (gameState.currentActiveTile) {
+        gameState.currentActiveTile.classList.remove('active');
+      }
+      gameState.currentActiveTile = tile;
+      tile.classList.add('active');
+    }
+
+    function updateScore(change, reason) {
+      gameState.score += change;
+      
+      document.getElementById('scoreValue').textContent = gameState.score;
+      document.getElementById('mobileScoreValue').textContent = gameState.score;
+      
+      if (gameState.score < 0) {
+        document.getElementById('scoreValue').classList.add('negative');
+        document.getElementById('mobileScoreValue').classList.add('negative');
+      } else {
+        document.getElementById('scoreValue').classList.remove('negative');
+        document.getElementById('mobileScoreValue').classList.remove('negative');
+      }
+      
+      var fillPercentage = Math.max(0, (gameState.score / 10) * 100);
+      document.getElementById('progressFill').style.width = fillPercentage + '%';
+      document.getElementById('mobileProgressFill').style.width = fillPercentage + '%';
+      
+      if (change < 0 && reason) {
+        gameState.penalties.push({ points: change, reason: reason });
+      }
+    }
+
+    function updateMessage(text, className, clueText) {
+      var message = document.getElementById('message');
+      var clue = document.getElementById('clue');
+      
+      message.textContent = text;
+      message.className = 'message ' + (className || '');
+      
+      if (clueText) {
+        clue.textContent = clueText;
+        clue.style.display = 'block';
+      } else {
+        clue.style.display = 'none';
+      }
+      
+      var mobileMessage = document.getElementById('mobileMessage');
+      if (mobileMessage) {
+        var mobileText = clueText || text;
+        if (mobileText.includes('Random letter revealed')) {
+          mobileText = 'Letter revealed (-1)';
+        } else if (mobileText.includes('Random word')) {
+          mobileText = 'Word revealed (-5)';
+        } else if (mobileText.includes('Not quite right')) {
+          mobileText = 'Try again (-2)';
+        } else if (mobileText.includes('Excellent')) {
+          mobileText = 'Correct!';
+        }
+        
+        mobileMessage.textContent = mobileText;
+        mobileMessage.className = 'mobile-inline-message ' + (className || '');
+        
+        setTimeout(function() {
+          mobileMessage.textContent = '';
+        }, 25000);
+      }
+    }
+
+    function handleHintOrRestart() {
+      if (!gameState.customHint) {
+        trackFeatureUse('restart', 1);
+        trackPunzzleEvent('gameplay', 'game_action', 'restart_puzzle');
+        restartGame();
+        return;
+      }
+      
+      if (!gameState.hintUsed) {
+        trackFeatureUse('hint_used', 1);
+        trackPunzzleEvent('gameplay', 'hint_used', 'custom_hint');
+        giveHint();
+        gameState.hintUsed = true;
+        
+        document.getElementById('hintRestartBtn').classList.add('hint-used');
+        document.getElementById('mobileHintRestartBtn').classList.add('hint-used');
+      } else {
+        trackFeatureUse('restart', 1);
+        trackPunzzleEvent('gameplay', 'game_action', 'restart_after_hint');
+        restartGame();
+      }
+    }
+
+    function giveHint() {
+      updateScore(-3, 'Hint');
+      updateMessage('', '', gameState.customHint);
+    }
+
+    function revealRandomLetter() {
+      var hiddenTiles = gameState.letterTiles.filter(function(tile) {
+        return !tile.classList.contains('revealed') && !tile.classList.contains('user-filled');
+      });
+      
+      if (hiddenTiles.length > 0) {
+        var randomTile = hiddenTiles[Math.floor(Math.random() * hiddenTiles.length)];
+        randomTile.classList.add('revealed');
+        randomTile.classList.remove('hidden');
+        randomTile.textContent = randomTile.dataset.letter;
+        
+        updateMessage('', '', 'Random letter revealed (-1 point)');
+        updateScore(-1, 'Random letter');
+        
+        trackFeatureUse('random_letter', 1);
+        trackPunzzleEvent('gameplay', 'hint_used', 'random_letter');
+        
+        checkPuzzleComplete();
+      }
+    }
+
+    function revealRandomWord() {
+      var wordGroups = document.querySelectorAll('.word-group');
+      var availableWords = [];
+      
+      wordGroups.forEach(function(wordGroup, index) {
+        var tiles = Array.from(wordGroup.querySelectorAll('.tile'));
+        var hasHidden = tiles.some(function(tile) {
+          return !tile.classList.contains('revealed') && !tile.classList.contains('user-filled');
+        });
+        
+        if (hasHidden) {
+          availableWords.push({ element: wordGroup, tiles: tiles, word: gameState.words[index] });
+        }
+      });
+      
+      if (availableWords.length > 0) {
+        var randomWord = availableWords[Math.floor(Math.random() * availableWords.length)];
+        
+        randomWord.tiles.forEach(function(tile, index) {
+          if (!tile.classList.contains('revealed')) {
+            setTimeout(function() {
+              tile.classList.add('revealed');
+              tile.classList.remove('hidden', 'user-filled');
+              tile.textContent = tile.dataset.letter;
+            }, index * 100);
+          }
+        });
+        
+        updateMessage('', '', 'Random word "' + randomWord.word + '" revealed (-5 points)');
+        updateScore(-5, 'Random word');
+        
+        trackFeatureUse('random_word', 1);
+        trackPunzzleEvent('gameplay', 'hint_used', 'random_word');
+        
+        setTimeout(function() {
+          var remainingHiddenTiles = gameState.letterTiles.filter(function(tile) {
+            return !tile.classList.contains('revealed') && !tile.classList.contains('user-filled');
+          });
+            
+          if (remainingHiddenTiles.length === 0) {
+            updateMessage('', '', 'Puzzle completed with hints');
+            
+            gameState.completedWithHints = true;
+            
+            gameState.letterTiles.forEach(function(tile) {
+              tile.classList.add('hint-completed');
+              tile.classList.remove('user-filled', 'active');
+            });
+            
+            if (gameState.currentActiveTile) {
+              gameState.currentActiveTile.classList.remove('active');
+              gameState.currentActiveTile = null;
+            }
+            
+            stopFoxTimer();
+            
+            var puzzleType = isCustomPuzzle ? 'custom' : 'daily';
+            trackPuzzleComplete(puzzleType, gameState.score, getElapsedTime(), false);
+            
+            setTimeout(function() {
+              showScoreCard(false);
+            }, 1000);
+          } else {
+            checkPuzzleComplete();
+          }
+        }, randomWord.tiles.length * 100 + 200);
+      }
+    }
+
+    function checkPuzzleComplete() {
+      if (gameState.completedWithHints) {
+        return;
+      }
+      
+      var allFilled = gameState.letterTiles.every(function(tile) {
+        return tile.classList.contains('revealed') || 
+               (tile.classList.contains('user-filled') && tile.textContent.trim() !== '');
+      });
+      
+      if (allFilled) {
+        var userAnswer = gameState.letterTiles.map(function(tile) {
+          if (tile.classList.contains('revealed')) {
+            return tile.dataset.letter.toUpperCase();
+          } else if (tile.classList.contains('user-filled')) {
+            return tile.textContent.toUpperCase();
+          } else {
+            return tile.dataset.letter.toUpperCase();
+          }
+        }).join('');
+        
+        var correctAnswer = gameState.puzzleAnswer.replace(/\s/g, '').toUpperCase();
+        
+        if (userAnswer === correctAnswer) {
+          updateMessage('Excellent! You solved the puzzle.', 'success');
+          
+          gameState.letterTiles.forEach(function(tile, index) {
+            setTimeout(function() {
+              tile.classList.add('revealed', 'correct');
+              tile.classList.remove('user-filled', 'active');
+              tile.textContent = tile.dataset.letter;
+            }, index * 50);
+          });
+          
+          stopFoxTimer();
+          
+          var puzzleType = isCustomPuzzle ? 'custom' : 'daily';
+          trackPuzzleComplete(puzzleType, gameState.score, getElapsedTime(), true);
+          
+          setTimeout(function() {
+            showScoreCard(true);
+          }, gameState.letterTiles.length * 50 + 1000);
+          
+        } else {
+          updateMessage('Not quite right. Try again! (-2 points)', 'error');
+          updateScore(-2, 'Incorrect answer');
+          trackFeatureUse('incorrect_guess', 1);
+        }
+      }
+    }
+
+    function showScoreCard(isSuccess) {
+      var scoreCardTitle = document.getElementById('scoreCardTitle');
+      var scoreCardCategories = document.getElementById('scoreCardCategories');
+      var penaltiesContainer = document.getElementById('penaltiesContainer');
+      var finalScoreDisplay = document.getElementById('finalScoreDisplay');
+      
+      document.body.classList.remove('game-active');
+      
+      if (gameState.completedWithHints) {
+        isSuccess = false;
+      }
+      
+      var title = '';
+      if (gameState.score === 10) {
+        title = 'A hole in pun!';
+      } else if (gameState.score >= 1 && gameState.score <= 9) {
+        title = 'You got it!';
+      } else if (gameState.score === 0) {
+        title = 'You broke even!';
+      } else if (gameState.score < 0) {
+        title = 'Thank you for<br>not using AI.';
+      }
+      
+      scoreCardTitle.innerHTML = title;
+      scoreCardCategories.textContent = gameState.categoryText;
+      
+      penaltiesContainer.innerHTML = '';
+      var penaltiesByReason = {};
+      var penaltyCounts = {};
+      
+      gameState.penalties.forEach(function(penalty) {
+        if (!penaltiesByReason[penalty.reason]) {
+          penaltiesByReason[penalty.reason] = 0;
+          penaltyCounts[penalty.reason] = 0;
+        }
+        penaltiesByReason[penalty.reason] += penalty.points;
+        penaltyCounts[penalty.reason] += 1;
+      });
+      
+      for (var reason in penaltiesByReason) {
+        var row = document.createElement('div');
+        row.style.cssText = 'display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;';
+        var count = penaltyCounts[reason];
+        var displayReason = count > 1 ? reason + ' (x' + count + ')' : reason;
+        var penaltyValue = penaltiesByReason[reason];
+        var penaltyStyle = penaltyValue < 0 ? 'color: #c9372c; font-weight: 600;' : 'font-weight: 600;';
+        row.innerHTML = '<span style="font-size: 0.875rem; color: #666;">' + displayReason + '</span><span style="font-size: 0.875rem; ' + penaltyStyle + '">' + penaltyValue + '</span>';
+        penaltiesContainer.appendChild(row);
+      }
+      
+      if (gameState.penalties.length === 0) {
+        var row = document.createElement('div');
+        row.style.cssText = 'display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;';
+        row.innerHTML = '<span style="font-size: 0.875rem; color: #666;">Perfect! No hints</span><span style="font-size: 0.875rem; font-weight: 600;">0</span>';
+        penaltiesContainer.appendChild(row);
+      }
+      
+      finalScoreDisplay.textContent = gameState.score;
+      
+      if (gameState.completedWithHints || gameState.score < 0) {
+        finalScoreDisplay.style.color = '#c9372c';
+      } else {
+        finalScoreDisplay.style.color = '#1a1a1a';
+      }
+      
+      document.getElementById('scoreCard').style.display = 'flex';
+      
+      var hamburgerMenu = document.getElementById('hamburgerMenu');
+      if (hamburgerMenu) {
+        hamburgerMenu.style.display = 'none';
+      }
+      
+      document.getElementById('gameContainer').classList.add('content-blur');
+    }
+
+    function closeScoreModal() {
+      // Navigate immediately without showing loading state - let the new page handle it
+      var baseUrl = window.location.origin + window.location.pathname;
+      window.location.href = baseUrl + '?skipIntro=true';
+    }
+
+    function restartGame() {
+      gameState.score = 10;
+      gameState.penalties = [];
+      gameState.completedWithHints = false;
+      gameState.hintUsed = false;
+      
+      if (!gameState.customHint) {
+        document.getElementById('hintRestartBtn').textContent = 'Restart';
+        document.getElementById('mobileHintRestartBtn').textContent = 'Restart';
+      } else {
+        document.getElementById('hintRestartBtn').textContent = 'Hint (-3)';
+        document.getElementById('mobileHintRestartBtn').textContent = 'Hint (-3)';
+      }
+      
+      if (gameState.currentActiveTile) {
+        gameState.currentActiveTile.classList.remove('active');
+        gameState.currentActiveTile = null;
+      }
+      
+      var container = document.getElementById('puzzleContainer');
+      container.classList.remove('tiles-small', 'tiles-medium');
+      
+      updateMessage('');
+      
+      var hamburgerMenu = document.getElementById('hamburgerMenu');
+      if (hamburgerMenu) {
+        hamburgerMenu.style.display = 'block';
+      }
+      
+      var scoreCard = document.getElementById('scoreCard');
+      if (scoreCard.style.display === 'flex') {
+        scoreCard.style.display = 'none';
+        document.getElementById('gameContainer').classList.remove('content-blur');
+        document.body.classList.add('game-active');
+        buildPuzzle();
+        updateScore(0);
+        startFoxTimer();
+      } else {
+        buildPuzzle();
+        updateScore(0);
+      }
+    }
+
+    function processDesktopKeyInput(inputKey) {
+      if (!gameState.currentActiveTile) return;
+      
+      if (/^[A-Za-z]$/.test(inputKey)) {
+        if (!gameState.currentActiveTile.classList.contains('revealed')) {
+          gameState.currentActiveTile.textContent = inputKey.toUpperCase();
+          gameState.currentActiveTile.classList.add('user-filled');
+          gameState.currentActiveTile.classList.remove('hidden');
+          
+          var puzzleComplete = gameState.letterTiles.every(function(tile) {
+            return tile.classList.contains('revealed') || 
+                   (tile.classList.contains('user-filled') && tile.textContent.trim() !== '');
+          });
+          
+          if (puzzleComplete) {
+            setTimeout(checkPuzzleComplete, 50);
+          } else {
+            var emptyTiles = gameState.letterTiles.filter(function(tile) {
+              return !tile.classList.contains('revealed');
+            });
+            var currentPosition = emptyTiles.indexOf(gameState.currentActiveTile);
+            var nextAvailable = emptyTiles[currentPosition + 1];
+            
+            if (nextAvailable) {
+              setActiveTile(nextAvailable);
+            }
+          }
+        }
+      } else if (inputKey === 'Backspace') {
+        processDesktopBackspace();
+      }
+    }
+
+    function processDesktopBackspace() {
+      if (!gameState.currentActiveTile) return;
+      
+      var editableTiles = gameState.letterTiles.filter(function(tile) {
+        return !tile.classList.contains('revealed');
+      });
+      
+      if (gameState.currentActiveTile.classList.contains('user-filled')) {
+        gameState.currentActiveTile.textContent = '';
+        gameState.currentActiveTile.classList.remove('user-filled');
+        gameState.currentActiveTile.classList.add('hidden');
+      } else {
+        var currentPosition = editableTiles.indexOf(gameState.currentActiveTile);
+        var previousTile = editableTiles[currentPosition - 1];
+        
+        if (previousTile && previousTile.classList.contains('user-filled')) {
+          setActiveTile(previousTile);
+          previousTile.textContent = '';
+          previousTile.classList.remove('user-filled');
+          previousTile.classList.add('hidden');
+        }
+      }
+    }
+
+    function handleKey(key) {
+      if (key === 'Backspace') {
+        trackPunzzleEvent('mobile_keyboard', 'interaction', 'backspace');
+      } else if (/^[A-Za-z]$/.test(key)) {
+        trackPunzzleEvent('mobile_keyboard', 'interaction', 'letter_key');
+      }
+      
+      if (!gameState.currentActiveTile) return;
+
+      if (/^[A-Za-z]$/.test(key)) {
+        if (!gameState.currentActiveTile.classList.contains('revealed')) {
+          gameState.currentActiveTile.textContent = key.toUpperCase();
+          gameState.currentActiveTile.classList.add('user-filled');
+          gameState.currentActiveTile.classList.remove('hidden');
+          
+          var allFilled = gameState.letterTiles.every(function(tile) {
+            return tile.classList.contains('revealed') || 
+                   (tile.classList.contains('user-filled') && tile.textContent.trim() !== '');
+          });
+          
+          if (allFilled) {
+            setTimeout(checkPuzzleComplete, 50);
+          } else {
+            var availableTiles = gameState.letterTiles.filter(function(tile) {
+              return !tile.classList.contains('revealed');
+            });
+            var currentIndex = availableTiles.indexOf(gameState.currentActiveTile);
+            var nextTile = availableTiles[currentIndex + 1];
+            
+            if (nextTile) {
+              setActiveTile(nextTile);
+            }
+          }
+        }
+      } else if (key === 'Backspace') {
+        handleBackspace();
+      }
+    }
+
+    function handleBackspace() {
+      if (!gameState.currentActiveTile) return;
+      
+      var availableTiles = gameState.letterTiles.filter(function(tile) {
+        return !tile.classList.contains('revealed');
+      });
+      
+      if (gameState.currentActiveTile.classList.contains('user-filled')) {
+        gameState.currentActiveTile.textContent = '';
+        gameState.currentActiveTile.classList.remove('user-filled');
+        gameState.currentActiveTile.classList.add('hidden');
+      } else {
+        var currentIndex = availableTiles.indexOf(gameState.currentActiveTile);
+        var prevTile = availableTiles[currentIndex - 1];
+        
+        if (prevTile && prevTile.classList.contains('user-filled')) {
+          setActiveTile(prevTile);
+          prevTile.textContent = '';
+          prevTile.classList.remove('user-filled');
+          prevTile.classList.add('hidden');
+        }
+      }
+    }
+
+    // Desktop keyboard toggle functionality
+    function toggleDesktopKeyboard() {
+      var body = document.body;
+      var toggleBtn = document.getElementById('desktopKeyboardToggle');
+      
+      if (body.classList.contains('desktop-keyboard-active')) {
+        body.classList.remove('desktop-keyboard-active');
+        toggleBtn.textContent = 'Show Keyboard';
+        trackFeatureUse('desktop_keyboard_hidden', 1);
+      } else {
+        body.classList.add('desktop-keyboard-active');
+        toggleBtn.textContent = 'Hide Keyboard';
+        trackFeatureUse('desktop_keyboard_shown', 1);
+      }
+    }
+    
+    // Handle desktop keyboard button clicks
+    function handleDesktopKey(key) {
+      processDesktopKeyInput(key);
+      trackFeatureUse('desktop_keyboard_key', 1);
+    }
+
+    document.addEventListener('keydown', function(event) {
+      var createModal = document.getElementById('createWrapper');
+      var feedbackModal = document.getElementById('feedbackWrapper');
+      var faqModal = document.getElementById('faqWrapper');
+      var startModal = document.getElementById('startModal');
+      var scoreCard = document.getElementById('scoreCard');
+      
+      var modalOpen = (createModal && createModal.classList.contains('active')) ||
+                      (feedbackModal && feedbackModal.classList.contains('active')) ||
+                      (faqModal && faqModal.classList.contains('active')) ||
+                      (startModal && startModal.style.display === 'flex') ||
+                      (scoreCard && scoreCard.style.display === 'flex');
+      
+      if (!modalOpen) {
+        processDesktopKeyInput(event.key);
+      }
+    });
+
+
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Escape') {
+        var createModal = document.getElementById('createWrapper');
+        var feedbackModal = document.getElementById('feedbackWrapper');
+        var faqModal = document.getElementById('faqWrapper');
+        if (createModal && createModal.classList.contains('active')) {
+          showMainGame();
+        } else if (feedbackModal && feedbackModal.classList.contains('active')) {
+          closeFeedbackForm();
+        } else if (faqModal && faqModal.classList.contains('active')) {
+          closeFAQ();
+        }
+      }
+    });
+
+    // Enhanced shareCompletedPuzzle function to share image
+    async function shareCompletedPuzzle() {
+      // Hide close button and share buttons temporarily
+      const closeBtn = document.querySelector('#scoreCard button[onclick="closeScoreModal()"]');
+      const actionButtons = document.querySelector('#scoreCard .modal-content > div:last-child');
+      
+      if (closeBtn) closeBtn.style.display = 'none';
+      if (actionButtons) actionButtons.style.display = 'none';
+      
+      try {
+        // Pre-load the fox image to ensure it's cached and can be rendered
+        const foxImg = document.querySelector('.scorecard-logo');
+        if (foxImg && foxImg.src) {
+          await new Promise((resolve, reject) => {
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = resolve;
+            img.onerror = resolve; // Continue even if image fails
+            img.src = foxImg.src;
+          });
+        }
+        
+        // Generate image from scorecard modal content
+        const modal = document.querySelector('#scoreCard .modal');
+        const canvas = await html2canvas(modal, {
+          backgroundColor: '#ffffff',
+          scale: 2,
+          logging: false,
+          useCORS: true,
+          allowTaint: false,
+          imageTimeout: 15000,
+          onclone: function(clonedDoc) {
+            // Ensure the fox image in the cloned document has crossOrigin set
+            const clonedImg = clonedDoc.querySelector('.scorecard-logo');
+            if (clonedImg) {
+              clonedImg.crossOrigin = 'anonymous';
+            }
+          }
+        });
+        
+        // Convert canvas to blob
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+        
+        // Restore UI elements
+        if (closeBtn) closeBtn.style.display = '';
+        if (actionButtons) actionButtons.style.display = '';
+        
+        // Track sharing
+        if (gameState.puzzleId) {
+          try {
+            if (typeof db !== 'undefined' && db.collection) {
+              await db.collection('gameStats').add({
+                puzzleId: gameState.puzzleId,
+                action: 'shared',
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+              });
+              
+              if (gameState.puzzleId.startsWith('custom-')) {
+                const customId = gameState.puzzleId.replace('custom-', '');
+                const docRef = db.collection('customPuzzleStats').doc(customId);
+                await docRef.update({
+                  shares: firebase.firestore.FieldValue.increment(1)
+                });
+              }
+            }
+          } catch (error) {
+            console.error('Error tracking share:', error);
+          }
+        }
+        
+        trackFeatureUse('share_completed', gameState.score);
+        
+        const shareType = isCustomPuzzle ? 'custom_puzzle_shared' : 'daily_puzzle_shared';
+        trackPunzzleEvent('share', shareType, gameState.categoryText);
+        
+        var shareUrl = window.location.href;
+        
+        if (!window.location.search.includes('puzzle=')) {
+          shareUrl = window.location.origin + window.location.pathname;
+        }
+        
+        var shareText = 'I just solved this Punzzle!\n\n' + gameState.categoryText + '\n\nCan you solve it too?\n\n' + shareUrl;
+        
+        // Try to share with image if supported
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([blob], 'punzzle-score.png', { type: 'image/png' })] })) {
+          const file = new File([blob], 'punzzle-score.png', { type: 'image/png' });
+          await navigator.share({
+            title: 'Punzzle Challenge',
+            text: shareText,
+            files: [file]
+          });
+        } else if (navigator.share) {
+          // Fallback to text-only share
+          navigator.share({
+            title: 'Punzzle Challenge',
+            text: shareText,
+            url: shareUrl
+          });
+        } else {
+          // Fallback to download image
+          const link = document.createElement('a');
+          link.download = 'punzzle-score.png';
+          link.href = URL.createObjectURL(blob);
+          link.click();
+          URL.revokeObjectURL(link.href);
+          
+          // Also copy text to clipboard
+          if (navigator.clipboard) {
+            navigator.clipboard.writeText(shareText).then(function() {
+              alert('Score image downloaded and puzzle challenge copied to clipboard!');
+            });
+          } else {
+            var textArea = document.createElement('textarea');
+            textArea.value = shareText;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            alert('Score image downloaded and puzzle challenge copied to clipboard!');
+          }
+        }
+      } catch (error) {
+        console.error('Error sharing scorecard:', error);
+        
+        // Restore UI elements in case of error
+        if (closeBtn) closeBtn.style.display = '';
+        if (actionButtons) actionButtons.style.display = '';
+        
+        // Fallback to text-only share
+        var shareUrl = window.location.href;
+        if (!window.location.search.includes('puzzle=')) {
+          shareUrl = window.location.origin + window.location.pathname;
+        }
+        
+        var shareText = 'I just solved this Punzzle!\n\n' + gameState.categoryText + '\n\nCan you solve it too?\n\n' + shareUrl;
+        
+        if (navigator.share) {
+          navigator.share({
+            title: 'Punzzle Challenge',
+            text: shareText,
+            url: shareUrl
+          });
+        } else if (navigator.clipboard) {
+          navigator.clipboard.writeText(shareText).then(function() {
+            alert('Puzzle challenge copied to clipboard!');
+          });
+        } else {
+          var textArea = document.createElement('textarea');
+          textArea.value = shareText;
+          document.body.appendChild(textArea);
+          textArea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textArea);
+          alert('Puzzle challenge copied to clipboard!');
+        }
+      }
+    }
+
+    // Make Your Own functionality
+    var savedFormData = null;
+    
+    function showMakeYourOwn() {
+      trackNavigation('make_your_own');
+      
+      closeHamburgerMenu();
+      
+      document.getElementById('createWrapper').classList.add('active');
+      document.body.classList.add('modal-open');
+
+      document.getElementById('createWrapper').classList.add('active');
+      document.body.classList.add('modal-open');
+      
+      var gameContainer = document.getElementById('gameContainer');
+      if (!gameContainer.classList.contains('game-hidden')) {
+        gameContainer.classList.add('content-blur');
+      }
+      
+      var scoreCard = document.getElementById('scoreCard');
+      if (scoreCard.style.display === 'flex') {
+        scoreCard.classList.add('content-blur');
+      }
+      
+      stopFoxTimer();
+      
+      if (savedFormData) {
+        restoreFormData();
+      } else {
+        resetCreateForm();
+      }
+    }
+    
+    function closeCreateModal(event) {
+      if (event && event.target !== event.currentTarget) {
+        return;
+      }
+      showMainGame();
+    }
+
+    function restoreFormData() {
+      if (!savedFormData) return;
+      
+      document.getElementById('category1Input').value = savedFormData.category1;
+      document.getElementById('category2Input').value = savedFormData.category2;
+      
+      if (savedFormData.hint) {
+        document.getElementById('hintInput').value = savedFormData.hint;
+      }
+      
+      var wordInputs = document.getElementById('wordInputs');
+      wordInputs.innerHTML = '';
+      
+      savedFormData.words.forEach(function(word, index) {
+        var newGroup = document.createElement('div');
+        newGroup.className = 'word-input-group';
+        var placeholder = getOrdinalWord(index + 1);
+        
+        newGroup.innerHTML = 
+          '<input type="text" class="word-input" placeholder="' + placeholder + '" maxlength="12" required value="' + word + '">';
+        
+        wordInputs.appendChild(newGroup);
+        
+        newGroup.querySelector('.word-input').addEventListener('input', function() {
+          if (typeof validateAndPreview === 'function') {
+            validateAndPreview();
+          }
+        });
+      });
+      
+      updateAddWordButton();
+      if (typeof validateAndPreview === 'function') {
+        validateAndPreview();
+      }
+      
+      savedFormData = null;
+    }
+    
+    function showMainGame() {
+      document.getElementById('createWrapper').classList.remove('active');
+      document.body.classList.remove('modal-open');
+      
+      // Remove custom preview class when returning to main game
+      removeCustomPreviewClass();
+      
+      document.getElementById('gameContainer').classList.remove('content-blur');
+      
+      savedFormData = null;
+      
+      if (!hasStartedGame) {
+        document.getElementById('startModal').style.display = 'flex';
+        document.body.classList.add('modal-open');
+        document.getElementById('gameContainer').classList.add('content-blur');
+        var hamburgerMenu = document.getElementById('hamburgerMenu');
+        if (hamburgerMenu) {
+          hamburgerMenu.style.display = 'none';
+        }
+      } else {
+        document.getElementById('gameContainer').classList.remove('game-hidden');
+        document.body.classList.add('game-active');
+        var hamburgerMenu = document.getElementById('hamburgerMenu');
+        if (hamburgerMenu) {
+          hamburgerMenu.style.display = 'block';
+        }
+        startFoxTimer();
+      }
+    }
+
+    function setupCreateForm() {
+      var form = document.getElementById('createForm');
+      
+      form.addEventListener('input', function() {
+        validateAndPreview();
+      });
+      
+      document.querySelectorAll('.word-input').forEach(function(input) {
+        input.addEventListener('input', function() {
+          if (typeof validateAndPreview === 'function') {
+            validateAndPreview();
+          }
+        });
+      });
+      
+      document.getElementById('category1Input').addEventListener('input', function() {
+        if (typeof validateAndPreview === 'function') {
+          validateAndPreview();
+        }
+      });
+      
+      document.getElementById('category2Input').addEventListener('input', function() {
+        if (typeof validateAndPreview === 'function') {
+          validateAndPreview();
+        }
+      });
+      
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        previewPuzzle();
+      });
+      
+      updateAddWordButton();
+    }
+
+    function resetCreateForm() {
+      var form = document.getElementById('createForm');
+      form.reset();
+      
+      var wordInputs = document.getElementById('wordInputs');
+      wordInputs.innerHTML = 
+        '<div class="word-input-group">' +
+          '<input type="text" class="word-input" placeholder="First word" maxlength="12" required>' +
+        '</div>' +
+        '<div class="word-input-group">' +
+          '<input type="text" class="word-input" placeholder="Second word" maxlength="12" required>' +
+        '</div>';
+      
+      wordInputs.querySelectorAll('.word-input').forEach(function(input) {
+        input.addEventListener('input', function() {
+          if (typeof validateAndPreview === 'function') {
+            validateAndPreview();
+          }
+        });
+      });
+      
+      document.getElementById('previewSection').classList.remove('active');
+      
+      document.getElementById('categoriesError').style.display = 'none';
+      document.getElementById('wordsError').style.display = 'none';
+      
+      document.getElementById('createBtn').disabled = true;
+      var copyBtn = document.getElementById('copyBtn');
+      copyBtn.disabled = true;
+      copyBtn.style.opacity = '0.5';
+      copyBtn.style.cursor = 'not-allowed';
+      
+      var shareBtn = document.getElementById('shareBtn');
+      shareBtn.disabled = true;
+      shareBtn.style.opacity = '0.5';
+      shareBtn.style.cursor = 'not-allowed';
+      
+      updateAddWordButton();
+    }
+
+    function addWordInput() {
+      var wordInputs = document.getElementById('wordInputs');
+      var currentInputs = wordInputs.querySelectorAll('.word-input-group');
+      
+      if (currentInputs.length < 5) {
+        var newGroup = document.createElement('div');
+        newGroup.className = 'word-input-group';
+        var placeholder = getOrdinalWord(currentInputs.length + 1);
+        newGroup.innerHTML = 
+          '<input type="text" class="word-input" placeholder="' + placeholder + '" maxlength="12" required>';
+        
+        wordInputs.appendChild(newGroup);
+        
+        newGroup.querySelector('.word-input').addEventListener('input', function() {
+          if (typeof validateAndPreview === 'function') {
+            validateAndPreview();
+          }
+        });
+        
+        updateAddWordButton();
+        if (typeof validateAndPreview === 'function') {
+          validateAndPreview();
+        }
+      }
+    }
+
+    function removeLastWord() {
+      var wordInputs = document.getElementById('wordInputs');
+      var currentInputs = wordInputs.querySelectorAll('.word-input-group');
+      
+      if (currentInputs.length > 2) {
+        currentInputs[currentInputs.length - 1].remove();
+        updateAddWordButton();
+        if (typeof validateAndPreview === 'function') {
+          validateAndPreview();
+        }
+      }
+    }
+
+    function getOrdinalWord(num) {
+      var ordinals = ['First', 'Second', 'Third', 'Fourth', 'Fifth'];
+      return ordinals[num - 1] + ' word';
+    }
+
+    function updateAddWordButton() {
+      var wordInputs = document.getElementById('wordInputs');
+      var currentInputs = wordInputs.querySelectorAll('.word-input-group');
+      var addBtn = document.getElementById('addWordBtn');
+      var removeBtn = document.getElementById('removeWordBtn');
+      
+      if (currentInputs.length >= 5) {
+        addBtn.disabled = true;
+        addBtn.textContent = 'Maximum 5 words';
+      } else {
+        addBtn.disabled = false;
+        addBtn.textContent = 'Add Word';
+      }
+      
+      if (currentInputs.length <= 2) {
+        removeBtn.disabled = true;
+      } else {
+        removeBtn.disabled = false;
+      }
+      
+      currentInputs.forEach(function(group, index) {
+        var input = group.querySelector('.word-input');
+        if (input && !input.value) {
+          input.placeholder = getOrdinalWord(index + 1);
+        }
+      });
+    }
+
+    function validateAndPreview() {
+      var category1Input = document.getElementById('category1Input');
+      var category2Input = document.getElementById('category2Input');
+      var wordInputs = document.querySelectorAll('.word-input');
+      var previewSection = document.getElementById('previewSection');
+      var createBtn = document.getElementById('createBtn');
+      var copyBtn = document.getElementById('copyBtn');
+      
+      var category1 = category1Input.value.trim();
+      var category2 = category2Input.value.trim();
+      var categories = category1 && category2 ? category1 + ' + ' + category2 : '';
+      
+      var words = Array.from(wordInputs).map(function(input) {
+        return input.value.trim().toUpperCase();
+      }).filter(function(word) {
+        return word.length > 0;
+      });
+      
+      var isValid = categories.length > 0 && words.length >= 2 && 
+                   words.every(function(word) { 
+                     var cleanWord = word.replace(/\s+/g, '');
+                     return cleanWord.length > 0 && /^[A-Z\s]+$/.test(word); 
+                   });
+      
+      if (isValid) {
+        updatePreview(categories, words);
+        previewSection.classList.add('active');
+        
+        createBtn.disabled = false;
+        copyBtn.disabled = false;
+        copyBtn.style.opacity = '1';
+        copyBtn.style.cursor = 'pointer';
+        
+        var shareBtn = document.getElementById('shareBtn');
+        shareBtn.disabled = false;
+        shareBtn.style.opacity = '1';
+        shareBtn.style.cursor = 'pointer';
+        
+        var hintText = document.getElementById('hintInput').value.trim();
+        var puzzleData = {
+          categories: categories.toUpperCase(),
+          words: words,
+          answer: words.join(' '),
+          hint: hintText
+        };
+        var encodedPuzzle = btoa(JSON.stringify(puzzleData));
+        var shareUrl = window.location.origin + window.location.pathname + '?puzzle=' + encodedPuzzle;
+        document.getElementById('shareUrlInput').value = shareUrl;
+        
+      } else {
+        previewSection.classList.remove('active');
+        createBtn.disabled = true;
+        
+        copyBtn.disabled = true;
+        copyBtn.style.opacity = '0.5';
+        copyBtn.style.cursor = 'not-allowed';
+        
+        var shareBtn = document.getElementById('shareBtn');
+        shareBtn.disabled = true;
+        shareBtn.style.opacity = '0.5';
+        shareBtn.style.cursor = 'not-allowed';
+      }
+      
+      document.getElementById('categoriesError').style.display = 'none';
+      document.getElementById('wordsError').style.display = 'none';
+    }
+
+    function updatePreview(categories, words) {
+      var previewCategories = document.getElementById('previewCategories');
+      var previewPuzzle = document.getElementById('previewPuzzle');
+      
+      previewCategories.textContent = categories.toUpperCase();
+      
+      previewPuzzle.innerHTML = '';
+      words.forEach(function(word) {
+        var cleanWord = word.replace(/\s+/g, '');
+        if (cleanWord.length > 0) {
+          var wordDiv = document.createElement('div');
+          wordDiv.className = 'preview-word';
+          
+          for (var i = 0; i < cleanWord.length; i++) {
+            var tile = document.createElement('div');
+            tile.className = 'preview-tile';
+            tile.textContent = cleanWord[i];
+            wordDiv.appendChild(tile);
+          }
+          
+          previewPuzzle.appendChild(wordDiv);
+        }
+      });
+    }
+
+    function previewPuzzle() {
+      var shareUrlInput = document.getElementById('shareUrlInput');
+      var shareUrl = shareUrlInput.value;
+      
+      if (shareUrl) {
+        // Add preview parameter to the URL
+        var previewUrl = shareUrl + '&preview=true';
+        
+        trackCustomPuzzle('previewed');
+        
+        // Save form data before navigation
+        savedFormData = {
+          category1: document.getElementById('category1Input').value.trim(),
+          category2: document.getElementById('category2Input').value.trim(),
+          words: Array.from(document.querySelectorAll('.word-input')).map(function(input) {
+            return input.value.trim();
+          }).filter(function(word) {
+            return word.length > 0;
+          }),
+          hint: document.getElementById('hintInput').value.trim()
+        };
+        
+        // Open in same tab/window
+        window.location.href = previewUrl;
+      }
+    }
+
+    async function createPuzzle() {
+      var category1Input = document.getElementById('category1Input');
+      var category2Input = document.getElementById('category2Input');
+      var wordInputs = document.querySelectorAll('.word-input');
+      var categoriesError = document.getElementById('categoriesError');
+      var wordsError = document.getElementById('wordsError');
+      
+      var category1 = category1Input.value.trim();
+      var category2 = category2Input.value.trim();
+      var categories = category1 && category2 ? category1 + ' + ' + category2 : '';
+      
+      var words = Array.from(wordInputs).map(function(input) {
+        return input.value.trim().toUpperCase().replace(/\s+/g, ' ');
+      }).filter(function(word) {
+        return word.length > 0;
+      });
+      
+      words = words.map(function(word) {
+        return word.replace(/\s+/g, ' ').trim();
+      });
+      
+      var hasErrors = false;
+      
+      if (!category1 || !category2) {
+        categoriesError.textContent = 'Both categories are required';
+        categoriesError.style.display = 'block';
+        hasErrors = true;
+      } else if (category1.length > 25 || category2.length > 25) {
+        categoriesError.textContent = 'Each category must be 25 characters or less';
+        categoriesError.style.display = 'block';
+        hasErrors = true;
+      }
+      
+      if (words.length < 2) {
+        wordsError.textContent = 'At least 2 words are required';
+        wordsError.style.display = 'block';
+        hasErrors = true;
+      } else if (words.some(function(word) { 
+        var cleanWord = word.replace(/\s+/g, '');
+        return !cleanWord || !/^[A-Z\s]+$/.test(word); 
+      })) {
+        wordsError.textContent = 'Words can only contain letters and spaces';
+        wordsError.style.display = 'block';
+        hasErrors = true;
+      } else if (words.some(function(word) { return word.length > 12; })) {
+        wordsError.textContent = 'Each word must be 12 characters or less';
+        wordsError.style.display = 'block';
+        hasErrors = true;
+      }
+      
+      if (hasErrors) {
+        return;
+      }
+      
+      savedFormData = {
+        category1: category1,
+        category2: category2,
+        words: Array.from(wordInputs).map(function(input) {
+          return input.value.trim();
+        }).filter(function(word) {
+          return word.length > 0;
+        }),
+        hint: document.getElementById('hintInput').value.trim()
+      };
+      
+      var hintText = document.getElementById('hintInput').value.trim();
+      var puzzleData = {
+        categories: categories.toUpperCase(),
+        words: words,
+        answer: words.join(' '),
+        hint: hintText
+      };
+      
+      isCustomPuzzle = true;
+      
+      trackCustomPuzzle('created');
+      
+      gameState.puzzleAnswer = puzzleData.answer;
+      gameState.categoryText = puzzleData.categories;
+      gameState.words = puzzleData.words;
+      gameState.customHint = hintText || null;
+      gameState.score = 10;
+      gameState.penalties = [];
+      gameState.letterTiles = [];
+      gameState.currentActiveTile = null;
+      gameState.hintUsed = false;
+      gameState.puzzleId = `custom-shared-${Date.now()}`;
+      
+      // Add mobile preview class for proper layout
+      if (window.innerWidth <= 768 || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+        document.body.classList.add('custom-puzzle-preview');
+        console.log('Added custom-puzzle-preview class for mobile layout');
+      }
+      
+      const customId = await saveCustomPuzzle(puzzleData);
+      if (customId) {
+        gameState.puzzleId = `custom-${customId}`;
+        
+        trackPunzzleEvent('custom_puzzle_created', 'user_generated', gameState.categoryText);
+        
+        try {
+          if (typeof AnalyticsDB !== 'undefined' && AnalyticsDB && AnalyticsDB.trackCompletion) {
+            await AnalyticsDB.trackCompletion({
+              puzzleId: gameState.puzzleId,
+              puzzleType: 'custom_created',
+              categories: gameState.categoryText,
+              answer: gameState.puzzleAnswer,
+              date: new Date().toISOString().split('T')[0],
+              completed: false,
+              score: 0,
+              timeSpent: 0
+            });
+          }
+        } catch (error) {
+          console.error('Error tracking custom puzzle creation:', error);
+        }
+      }
+      
+      var encodedPuzzle = btoa(JSON.stringify(puzzleData));
+      var shareUrl = window.location.origin + window.location.pathname + '?puzzle=' + encodedPuzzle;
+      document.getElementById('shareUrlInput').value = shareUrl;
+      
+      document.getElementById('categoryText').textContent = gameState.categoryText;
+      
+      document.getElementById('dateDisplay').innerHTML = 
+        'Custom Punzzle · <a href="#" onclick="copyPuzzleUrl(); return false;">Copy link</a>';
+
+      if (!gameState.customHint) {
+        document.getElementById('hintRestartBtn').textContent = 'Restart';
+        document.getElementById('mobileHintRestartBtn').textContent = 'Restart';
+      } else {
+        document.getElementById('hintRestartBtn').textContent = 'Hint (3)';
+        document.getElementById('mobileHintRestartBtn').textContent = 'Hint (-)';
+      }
+      
+      document.getElementById('createWrapper').classList.remove('active');
+      document.body.classList.remove('modal-open');
+      document.getElementById('gameContainer').classList.remove('game-hidden', 'content-blur');
+      
+      // Add game-active class to show mobile controls
+      document.body.classList.add('game-active');
+      
+      if (!hasStartedGame) {
+        document.getElementById('startModal').style.display = 'flex';
+      } else {
+        startGame();
+      }
+      
+      var hamburgerMenu = document.getElementById('hamburgerMenu');
+      if (hamburgerMenu) {
+        hamburgerMenu.style.display = 'none';
+      }
+    }
+
+    function removeCustomPreviewClass() {
+      document.body.classList.remove('custom-puzzle-preview');
+      console.log('Removed custom-puzzle-preview class');
+    }
+
+    function copyPuzzleUrl() {
+      var shareUrlInput = document.getElementById('shareUrlInput');
+      var shareUrl = shareUrlInput.value;
+      
+      trackCustomPuzzle('shared');
+      
+      var tempInput = document.createElement('input');
+      tempInput.value = shareUrl;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      tempInput.setSelectionRange(0, 99999);
+      
+      try {
+        document.execCommand('copy');
+        alert('Punzzle link copied to clipboard!');
+      } catch (err) {
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(shareUrl).then(function() {
+            alert('Punzzle link copied to clipboard!');
+          }).catch(function() {
+            alert('Please copy the link manually: ' + shareUrl);
+          });
+        } else {
+          alert('Please copy the link manually: ' + shareUrl);
+        }
+      }
+      
+      document.body.removeChild(tempInput);
+    }
+
+    function shareCreatedPuzzle() {
+      var shareUrlInput = document.getElementById('shareUrlInput');
+      var shareUrl = shareUrlInput.value;
+      var category1 = document.getElementById('category1Input').value.trim();
+      var category2 = document.getElementById('category2Input').value.trim();
+      var categories = category1 + ' + ' + category2;
+      
+      trackCustomPuzzle('shared_native');
+      
+      var shareText = 'Can you solve my Punzzle?\n\n' + categories.toUpperCase() + '\n\n' + shareUrl;
+      
+      if (navigator.share) {
+        navigator.share({
+          title: 'Custom Punzzle Challenge',
+          text: shareText,
+          url: shareUrl
+        }).catch(function(err) {
+          // User cancelled share, do nothing
+        });
+      } else {
+        copyPuzzleUrl();
+      }
+    }
+
+    // Hamburger menu functionality
+    function toggleHamburgerMenu() {
+      var button = document.getElementById('hamburgerButton');
+      var dropdown = document.getElementById('hamburgerDropdown');
+      
+      button.classList.toggle('active');
+      dropdown.classList.toggle('active');
+      
+      if (button.classList.contains('active')) {
+        trackPunzzleEvent('hamburger_menu_opened', 'navigation', 'menu');
+      } else {
+        trackPunzzleEvent('hamburger_menu_closed', 'navigation', 'menu');
+      }
+    }
+    
+    function closeHamburgerMenu() {
+      var button = document.getElementById('hamburgerButton');
+      var dropdown = document.getElementById('hamburgerDropdown');
+      
+      button.classList.remove('active');
+      dropdown.classList.remove('active');
+    }
+    
+    document.addEventListener('click', function(event) {
+      var hamburgerMenu = document.getElementById('hamburgerMenu');
+      var hamburgerButton = document.getElementById('hamburgerButton');
+      var hamburgerDropdown = document.getElementById('hamburgerDropdown');
+      
+      if (hamburgerMenu && !hamburgerMenu.contains(event.target)) {
+        hamburgerButton.classList.remove('active');
+        hamburgerDropdown.classList.remove('active');
+      }
+    });
+
+    // Feedback form functions
+    function showFeedbackForm() {
+      trackNavigation('feedback_form');
+      
+      closeHamburgerMenu();
+      
+      document.getElementById('feedbackWrapper').classList.add('active');
+      document.body.classList.add('modal-open');
+      
+      var gameContainer = document.getElementById('gameContainer');
+      if (!gameContainer.classList.contains('game-hidden')) {
+        gameContainer.classList.add('content-blur');
+      }
+      
+      var scoreCard = document.getElementById('scoreCard');
+      if (scoreCard.style.display === 'flex') {
+        scoreCard.classList.add('content-blur');
+      }
+    }
+
+    function closeFeedbackModal(event) {
+      if (event && event.target !== event.currentTarget) {
+        return;
+      }
+      closeFeedbackForm();
+    }
+
+    function closeFeedbackForm() {
+      document.getElementById('feedbackWrapper').classList.remove('active');
+      document.body.classList.remove('modal-open');
+      
+      document.getElementById('gameContainer').classList.remove('content-blur');
+      document.getElementById('scoreCard').classList.remove('content-blur');
+      
+      var form = document.getElementById('feedbackForm');
+      if (form) {
+        form.reset();
+      }
+    }
+
+    // FAQ functions
+    function showFAQ() {
+      trackNavigation('faq');
+      
+      closeHamburgerMenu();
+      
+      document.getElementById('faqWrapper').classList.add('active');
+      document.body.classList.add('modal-open');
+      
+      var gameContainer = document.getElementById('gameContainer');
+      if (!gameContainer.classList.contains('game-hidden')) {
+        gameContainer.classList.add('content-blur');
+      }
+      
+      var scoreCard = document.getElementById('scoreCard');
+      if (scoreCard.style.display === 'flex') {
+        scoreCard.classList.add('content-blur');
+      }
+    }
+
+    function closeFAQModal(event) {
+      if (event && event.target !== event.currentTarget) {
+        return;
+      }
+      closeFAQ();
+    }
+
+    function closeFAQ() {
+      document.getElementById('faqWrapper').classList.remove('active');
+      document.body.classList.remove('modal-open');
+      
+      document.getElementById('gameContainer').classList.remove('content-blur');
+      document.getElementById('scoreCard').classList.remove('content-blur');
+    }
+
+    function handleFeedbackSubmit(event) {
+      event.preventDefault();
+      
+      var name = document.getElementById('userName').value;
+      var email = document.getElementById('userEmail').value;
+      var category = document.getElementById('category').value;
+      var message = document.getElementById('message').value;
+      
+      if (!name || !email || !category || !message) {
+        alert('Please fill in all fields');
+        return false;
+      }
+      
+      if (typeof trackPunzzleEvent === 'function') {
+        trackPunzzleEvent('contact_form_submitted', 'engagement', category);
+      }
+      
+      var submitBtn = event.target.querySelector('button[type="submit"]');
+      var originalText = submitBtn.textContent;
+      submitBtn.textContent = 'Sending...';
+      submitBtn.disabled = true;
+      
+      var formData = new FormData(event.target);
+      
+      fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        body: formData
+      })
+      .then(function(response) {
+        return response.json();
+      })
+      .then(function(data) {
+        if (data.success) {
+          alert('Thank you for your message! We\'ll get back to you soon.');
+          closeFeedbackForm();
+        } else {
+          alert('Sorry, there was an error sending your message. Please try again.');
+        }
+      })
+      .catch(function(error) {
+        console.error('Error:', error);
+        alert('Sorry, there was an error sending your message. Please try again.');
+      })
+      .finally(function() {
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+      });
+      
+      return false;
+    }
+
+    // Helper function to save custom puzzle
+    async function saveCustomPuzzle(puzzleData) {
+      try {
+        if (typeof db !== 'undefined' && db.collection) {
+          const docRef = await db.collection('customPuzzles').add({
+            ...puzzleData,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            views: 0,
+            plays: 0,
+            completed: 0
+          });
+          return docRef.id;
+        } else {
+          console.warn('Firebase db not available, puzzle not saved to database');
+          return null;
+        }
+      } catch (error) {
+        console.error('Error saving custom puzzle:', error);
+        return null;
+      }
+    }
+  </script>
+
+</body>
+</html>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
@@ -51,6 +2437,9 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="firebase-setup.js"></script>
+
+  <!-- Add html2canvas for score card sharing -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
   <script>
     // Global loading state tracking
@@ -799,7 +3188,6 @@
     
     .button {
       display: inline-flex;
-
       align-items: center;
       justify-content: center;
       padding: 0.75rem 1.5rem;
@@ -824,7 +3212,6 @@
     .button:hover {
       background-color: #f8fafc;
       color: #1a1a1a;
-
     }
     
     .hamburger-menu {
@@ -2369,2276 +4756,4 @@
   <div class="copyright-footer">Copyright Lowercase Studios</div>
 
   <script>
-    // Define randomizeCategory immediately to ensure it's available
-    window.randomizeCategory = function(categoryNumber) {
-      var categoryList = [
-        "Movie stars", "TV Shows", "Cartoons", "Famous Athletes", "Video Games",
-        "Sitcom Characters", "Superheroes", "Supervillains", "Oscar-Winning Films", "Reality Shows",
-        "Celebrity Couples", "Book Titles", "Tourist Attractions", "Countries", "Capital Cities",
-        "U.S. States", "National Parks", "Places in Europe", "Places You Swim", "Cities with Subways",
-        "Islands", "Airports", "Childhood Snacks", "Condiments", "Fast Food Chains", "Types of Pasta",
-        "Fruits", "Vegetables", "Desserts", "Breakfast Foods", "Pizza Toppings",
-        "Cocktails", "Candy Bars", "Spices or Herbs", "Non-Alcoholic Beverages", "Foods That Are Red",
-        "Summer Activities", "School Supplies", "Hobbies", "Ways to Get Around", "Housework or Chores",
-        "Board Games", "Party Themes", "Things That Are Round", "Things That Are Sticky", "Things with Wheels",
-        "Things That Make Noise", "Things That Can Break", "Things That Are Cold", "Things with Stripes",
-        "Things That Float", "Things You Keep Hidden", "Things You Can't Touch", "Classic Costumes",
-        "Halloween Candies", "Christmas Songs", "Thanksgiving Foods", "New Year's Resolutions",
-        "Birthday Traditions", "Party Decorations", "Costumes for Couples", "Dangerous Animals",
-        "Zoo Animals", "Dog Breeds", "Sea Creatures", "Birds", "Farm Animals", "Things Found in a Forest",
-        "Bugs or Insects", "Diseases", "Types of Doctors", "Weather", "Body Parts", "Planets",
-        "Inventions", "Types of Transportation", "Genres of Music", "School Subjects", "Famous Scientists"
-      ];
-      
-      var randomIndex = Math.floor(Math.random() * categoryList.length);
-      var randomCategory = categoryList[randomIndex];
-      
-      if (categoryNumber === 1) {
-        document.getElementById('category1Input').value = randomCategory;
-      } else if (categoryNumber === 2) {
-        document.getElementById('category2Input').value = randomCategory;
-      }
-      
-      if (typeof validateAndPreview === 'function') {
-        validateAndPreview();
-      }
-      
-      if (typeof trackPunzzleEvent === 'function') {
-        trackPunzzleEvent('random_category_used', 'feature_use', 'category_' + categoryNumber);
-      }
-    };
-
-
-    // Global variables
-    var isCustomPuzzle = false;
-    var hasStartedGame = false;
-
-    // Array of fallback puzzles
-    var puzzleDatabase = [
-      {
-        answer: "GAME OF SCONES",
-        categories: "HBO SHOWS + PASTRIES",
-        words: ["GAME OF", "SCONES"],
-        hint: "Winter is crumbing!"
-      },
-      {
-        answer: "NEIL PATRICK CARROTS",
-        categories: "ACTORS + VEGETABLES",
-        words: ["NEIL", "PATRICK", "CARROTS"],
-        hint: "A former child star"
-      },
-      {
-        answer: "CELINE DIJON",
-        categories: "POP STARS + CONDIMENTS",
-        words: ["CELINE", "DIJON"],
-        hint: "My heart will go on... this sandwich"
-      },
-      {
-        answer: "CRAZY RICH RAISINS",
-        categories: "ROMANTIC COMEDIES + SNACKS",
-        words: ["CRAZY", "RICH", "RAISINS"],
-        hint: "A wealthy dried fruit?"
-      }
-    ];
-
-    // Function to get puzzle index based on date
-    function getPuzzleIndexForDate(date) {
-      var startDate = new Date('2024-01-01');
-      var daysDiff = Math.floor((date - startDate) / (1000 * 60 * 60 * 24));
-      return Math.abs(daysDiff) % puzzleDatabase.length;
-    }
-
-    // Enhanced puzzle loading with robust fallback
-    async function loadPuzzleFromServer(date) {
-      console.log('Attempting to load puzzle from server for date:', date.toISOString().split('T')[0]);
-      
-      // Check if Firebase is available
-      if (typeof PuzzleDB === 'undefined' || !PuzzleDB || !PuzzleDB.getDailyPuzzle) {
-        console.log('PuzzleDB not available');
-        throw new Error('PuzzleDB not available');
-      }
-      
-      try {
-        const puzzle = await Promise.race([
-          PuzzleDB.getDailyPuzzle(date),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Server request timeout')), 5000))
-        ]);
         
-        if (!puzzle) {
-          throw new Error('No puzzle found on server for this date');
-        }
-        
-        console.log('Server puzzle loaded successfully:', puzzle.categories);
-        return puzzle;
-      } catch (error) {
-        console.log('Server request failed:', error.message);
-        throw error;
-      }
-    }
-
-    // Enhanced function to load puzzle by date with smart fallback strategy
-    async function loadPuzzleByDate(date) {
-      console.log('=== loadPuzzleByDate() called for date:', date.toISOString().split('T')[0]);
-      
-      // Reset game state before loading new puzzle
-      console.log('Resetting game state...');
-      gameState.score = 10;
-      gameState.puzzleAnswer = "";
-      gameState.categoryText = "";
-      gameState.words = [];
-      gameState.letterTiles = [];
-      gameState.currentActiveTile = null;
-      gameState.penalties = [];
-      gameState.completedWithHints = false;
-      gameState.hintUsed = false;
-      gameState.customHint = null;
-      gameState.puzzleDate = null;
-      gameState.puzzleId = null;
-      
-      var puzzle = null;
-      var usesFallback = false;
-      
-      try {
-        console.log('Trying to load from server...');
-        puzzle = await loadPuzzleFromServer(date);
-        console.log('✓ Successfully loaded puzzle from server:', puzzle.categories);
-        
-      } catch (error) {
-        console.log('✗ Server load failed:', error.message);
-        console.log('Using fallback puzzle...');
-        
-        // Use fallback puzzle
-        const puzzleIndex = getPuzzleIndexForDate(date);
-        puzzle = puzzleDatabase[puzzleIndex];
-        usesFallback = true;
-        
-        console.log('✓ Fallback puzzle selected:', {
-          index: puzzleIndex,
-          categories: puzzle ? puzzle.categories : 'null',
-          answer: puzzle ? puzzle.answer : 'null'
-        });
-      }
-      
-      if (!puzzle) {
-        console.error('✗ No puzzle available (both server and fallback failed)');
-        throw new Error('No puzzle available (server and fallback both failed)');
-      }
-      
-      console.log('Setting game state with puzzle:', puzzle);
-      
-      // Set game state
-      gameState.puzzleAnswer = puzzle.answer;
-      gameState.categoryText = puzzle.categories;
-      gameState.words = puzzle.words;
-      gameState.customHint = puzzle.hint;
-      gameState.puzzleDate = date.toISOString().split('T')[0];
-      gameState.puzzleId = `daily-${gameState.puzzleDate}`;
-      
-      console.log('Game state updated:', {
-        answer: gameState.puzzleAnswer,
-        category: gameState.categoryText,
-        words: gameState.words,
-        hint: gameState.customHint
-      });
-      
-      // Update UI elements
-      var categoryElement = document.getElementById('categoryText');
-      var dateDisplayElement = document.getElementById('dateDisplay');
-      
-      if (!categoryElement) {
-        console.error('✗ Category element not found!');
-        throw new Error('Category UI element not found');
-      }
-      
-      if (!dateDisplayElement) {
-        console.error('✗ Date display element not found!');
-        throw new Error('Date display UI element not found');
-      }
-      
-      console.log('Updating UI elements...');
-      categoryElement.textContent = gameState.categoryText;
-      
-      // Format date for display
-      var dateString = date.toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
-      });
-      
-      var prevDate = new Date(date);
-      prevDate.setDate(prevDate.getDate() - 1);
-      var prevDateParam = prevDate.toISOString().split('T')[0];
-      
-      var dateDisplayText = dateString;
-      if (usesFallback) {
-        // Only show (Demo) if not in private browsing
-        if (typeof window.isPrivateBrowsing !== 'undefined' && window.isPrivateBrowsing) {
-          // In private browsing, don't add (Demo) label for better UX
-        } else {
-          dateDisplayText += ' (Demo)';
-        }
-      }
-      
-      // Add Previous link to existing date display
-      var prevLinkHtml = '<a href="?date=' + prevDateParam + '&skipIntro=true">Previous</a> · ';
-      
-      dateDisplayElement.innerHTML = 
-        prevLinkHtml + dateDisplayText;
-      
-      console.log('✓ UI updated successfully');
-      console.log('=== loadPuzzleByDate() completed successfully');
-      return true;
-    }
-
-    // Game State
-    var gameState = {
-      score: 10,
-      puzzleAnswer: "",
-      categoryText: "",
-      words: [],
-      letterTiles: [],
-      currentActiveTile: null,
-      penalties: [],
-      completedWithHints: false,
-      hintUsed: false,
-      foxInterval: null,
-      currentFoxTile: null,
-      customHint: null,
-      puzzleDate: null,
-      puzzleId: null,
-      isBonus: false,
-      isPreview: false
-    };
-
-    // Google Analytics Enhanced Tracking
-    function trackPunzzleEvent(action, category, label, value) {
-      if (typeof gtag !== 'undefined') {
-        gtag('event', action, {
-          'event_category': category,
-          'event_label': label,
-          'value': value
-        });
-      }
-    }
-
-    function trackPuzzleStart(puzzleType, categories) {
-      trackPunzzleEvent('puzzle_start', puzzleType, categories);
-    }
-
-    async function trackPuzzleComplete(puzzleType, score, timeSpent, completed) {
-      trackPunzzleEvent('puzzle_complete', puzzleType, 'score_' + score, score);
-      if (timeSpent) {
-        trackPunzzleEvent('game_time', puzzleType, 'seconds', Math.round(timeSpent));
-      }
-      if (completed) {
-        trackPunzzleEvent('puzzle_solved', puzzleType, 'success', 1);
-      } else {
-        trackPunzzleEvent('puzzle_abandoned', puzzleType, 'with_hints', 1);
-      }
-      
-      if (!gameState.isPreview) {
-        const analyticsData = {
-          puzzleId: gameState.puzzleId || 'unknown',
-          puzzleType: puzzleType,
-          score: score,
-          completed: completed,
-          completedWithHints: gameState.completedWithHints || false,
-          timeSpent: Math.round(timeSpent),
-          hints: gameState.penalties.filter(p => p.reason === 'Hint').length,
-          randomLetters: gameState.penalties.filter(p => p.reason === 'Random letter').length,
-          randomWords: gameState.penalties.filter(p => p.reason === 'Random word').length,
-          incorrectGuesses: gameState.penalties.filter(p => p.reason === 'Incorrect answer').length,
-          categories: gameState.categoryText,
-          answer: gameState.puzzleAnswer,
-          date: gameState.puzzleDate || new Date().toISOString().split('T')[0],
-          timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        };
-        
-        try {
-          if (typeof db !== 'undefined' && db.collection) {
-            await db.collection('gameStats').add(analyticsData);
-          }
-          
-          if (puzzleType === 'custom' && gameState.puzzleId && gameState.puzzleId.startsWith('custom-')) {
-            const customId = gameState.puzzleId.replace('custom-', '');
-            
-            if (typeof AnalyticsDB !== 'undefined' && AnalyticsDB && AnalyticsDB.trackCustomPuzzle) {
-              await AnalyticsDB.trackCustomPuzzle(customId, analyticsData);
-            }
-          }
-        } catch (error) {
-          console.error('Error tracking completion:', error);
-        }
-      }
-    }
-
-    function trackFeatureUse(feature, value) {
-      trackPunzzleEvent('feature_use', 'gameplay', feature, value);
-    }
-
-    function trackNavigation(link) {
-      trackPunzzleEvent('navigation', 'links', link);
-      
-      if (link === 'make_your_own') {
-        trackPunzzleEvent('feature_use', 'user_generated', 'opened_creator');
-      } else if (link === 'previous') {
-        trackPunzzleEvent('navigation', 'archive', 'previous_puzzle');
-      } else if (link === 'feedback_form') {
-        trackPunzzleEvent('engagement', 'feedback', 'opened_form');
-      }
-    }
-
-    function trackError(error) {
-      trackPunzzleEvent('error', 'gameplay', error);
-    }
-
-    function trackCustomPuzzle(action) {
-      trackPunzzleEvent('custom_puzzle', 'user_generated', action);
-    }
-
-    // Time tracking
-    var startTime = null;
-    
-    function startTimeTracking() {
-      startTime = Date.now();
-    }
-    
-    function getElapsedTime() {
-      return startTime ? (Date.now() - startTime) / 1000 : 0;
-    }
-
-    async function trackCustomPuzzleView(puzzleId) {
-      try {
-        if (typeof db !== 'undefined' && db.collection) {
-          const docRef = db.collection('customPuzzleStats').doc(puzzleId);
-          const doc = await docRef.get();
-          
-          if (doc.exists) {
-            await docRef.update({
-              views: firebase.firestore.FieldValue.increment(1),
-              lastViewed: firebase.firestore.FieldValue.serverTimestamp()
-            });
-          } else {
-            await docRef.set({
-              views: 1,
-              plays: 0,
-              completed: 0,
-              shares: 0,
-              playedAnother: 0,
-              totalScore: 0,
-              firstViewed: firebase.firestore.FieldValue.serverTimestamp(),
-              lastViewed: firebase.firestore.FieldValue.serverTimestamp()
-            });
-          }
-        }
-      } catch (error) {
-        console.error('Error tracking custom puzzle view:', error);
-      }
-    }
-
-    // ENHANCED INITIALIZATION - This is the key fix for mobile support
-    document.addEventListener('DOMContentLoaded', async function() {
-      console.log('=== DOMContentLoaded fired ===');
-      
-      var urlParams = new URLSearchParams(window.location.search);
-      var skipIntro = urlParams.get('skipIntro');
-      var optimized = urlParams.get('optimized');
-      
-      var pageType = 'daily';
-      if (urlParams.get('puzzle')) pageType = 'custom_shared';
-      if (urlParams.get('bonus')) pageType = 'bonus';
-      if (urlParams.get('date')) pageType = 'archive';
-      
-      trackPunzzleEvent('page_view', pageType, document.referrer || 'direct');
-      
-      var sharedPuzzle = urlParams.get('puzzle');
-      var bonusId = urlParams.get('bonus');
-      var dateParam = urlParams.get('date');
-      var isPreview = urlParams.get('preview') === 'true';
-      
-      // Always show loading when we need to fetch data
-      var needsLoading = bonusId || sharedPuzzle || dateParam || (typeof PuzzleDB !== 'undefined');
-      
-      if (needsLoading) {
-        showLoadingState();
-      }
-      
-      try {
-        // Handle bonus puzzle
-        if (bonusId) {
-          isCustomPuzzle = true;
-          
-          if (typeof PuzzleDB !== 'undefined' && PuzzleDB.getBonusPuzzle) {
-            const bonusPuzzle = await PuzzleDB.getBonusPuzzle(bonusId);
-            
-            if (bonusPuzzle) {
-              gameState.puzzleAnswer = bonusPuzzle.answer;
-              gameState.categoryText = bonusPuzzle.categories;
-              gameState.words = bonusPuzzle.words;
-              gameState.customHint = bonusPuzzle.hint || null;
-              gameState.puzzleId = `bonus-${bonusId}`;
-              gameState.isBonus = true;
-              gameState.isPreview = isPreview;
-              
-              document.getElementById('categoryText').textContent = gameState.categoryText;
-              document.getElementById('dateDisplay').innerHTML = 
-                '<a href="' + window.location.origin + window.location.pathname + '?skipIntro=true">Today\'s Punzzle</a> · ' +
-                (isPreview ? 'Preview Mode' : 'Bonus Puzzle');
-            } else {
-              hideLoadingState();
-              alert('This bonus puzzle is no longer available.');
-              window.location.href = window.location.origin + window.location.pathname;
-              return;
-            }
-          } else {
-            hideLoadingState();
-            alert('Unable to load bonus puzzle. Please try again later.');
-            window.location.href = window.location.origin + window.location.pathname;
-            return;
-          }
-          
-          hideLoadingState();
-          
-          if (skipIntro === 'true') {
-            startGameDirectly(); // Use the new mobile-optimized function
-          } else {
-            document.getElementById('startModal').style.display = 'flex';
-          }
-          setupCreateForm();
-          return;
-        }
-        
-        // Handle shared custom puzzle
-        if (sharedPuzzle) {
-          isCustomPuzzle = true;
-          
-          var puzzleData = JSON.parse(atob(sharedPuzzle));
-          gameState.puzzleAnswer = puzzleData.answer;
-          gameState.categoryText = puzzleData.categories;
-          gameState.words = puzzleData.words;
-          gameState.customHint = puzzleData.hint || null;
-          
-          const tempId = 'shared-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-          gameState.puzzleId = `custom-${tempId}`;
-          
-          if (optimized !== 'true') {
-            try {
-              const customId = await saveCustomPuzzle(puzzleData);
-              if (customId) {
-                gameState.puzzleId = `custom-${customId}`;
-                trackCustomPuzzleView(customId);
-                trackPunzzleEvent('shared_puzzle_opened', 'user_generated', gameState.categoryText);
-              }
-              
-              const customTitle = `Punzzle: ${gameState.categoryText}`;
-              const customDescription = `Can you solve this custom Punzzle? Categories: ${gameState.categoryText}. Find the pun that connects them!`;
-              updateMetaTags(customTitle, customDescription);
-            } catch (error) {
-              console.error('Error processing shared puzzle:', error);
-            }
-          }
-          
-          // Ensure game container is visible BEFORE we do anything else
-          var gameContainer = document.getElementById('gameContainer');
-          if (gameContainer) {
-            gameContainer.classList.remove('game-hidden');
-            console.log('Making game container visible for shared puzzle...');
-          } else {
-            console.error('Game container not found!');
-          }
-          
-          document.getElementById('categoryText').textContent = gameState.categoryText;
-          document.getElementById('dateDisplay').innerHTML = 
-            '<a href="' + window.location.origin + window.location.pathname + '?skipIntro=true">Today\'s Punzzle</a> · ' + (isPreview ? 'Preview Mode' : 'Shared Puzzle');
-          
-          hideLoadingState();
-          
-          if (skipIntro === 'true') {
-            startGameDirectly(); // Use the new mobile-optimized function
-          } else {
-            document.getElementById('startModal').style.display = 'flex';
-            var hamburgerMenu = document.getElementById('hamburgerMenu');
-            if (hamburgerMenu) {
-              hamburgerMenu.style.display = 'none';
-            }
-          }
-          setupCreateForm();
-          return;
-        }
-        
-        // Load puzzle based on date - try server first, fallback to local
-        var puzzleDate = dateParam ? new Date(dateParam + 'T00:00:00') : new Date();
-        
-        try {
-          await loadPuzzleByDate(puzzleDate);
-          console.log('✓ Puzzle loaded successfully');
-          
-        } catch (error) {
-          console.error('✗ All puzzle loading methods failed:', error);
-          hideLoadingState();
-          
-          // Show the specific error for debugging
-          console.error('Error details:', {
-            message: error.message,
-            stack: error.stack,
-            puzzleDate: puzzleDate,
-            gameState: gameState
-          });
-          
-          alert('Unable to load puzzle: ' + error.message + '. Please refresh the page and try again.');
-          return;
-        }
-        
-        // Ensure game container is visible and properly set up
-        var gameContainer = document.getElementById('gameContainer');
-        if (gameContainer) {
-          console.log('Making game container visible...');
-          gameContainer.classList.remove('game-hidden');
-          console.log('✓ Game container is now visible');
-        } else {
-          console.error('✗ Game container not found!');
-          alert('Game container missing. Please refresh the page.');
-          return;
-        }
-        
-        // Clear loading state after puzzle is loaded
-        hideLoadingState();
-        
-      } catch (error) {
-        console.error('Error during initialization:', error);
-        hideLoadingState();
-        
-        // Show error message instead of silent fallback
-        alert('Error loading puzzle. Please refresh the page and try again.');
-        return;
-      }
-      
-      // Show intro or start game - ENHANCED FOR MOBILE  
-      if (skipIntro === 'true') {
-        console.log('Skipping intro, starting game directly');
-        startGameDirectly(); // Use the new mobile-optimized function
-      } else {
-        console.log('Showing intro modal');
-        document.getElementById('startModal').style.display = 'flex';
-        var hamburgerMenu = document.getElementById('hamburgerMenu');
-        if (hamburgerMenu) {
-          hamburgerMenu.style.display = 'none';
-        }
-        document.body.classList.add('modal-open');
-        document.getElementById('gameContainer').classList.add('content-blur');
-      }
-      
-      setupCreateForm();
-    });
-
-    testPreviewImage();
-
-    // NEW MOBILE-OPTIMIZED GAME START FUNCTION - This is the key fix
-    function startGameDirectly() {
-      console.log('startGameDirectly() called - optimized for mobile');
-      
-      // Clear any loading states first
-      hideLoadingState();
-      
-      // Ensure modal is hidden
-      document.getElementById('startModal').style.display = 'none';
-      
-      // Make sure game container is visible
-      var gameContainer = document.getElementById('gameContainer');
-      gameContainer.classList.remove('game-hidden');
-      
-      // Remove modal classes
-      document.body.classList.remove('modal-open');
-      gameContainer.classList.remove('content-blur');
-      
-      // Add game active class - CRITICAL for mobile
-      document.body.classList.add('game-active');
-      
-      hasStartedGame = true;
-      
-      // Verify we have puzzle data
-      if (!gameState.puzzleAnswer || !gameState.categoryText || !gameState.words.length) {
-        console.error('Missing puzzle data in startGameDirectly:', {
-          answer: gameState.puzzleAnswer,
-          category: gameState.categoryText,
-          words: gameState.words
-        });
-        alert('Puzzle data not loaded. Please refresh the page.');
-        return;
-      }
-      
-      console.log('Building puzzle with data:', {
-        answer: gameState.puzzleAnswer,
-        category: gameState.categoryText,
-        words: gameState.words
-      });
-      
-      // Build puzzle if not already built
-      if (gameState.letterTiles.length === 0) {
-        buildPuzzle();
-        updateScore(0);
-      }
-      
-      startFoxTimer();
-      startTimeTracking();
-      
-      var hamburgerMenu = document.getElementById('hamburgerMenu');
-      if (hamburgerMenu) {
-        hamburgerMenu.style.display = 'block';
-      }
-      var puzzleType = isCustomPuzzle ? 'custom' : 'daily';
-      trackPuzzleStart(puzzleType, gameState.categoryText);
-      
-      // Force mobile layout update
-      if (window.innerWidth <= 768) {
-        console.log('Mobile detected - ensuring mobile controls are visible');
-        setTimeout(() => {
-          const fixedBottomSection = document.getElementById('fixedBottomSection');
-          const mobileKeyboard = document.getElementById('mobileKeyboard');
-          
-          if (fixedBottomSection) {
-            fixedBottomSection.style.display = 'block';
-            console.log('Mobile bottom section shown');
-          }
-          if (mobileKeyboard) {
-            mobileKeyboard.style.display = 'block';
-            console.log('Mobile keyboard shown');
-          }
-        }, 100);
-      }
-      
-      console.log('Game started successfully with mobile optimizations');
-    }
-
-    function startGame() {
-      console.log('startGame() called');
-      
-      // Clear any loading states first
-      hideLoadingState();
-      
-      // Ensure modal is hidden
-      document.getElementById('startModal').style.display = 'none';
-      
-      // Make sure game container is visible
-      var gameContainer = document.getElementById('gameContainer');
-      gameContainer.classList.remove('game-hidden');
-      
-      // Remove modal classes
-      document.body.classList.remove('modal-open');
-      gameContainer.classList.remove('content-blur');
-      
-      // Add game active class
-      document.body.classList.add('game-active');
-      
-      hasStartedGame = true;
-      
-      // Verify we have puzzle data
-      if (!gameState.puzzleAnswer || !gameState.categoryText || !gameState.words.length) {
-        console.error('Missing puzzle data in startGame:', {
-          answer: gameState.puzzleAnswer,
-          category: gameState.categoryText,
-          words: gameState.words
-        });
-        alert('Puzzle data not loaded. Please refresh the page.');
-        return;
-      }
-      
-      console.log('Building puzzle with data:', {
-        answer: gameState.puzzleAnswer,
-        category: gameState.categoryText,
-        words: gameState.words
-      });
-      
-      // Build puzzle if not already built
-      if (gameState.letterTiles.length === 0) {
-        buildPuzzle();
-        updateScore(0);
-      }
-      
-      startFoxTimer();
-      startTimeTracking();
-      
-      var hamburgerMenu = document.getElementById('hamburgerMenu');
-      if (hamburgerMenu) {
-        hamburgerMenu.style.display = 'block';
-      }
-      var puzzleType = isCustomPuzzle ? 'custom' : 'daily';
-      trackPuzzleStart(puzzleType, gameState.categoryText);
-      
-      console.log('Game started successfully');
-    }
-
-    function startFoxTimer() {
-      if (gameState.foxInterval) {
-        clearInterval(gameState.foxInterval);
-      }
-      
-      setTimeout(function() {
-        showFoxPopup();
-        
-        gameState.foxInterval = setInterval(function() {
-          showFoxPopup();
-        }, 40000);
-      }, 15000);
-    }
-
-    function stopFoxTimer() {
-      if (gameState.foxInterval) {
-        clearInterval(gameState.foxInterval);
-        gameState.foxInterval = null;
-      }
-    }
-
-    function showFoxPopup() {
-      if (gameState.completedWithHints || 
-          document.getElementById('scoreCard').style.display === 'flex' ||
-          document.getElementById('startModal').style.display === 'flex') {
-        return;
-      }
-      
-      var emptyTiles = gameState.letterTiles.filter(function(tile) {
-        return tile.classList.contains('hidden') && 
-               !tile.classList.contains('revealed') && 
-               !tile.classList.contains('user-filled');
-      });
-      
-      if (emptyTiles.length === 0) return;
-      
-      if (gameState.currentFoxTile && gameState.currentFoxTile.querySelector('.fox-popup')) {
-        return;
-      }
-      
-      if (gameState.currentFoxTile) {
-        var existingFox = gameState.currentFoxTile.querySelector('.fox-popup');
-        if (existingFox) {
-          existingFox.remove();
-        }
-      }
-      
-      var randomTile = emptyTiles[Math.floor(Math.random() * emptyTiles.length)];
-      gameState.currentFoxTile = randomTile;
-      
-      var foxPopup = document.createElement('div');
-      foxPopup.className = 'fox-popup';
-      foxPopup.innerHTML = '<img src="https://punzzle.com/images/oliversurprise.png" alt="Oliver Fox">';
-      
-      randomTile.appendChild(foxPopup);
-      
-      trackFeatureUse('fox_popup_shown', 1);
-      
-      setTimeout(function() {
-        foxPopup.classList.add('active');
-      }, 50);
-      
-      setTimeout(function() {
-        foxPopup.classList.remove('active');
-        
-        setTimeout(function() {
-          if (foxPopup.parentNode) {
-            foxPopup.remove();
-          }
-          gameState.currentFoxTile = null;
-        }, 800);
-      }, 3350);
-    }
-
-    function buildPuzzle() {
-      console.log('=== buildPuzzle() called ===');
-      console.log('Game state words:', gameState.words);
-      console.log('Game state answer:', gameState.puzzleAnswer);
-      console.log('Game state category:', gameState.categoryText);
-      
-      var container = document.getElementById('puzzleContainer');
-      if (!container) {
-        console.error('✗ Puzzle container not found!');
-        return;
-      }
-      
-      container.innerHTML = '';
-      gameState.letterTiles = [];
-      
-      // Update hint/restart buttons
-      if (!gameState.customHint) {
-        var hintBtn = document.getElementById('hintRestartBtn');
-        var mobileHintBtn = document.getElementById('mobileHintRestartBtn');
-        if (hintBtn) hintBtn.textContent = 'Restart';
-        if (mobileHintBtn) mobileHintBtn.textContent = 'Restart';
-      } else {
-        var hintBtn = document.getElementById('hintRestartBtn');
-        var mobileHintBtn = document.getElementById('mobileHintRestartBtn');
-        if (hintBtn) hintBtn.textContent = 'Hint (-3)';
-        if (mobileHintBtn) mobileHintBtn.textContent = 'Hint (-3)';
-      }
-      
-      // Validate and clean words array
-      if (!gameState.words || !Array.isArray(gameState.words) || gameState.words.length === 0) {
-        console.error('✗ Invalid or missing words array:', gameState.words);
-        
-        // Try to reconstruct words from answer if possible
-        if (gameState.puzzleAnswer) {
-          console.log('Attempting to reconstruct words from answer:', gameState.puzzleAnswer);
-          // For fallback puzzles, we know the word structure
-          if (gameState.puzzleAnswer === "GAME OF SCONES") {
-            gameState.words = ["GAME OF", "SCONES"];
-          } else if (gameState.puzzleAnswer === "NEIL PATRICK CARROTS") {
-            gameState.words = ["NEIL", "PATRICK", "CARROTS"];
-          } else if (gameState.puzzleAnswer === "CELINE DIJON") {
-            gameState.words = ["CELINE", "DIJON"];
-          } else if (gameState.puzzleAnswer === "CRAZY RICH RAISINS") {
-            gameState.words = ["CRAZY", "RICH", "RAISINS"];
-          } else {
-            // Last resort: split by spaces
-            gameState.words = gameState.puzzleAnswer.split(' ');
-          }
-          console.log('Reconstructed words:', gameState.words);
-        } else {
-          console.error('✗ Cannot reconstruct words - no answer available');
-          return;
-        }
-      }
-      
-      // Validate each word
-      var validWords = [];
-      gameState.words.forEach(function(word, index) {
-        if (!word || typeof word !== 'string' || word.trim().length === 0) {
-          console.error('✗ Invalid word at index', index, ':', word);
-        } else {
-          validWords.push(word.trim());
-        }
-      });
-      
-      if (validWords.length === 0) {
-        console.error('✗ No valid words found');
-        return;
-      }
-      
-      gameState.words = validWords;
-      console.log('✓ Using validated words:', gameState.words);
-      
-      var totalLetters = 0;
-      var maxWordLength = 0;
-      gameState.words.forEach(function(word) {
-        totalLetters += word.length;
-        maxWordLength = Math.max(maxWordLength, word.length);
-      });
-      
-      console.log('Puzzle stats:', { totalLetters, maxWordLength });
-      
-      var sizeClass = '';
-      if (totalLetters > 20 || maxWordLength > 8) {
-        sizeClass = 'tiles-small';
-      } else if (totalLetters > 15 || maxWordLength > 6) {
-        sizeClass = 'tiles-medium';
-      }
-      
-      if (sizeClass) {
-        container.classList.add(sizeClass);
-        console.log('Applied size class:', sizeClass);
-      }
-      
-      gameState.words.forEach(function(word, wordIndex) {
-        console.log('Creating word group for word', wordIndex, ':', word);
-        
-        var wordGroup = document.createElement('div');
-        wordGroup.className = 'word-group';
-        
-        for (var i = 0; i < word.length; i++) {
-          var letter = word[i];
-          var tile = document.createElement('div');
-          tile.className = 'tile hidden';
-          tile.textContent = '';
-          tile.dataset.letter = letter;
-          
-          tile.addEventListener('click', function() {
-            if (!this.classList.contains('revealed')) {
-              setActiveTile(this);
-            }
-          });
-          
-          gameState.letterTiles.push(tile);
-          wordGroup.appendChild(tile);
-        }
-        
-        container.appendChild(wordGroup);
-      });
-
-      console.log('✓ Created', gameState.letterTiles.length, 'tiles total');
-
-      setTimeout(function() {
-        console.log('Revealing initial tiles...');
-        var shuffled = gameState.letterTiles.slice().sort(function() { return Math.random() - 0.5; });
-        
-        for (var i = 0; i < Math.min(3, shuffled.length); i++) {
-          var tile = shuffled[i];
-          tile.classList.add('revealed');
-          tile.classList.remove('hidden');
-          tile.textContent = tile.dataset.letter;
-          console.log('Revealed tile:', tile.dataset.letter);
-        }
-        
-        var firstEmpty = gameState.letterTiles.find(function(tile) {
-          return !tile.classList.contains('revealed');
-        });
-        if (firstEmpty) {
-          setActiveTile(firstEmpty);
-          console.log('✓ Set active tile');
-        }
-        
-        console.log('✓ Puzzle built successfully with', gameState.letterTiles.length, 'tiles');
-        console.log('=== buildPuzzle() completed ===');
-      }, 100);
-    }
-
-    function setActiveTile(tile) {
-      if (gameState.currentActiveTile) {
-        gameState.currentActiveTile.classList.remove('active');
-      }
-      gameState.currentActiveTile = tile;
-      tile.classList.add('active');
-    }
-
-    function updateScore(change, reason) {
-      gameState.score += change;
-      
-      document.getElementById('scoreValue').textContent = gameState.score;
-      document.getElementById('mobileScoreValue').textContent = gameState.score;
-      
-      if (gameState.score < 0) {
-        document.getElementById('scoreValue').classList.add('negative');
-        document.getElementById('mobileScoreValue').classList.add('negative');
-      } else {
-        document.getElementById('scoreValue').classList.remove('negative');
-        document.getElementById('mobileScoreValue').classList.remove('negative');
-      }
-      
-      var fillPercentage = Math.max(0, (gameState.score / 10) * 100);
-      document.getElementById('progressFill').style.width = fillPercentage + '%';
-      document.getElementById('mobileProgressFill').style.width = fillPercentage + '%';
-      
-      if (change < 0 && reason) {
-        gameState.penalties.push({ points: change, reason: reason });
-      }
-    }
-
-    function updateMessage(text, className, clueText) {
-      var message = document.getElementById('message');
-      var clue = document.getElementById('clue');
-      
-      message.textContent = text;
-      message.className = 'message ' + (className || '');
-      
-      if (clueText) {
-        clue.textContent = clueText;
-        clue.style.display = 'block';
-      } else {
-        clue.style.display = 'none';
-      }
-      
-      var mobileMessage = document.getElementById('mobileMessage');
-      if (mobileMessage) {
-        var mobileText = clueText || text;
-        if (mobileText.includes('Random letter revealed')) {
-          mobileText = 'Letter revealed (-1)';
-        } else if (mobileText.includes('Random word')) {
-          mobileText = 'Word revealed (-5)';
-        } else if (mobileText.includes('Not quite right')) {
-          mobileText = 'Try again (-2)';
-        } else if (mobileText.includes('Excellent')) {
-          mobileText = 'Correct!';
-        }
-        
-        mobileMessage.textContent = mobileText;
-        mobileMessage.className = 'mobile-inline-message ' + (className || '');
-        
-        setTimeout(function() {
-          mobileMessage.textContent = '';
-        }, 25000);
-      }
-    }
-
-    function handleHintOrRestart() {
-      if (!gameState.customHint) {
-        trackFeatureUse('restart', 1);
-        trackPunzzleEvent('gameplay', 'game_action', 'restart_puzzle');
-        restartGame();
-        return;
-      }
-      
-      if (!gameState.hintUsed) {
-        trackFeatureUse('hint_used', 1);
-        trackPunzzleEvent('gameplay', 'hint_used', 'custom_hint');
-        giveHint();
-        gameState.hintUsed = true;
-        
-        document.getElementById('hintRestartBtn').classList.add('hint-used');
-        document.getElementById('mobileHintRestartBtn').classList.add('hint-used');
-      } else {
-        trackFeatureUse('restart', 1);
-        trackPunzzleEvent('gameplay', 'game_action', 'restart_after_hint');
-        restartGame();
-      }
-    }
-
-    function giveHint() {
-      updateScore(-3, 'Hint');
-      updateMessage('', '', gameState.customHint);
-    }
-
-    function revealRandomLetter() {
-      var hiddenTiles = gameState.letterTiles.filter(function(tile) {
-        return !tile.classList.contains('revealed') && !tile.classList.contains('user-filled');
-      });
-      
-      if (hiddenTiles.length > 0) {
-        var randomTile = hiddenTiles[Math.floor(Math.random() * hiddenTiles.length)];
-        randomTile.classList.add('revealed');
-        randomTile.classList.remove('hidden');
-        randomTile.textContent = randomTile.dataset.letter;
-        
-        updateMessage('', '', 'Random letter revealed (-1 point)');
-        updateScore(-1, 'Random letter');
-        
-        trackFeatureUse('random_letter', 1);
-        trackPunzzleEvent('gameplay', 'hint_used', 'random_letter');
-        
-        checkPuzzleComplete();
-      }
-    }
-
-    function revealRandomWord() {
-      var wordGroups = document.querySelectorAll('.word-group');
-      var availableWords = [];
-      
-      wordGroups.forEach(function(wordGroup, index) {
-        var tiles = Array.from(wordGroup.querySelectorAll('.tile'));
-        var hasHidden = tiles.some(function(tile) {
-          return !tile.classList.contains('revealed') && !tile.classList.contains('user-filled');
-        });
-        
-        if (hasHidden) {
-          availableWords.push({ element: wordGroup, tiles: tiles, word: gameState.words[index] });
-        }
-      });
-      
-      if (availableWords.length > 0) {
-        var randomWord = availableWords[Math.floor(Math.random() * availableWords.length)];
-        
-        randomWord.tiles.forEach(function(tile, index) {
-          if (!tile.classList.contains('revealed')) {
-            setTimeout(function() {
-              tile.classList.add('revealed');
-              tile.classList.remove('hidden', 'user-filled');
-              tile.textContent = tile.dataset.letter;
-            }, index * 100);
-          }
-        });
-        
-        updateMessage('', '', 'Random word "' + randomWord.word + '" revealed (-5 points)');
-        updateScore(-5, 'Random word');
-        
-        trackFeatureUse('random_word', 1);
-        trackPunzzleEvent('gameplay', 'hint_used', 'random_word');
-        
-        setTimeout(function() {
-          var remainingHiddenTiles = gameState.letterTiles.filter(function(tile) {
-            return !tile.classList.contains('revealed') && !tile.classList.contains('user-filled');
-          });
-            
-          if (remainingHiddenTiles.length === 0) {
-            updateMessage('', '', 'Puzzle completed with hints');
-            
-            gameState.completedWithHints = true;
-            
-            gameState.letterTiles.forEach(function(tile) {
-              tile.classList.add('hint-completed');
-              tile.classList.remove('user-filled', 'active');
-            });
-            
-            if (gameState.currentActiveTile) {
-              gameState.currentActiveTile.classList.remove('active');
-              gameState.currentActiveTile = null;
-            }
-            
-            stopFoxTimer();
-            
-            var puzzleType = isCustomPuzzle ? 'custom' : 'daily';
-            trackPuzzleComplete(puzzleType, gameState.score, getElapsedTime(), false);
-            
-            setTimeout(function() {
-              showScoreCard(false);
-            }, 1000);
-          } else {
-            checkPuzzleComplete();
-          }
-        }, randomWord.tiles.length * 100 + 200);
-      }
-    }
-
-    function checkPuzzleComplete() {
-      if (gameState.completedWithHints) {
-        return;
-      }
-      
-      var allFilled = gameState.letterTiles.every(function(tile) {
-        return tile.classList.contains('revealed') || 
-               (tile.classList.contains('user-filled') && tile.textContent.trim() !== '');
-      });
-      
-      if (allFilled) {
-        var userAnswer = gameState.letterTiles.map(function(tile) {
-          if (tile.classList.contains('revealed')) {
-            return tile.dataset.letter.toUpperCase();
-          } else if (tile.classList.contains('user-filled')) {
-            return tile.textContent.toUpperCase();
-          } else {
-            return tile.dataset.letter.toUpperCase();
-          }
-        }).join('');
-        
-        var correctAnswer = gameState.puzzleAnswer.replace(/\s/g, '').toUpperCase();
-        
-        if (userAnswer === correctAnswer) {
-          updateMessage('Excellent! You solved the puzzle.', 'success');
-          
-          gameState.letterTiles.forEach(function(tile, index) {
-            setTimeout(function() {
-              tile.classList.add('revealed', 'correct');
-              tile.classList.remove('user-filled', 'active');
-              tile.textContent = tile.dataset.letter;
-            }, index * 50);
-          });
-          
-          stopFoxTimer();
-          
-          var puzzleType = isCustomPuzzle ? 'custom' : 'daily';
-          trackPuzzleComplete(puzzleType, gameState.score, getElapsedTime(), true);
-          
-          setTimeout(function() {
-            showScoreCard(true);
-          }, gameState.letterTiles.length * 50 + 1000);
-          
-        } else {
-          updateMessage('Not quite right. Try again! (-2 points)', 'error');
-          updateScore(-2, 'Incorrect answer');
-          trackFeatureUse('incorrect_guess', 1);
-        }
-      }
-    }
-
-    function showScoreCard(isSuccess) {
-      var scoreCardTitle = document.getElementById('scoreCardTitle');
-      var scoreCardCategories = document.getElementById('scoreCardCategories');
-      var penaltiesContainer = document.getElementById('penaltiesContainer');
-      var finalScoreDisplay = document.getElementById('finalScoreDisplay');
-      
-      document.body.classList.remove('game-active');
-      
-      if (gameState.completedWithHints) {
-        isSuccess = false;
-      }
-      
-      var title = '';
-      if (gameState.score === 10) {
-        title = 'A hole in pun!';
-      } else if (gameState.score >= 1 && gameState.score <= 9) {
-        title = 'You got it!';
-      } else if (gameState.score === 0) {
-        title = 'You broke even!';
-      } else if (gameState.score < 0) {
-        title = 'Thank you for<br>not using AI.';
-      }
-      
-      scoreCardTitle.innerHTML = title;
-      scoreCardCategories.textContent = gameState.categoryText;
-      
-      penaltiesContainer.innerHTML = '';
-      var penaltiesByReason = {};
-      var penaltyCounts = {};
-      
-      gameState.penalties.forEach(function(penalty) {
-        if (!penaltiesByReason[penalty.reason]) {
-          penaltiesByReason[penalty.reason] = 0;
-          penaltyCounts[penalty.reason] = 0;
-        }
-        penaltiesByReason[penalty.reason] += penalty.points;
-        penaltyCounts[penalty.reason] += 1;
-      });
-      
-      for (var reason in penaltiesByReason) {
-        var row = document.createElement('div');
-        row.style.cssText = 'display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;';
-        var count = penaltyCounts[reason];
-        var displayReason = count > 1 ? reason + ' (x' + count + ')' : reason;
-        var penaltyValue = penaltiesByReason[reason];
-        var penaltyStyle = penaltyValue < 0 ? 'color: #c9372c; font-weight: 600;' : 'font-weight: 600;';
-        row.innerHTML = '<span style="font-size: 0.875rem; color: #666;">' + displayReason + '</span><span style="font-size: 0.875rem; ' + penaltyStyle + '">' + penaltyValue + '</span>';
-        penaltiesContainer.appendChild(row);
-      }
-      
-      if (gameState.penalties.length === 0) {
-        var row = document.createElement('div');
-        row.style.cssText = 'display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;';
-        row.innerHTML = '<span style="font-size: 0.875rem; color: #666;">Perfect! No hints</span><span style="font-size: 0.875rem; font-weight: 600;">0</span>';
-        penaltiesContainer.appendChild(row);
-      }
-      
-      finalScoreDisplay.textContent = gameState.score;
-      
-      if (gameState.completedWithHints || gameState.score < 0) {
-        finalScoreDisplay.style.color = '#c9372c';
-      } else {
-        finalScoreDisplay.style.color = '#1a1a1a';
-      }
-      
-      document.getElementById('scoreCard').style.display = 'flex';
-      
-      var hamburgerMenu = document.getElementById('hamburgerMenu');
-      if (hamburgerMenu) {
-        hamburgerMenu.style.display = 'none';
-      }
-      
-      document.getElementById('gameContainer').classList.add('content-blur');
-    }
-
-    function closeScoreModal() {
-      // Navigate immediately without showing loading state - let the new page handle it
-      var baseUrl = window.location.origin + window.location.pathname;
-      window.location.href = baseUrl + '?skipIntro=true';
-    }
-
-    function restartGame() {
-      gameState.score = 10;
-      gameState.penalties = [];
-      gameState.completedWithHints = false;
-      gameState.hintUsed = false;
-      
-      if (!gameState.customHint) {
-        document.getElementById('hintRestartBtn').textContent = 'Restart';
-        document.getElementById('mobileHintRestartBtn').textContent = 'Restart';
-      } else {
-        document.getElementById('hintRestartBtn').textContent = 'Hint (-3)';
-        document.getElementById('mobileHintRestartBtn').textContent = 'Hint (-3)';
-      }
-      
-      if (gameState.currentActiveTile) {
-        gameState.currentActiveTile.classList.remove('active');
-        gameState.currentActiveTile = null;
-      }
-      
-      var container = document.getElementById('puzzleContainer');
-      container.classList.remove('tiles-small', 'tiles-medium');
-      
-      updateMessage('');
-      
-      var hamburgerMenu = document.getElementById('hamburgerMenu');
-      if (hamburgerMenu) {
-        hamburgerMenu.style.display = 'block';
-      }
-      
-      var scoreCard = document.getElementById('scoreCard');
-      if (scoreCard.style.display === 'flex') {
-        scoreCard.style.display = 'none';
-        document.getElementById('gameContainer').classList.remove('content-blur');
-        document.body.classList.add('game-active');
-        buildPuzzle();
-        updateScore(0);
-        startFoxTimer();
-      } else {
-        buildPuzzle();
-        updateScore(0);
-      }
-    }
-
-    function processDesktopKeyInput(inputKey) {
-      if (!gameState.currentActiveTile) return;
-      
-      if (/^[A-Za-z]$/.test(inputKey)) {
-        if (!gameState.currentActiveTile.classList.contains('revealed')) {
-          gameState.currentActiveTile.textContent = inputKey.toUpperCase();
-          gameState.currentActiveTile.classList.add('user-filled');
-          gameState.currentActiveTile.classList.remove('hidden');
-          
-          var puzzleComplete = gameState.letterTiles.every(function(tile) {
-            return tile.classList.contains('revealed') || 
-                   (tile.classList.contains('user-filled') && tile.textContent.trim() !== '');
-          });
-          
-          if (puzzleComplete) {
-            setTimeout(checkPuzzleComplete, 50);
-          } else {
-            var emptyTiles = gameState.letterTiles.filter(function(tile) {
-              return !tile.classList.contains('revealed');
-            });
-            var currentPosition = emptyTiles.indexOf(gameState.currentActiveTile);
-            var nextAvailable = emptyTiles[currentPosition + 1];
-            
-            if (nextAvailable) {
-              setActiveTile(nextAvailable);
-            }
-          }
-        }
-      } else if (inputKey === 'Backspace') {
-        processDesktopBackspace();
-      }
-    }
-
-    function processDesktopBackspace() {
-      if (!gameState.currentActiveTile) return;
-      
-      var editableTiles = gameState.letterTiles.filter(function(tile) {
-        return !tile.classList.contains('revealed');
-      });
-      
-      if (gameState.currentActiveTile.classList.contains('user-filled')) {
-        gameState.currentActiveTile.textContent = '';
-        gameState.currentActiveTile.classList.remove('user-filled');
-        gameState.currentActiveTile.classList.add('hidden');
-      } else {
-        var currentPosition = editableTiles.indexOf(gameState.currentActiveTile);
-        var previousTile = editableTiles[currentPosition - 1];
-        
-        if (previousTile && previousTile.classList.contains('user-filled')) {
-          setActiveTile(previousTile);
-          previousTile.textContent = '';
-          previousTile.classList.remove('user-filled');
-          previousTile.classList.add('hidden');
-        }
-      }
-    }
-
-    function handleKey(key) {
-      if (key === 'Backspace') {
-        trackPunzzleEvent('mobile_keyboard', 'interaction', 'backspace');
-      } else if (/^[A-Za-z]$/.test(key)) {
-        trackPunzzleEvent('mobile_keyboard', 'interaction', 'letter_key');
-      }
-      
-      if (!gameState.currentActiveTile) return;
-
-      if (/^[A-Za-z]$/.test(key)) {
-        if (!gameState.currentActiveTile.classList.contains('revealed')) {
-          gameState.currentActiveTile.textContent = key.toUpperCase();
-          gameState.currentActiveTile.classList.add('user-filled');
-          gameState.currentActiveTile.classList.remove('hidden');
-          
-          var allFilled = gameState.letterTiles.every(function(tile) {
-            return tile.classList.contains('revealed') || 
-                   (tile.classList.contains('user-filled') && tile.textContent.trim() !== '');
-          });
-          
-          if (allFilled) {
-            setTimeout(checkPuzzleComplete, 50);
-          } else {
-            var availableTiles = gameState.letterTiles.filter(function(tile) {
-              return !tile.classList.contains('revealed');
-            });
-            var currentIndex = availableTiles.indexOf(gameState.currentActiveTile);
-            var nextTile = availableTiles[currentIndex + 1];
-            
-            if (nextTile) {
-              setActiveTile(nextTile);
-            }
-          }
-        }
-      } else if (key === 'Backspace') {
-        handleBackspace();
-      }
-    }
-
-    function handleBackspace() {
-      if (!gameState.currentActiveTile) return;
-      
-      var availableTiles = gameState.letterTiles.filter(function(tile) {
-        return !tile.classList.contains('revealed');
-      });
-      
-      if (gameState.currentActiveTile.classList.contains('user-filled')) {
-        gameState.currentActiveTile.textContent = '';
-        gameState.currentActiveTile.classList.remove('user-filled');
-        gameState.currentActiveTile.classList.add('hidden');
-      } else {
-        var currentIndex = availableTiles.indexOf(gameState.currentActiveTile);
-        var prevTile = availableTiles[currentIndex - 1];
-        
-        if (prevTile && prevTile.classList.contains('user-filled')) {
-          setActiveTile(prevTile);
-          prevTile.textContent = '';
-          prevTile.classList.remove('user-filled');
-          prevTile.classList.add('hidden');
-        }
-      }
-    }
-
-    // Desktop keyboard toggle functionality
-    function toggleDesktopKeyboard() {
-      var body = document.body;
-      var toggleBtn = document.getElementById('desktopKeyboardToggle');
-      
-      if (body.classList.contains('desktop-keyboard-active')) {
-        body.classList.remove('desktop-keyboard-active');
-        toggleBtn.textContent = 'Show Keyboard';
-        trackFeatureUse('desktop_keyboard_hidden', 1);
-      } else {
-        body.classList.add('desktop-keyboard-active');
-        toggleBtn.textContent = 'Hide Keyboard';
-        trackFeatureUse('desktop_keyboard_shown', 1);
-      }
-    }
-    
-    // Handle desktop keyboard button clicks
-    function handleDesktopKey(key) {
-      processDesktopKeyInput(key);
-      trackFeatureUse('desktop_keyboard_key', 1);
-    }
-
-    document.addEventListener('keydown', function(event) {
-      var createModal = document.getElementById('createWrapper');
-      var feedbackModal = document.getElementById('feedbackWrapper');
-      var faqModal = document.getElementById('faqWrapper');
-      var startModal = document.getElementById('startModal');
-      var scoreCard = document.getElementById('scoreCard');
-      
-      var modalOpen = (createModal && createModal.classList.contains('active')) ||
-                      (feedbackModal && feedbackModal.classList.contains('active')) ||
-                      (faqModal && faqModal.classList.contains('active')) ||
-                      (startModal && startModal.style.display === 'flex') ||
-                      (scoreCard && scoreCard.style.display === 'flex');
-      
-      if (!modalOpen) {
-        processDesktopKeyInput(event.key);
-      }
-    });
-
-
-    document.addEventListener('keydown', function(event) {
-      if (event.key === 'Escape') {
-        var createModal = document.getElementById('createWrapper');
-        var feedbackModal = document.getElementById('feedbackWrapper');
-        var faqModal = document.getElementById('faqWrapper');
-        if (createModal && createModal.classList.contains('active')) {
-          showMainGame();
-        } else if (feedbackModal && feedbackModal.classList.contains('active')) {
-          closeFeedbackForm();
-        } else if (faqModal && faqModal.classList.contains('active')) {
-          closeFAQ();
-        }
-      }
-    });
-
-    async function shareCompletedPuzzle() {
-      if (gameState.puzzleId) {
-        try {
-          if (typeof db !== 'undefined' && db.collection) {
-            await db.collection('gameStats').add({
-              puzzleId: gameState.puzzleId,
-              action: 'shared',
-              timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            
-            if (gameState.puzzleId.startsWith('custom-')) {
-              const customId = gameState.puzzleId.replace('custom-', '');
-              const docRef = db.collection('customPuzzleStats').doc(customId);
-              await docRef.update({
-                shares: firebase.firestore.FieldValue.increment(1)
-              });
-            }
-          }
-        } catch (error) {
-          console.error('Error tracking share:', error);
-        }
-      }
-      
-      trackFeatureUse('share_completed', gameState.score);
-      
-      const shareType = isCustomPuzzle ? 'custom_puzzle_shared' : 'daily_puzzle_shared';
-      trackPunzzleEvent('share', shareType, gameState.categoryText);
-      
-      var shareUrl = window.location.href;
-      
-      if (!window.location.search.includes('puzzle=')) {
-        shareUrl = window.location.origin + window.location.pathname;
-      }
-      
-      var shareText = 'I just solved this Punzzle!\n\n' + gameState.categoryText + '\n\nCan you solve it too?\n\n' + shareUrl;
-      
-      if (navigator.share) {
-        navigator.share({
-          title: 'Punzzle Challenge',
-          text: shareText,
-          url: shareUrl
-        });
-      } else if (navigator.clipboard) {
-        navigator.clipboard.writeText(shareText).then(function() {
-          alert('Puzzle challenge copied to clipboard!');
-        });
-      } else {
-        var textArea = document.createElement('textarea');
-        textArea.value = shareText;
-        document.body.appendChild(textArea);
-        textArea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textArea);
-        alert('Puzzle challenge copied to clipboard!');
-      }
-    }
-
-    // Make Your Own functionality
-    var savedFormData = null;
-    
-    function showMakeYourOwn() {
-      trackNavigation('make_your_own');
-      
-      closeHamburgerMenu();
-      
-      document.getElementById('createWrapper').classList.add('active');
-      document.body.classList.add('modal-open');
-
-      document.getElementById('createWrapper').classList.add('active');
-      document.body.classList.add('modal-open');
-      
-      var gameContainer = document.getElementById('gameContainer');
-      if (!gameContainer.classList.contains('game-hidden')) {
-        gameContainer.classList.add('content-blur');
-      }
-      
-      var scoreCard = document.getElementById('scoreCard');
-      if (scoreCard.style.display === 'flex') {
-        scoreCard.classList.add('content-blur');
-      }
-      
-      stopFoxTimer();
-      
-      if (savedFormData) {
-        restoreFormData();
-      } else {
-        resetCreateForm();
-      }
-    }
-    
-    function closeCreateModal(event) {
-      if (event && event.target !== event.currentTarget) {
-        return;
-      }
-      showMainGame();
-    }
-
-    function restoreFormData() {
-      if (!savedFormData) return;
-      
-      document.getElementById('category1Input').value = savedFormData.category1;
-      document.getElementById('category2Input').value = savedFormData.category2;
-      
-      if (savedFormData.hint) {
-        document.getElementById('hintInput').value = savedFormData.hint;
-      }
-      
-      var wordInputs = document.getElementById('wordInputs');
-      wordInputs.innerHTML = '';
-      
-      savedFormData.words.forEach(function(word, index) {
-        var newGroup = document.createElement('div');
-        newGroup.className = 'word-input-group';
-        var placeholder = getOrdinalWord(index + 1);
-        
-        newGroup.innerHTML = 
-          '<input type="text" class="word-input" placeholder="' + placeholder + '" maxlength="12" required value="' + word + '">';
-        
-        wordInputs.appendChild(newGroup);
-        
-        newGroup.querySelector('.word-input').addEventListener('input', function() {
-          if (typeof validateAndPreview === 'function') {
-            validateAndPreview();
-          }
-        });
-      });
-      
-      updateAddWordButton();
-      if (typeof validateAndPreview === 'function') {
-        validateAndPreview();
-      }
-      
-      savedFormData = null;
-    }
-    
-    function showMainGame() {
-      document.getElementById('createWrapper').classList.remove('active');
-      document.body.classList.remove('modal-open');
-      
-      // Remove custom preview class when returning to main game
-      removeCustomPreviewClass();
-      
-      document.getElementById('gameContainer').classList.remove('content-blur');
-      
-      savedFormData = null;
-      
-      if (!hasStartedGame) {
-        document.getElementById('startModal').style.display = 'flex';
-        document.body.classList.add('modal-open');
-        document.getElementById('gameContainer').classList.add('content-blur');
-        var hamburgerMenu = document.getElementById('hamburgerMenu');
-        if (hamburgerMenu) {
-          hamburgerMenu.style.display = 'none';
-        }
-      } else {
-        document.getElementById('gameContainer').classList.remove('game-hidden');
-        document.body.classList.add('game-active');
-        var hamburgerMenu = document.getElementById('hamburgerMenu');
-        if (hamburgerMenu) {
-          hamburgerMenu.style.display = 'block';
-        }
-        startFoxTimer();
-      }
-    }
-
-    function setupCreateForm() {
-      var form = document.getElementById('createForm');
-      
-      form.addEventListener('input', function() {
-        validateAndPreview();
-      });
-      
-      document.querySelectorAll('.word-input').forEach(function(input) {
-        input.addEventListener('input', function() {
-          if (typeof validateAndPreview === 'function') {
-            validateAndPreview();
-          }
-        });
-      });
-      
-      document.getElementById('category1Input').addEventListener('input', function() {
-        if (typeof validateAndPreview === 'function') {
-          validateAndPreview();
-        }
-      });
-      
-      document.getElementById('category2Input').addEventListener('input', function() {
-        if (typeof validateAndPreview === 'function') {
-          validateAndPreview();
-        }
-      });
-      
-      form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        previewPuzzle();
-      });
-      
-      updateAddWordButton();
-    }
-
-    function resetCreateForm() {
-      var form = document.getElementById('createForm');
-      form.reset();
-      
-      var wordInputs = document.getElementById('wordInputs');
-      wordInputs.innerHTML = 
-        '<div class="word-input-group">' +
-          '<input type="text" class="word-input" placeholder="First word" maxlength="12" required>' +
-        '</div>' +
-        '<div class="word-input-group">' +
-          '<input type="text" class="word-input" placeholder="Second word" maxlength="12" required>' +
-        '</div>';
-      
-      wordInputs.querySelectorAll('.word-input').forEach(function(input) {
-        input.addEventListener('input', function() {
-          if (typeof validateAndPreview === 'function') {
-            validateAndPreview();
-          }
-        });
-      });
-      
-      document.getElementById('previewSection').classList.remove('active');
-      
-      document.getElementById('categoriesError').style.display = 'none';
-      document.getElementById('wordsError').style.display = 'none';
-      
-      document.getElementById('createBtn').disabled = true;
-      var copyBtn = document.getElementById('copyBtn');
-      copyBtn.disabled = true;
-      copyBtn.style.opacity = '0.5';
-      copyBtn.style.cursor = 'not-allowed';
-      
-      var shareBtn = document.getElementById('shareBtn');
-      shareBtn.disabled = true;
-      shareBtn.style.opacity = '0.5';
-      shareBtn.style.cursor = 'not-allowed';
-      
-      updateAddWordButton();
-    }
-
-    function addWordInput() {
-      var wordInputs = document.getElementById('wordInputs');
-      var currentInputs = wordInputs.querySelectorAll('.word-input-group');
-      
-      if (currentInputs.length < 5) {
-        var newGroup = document.createElement('div');
-        newGroup.className = 'word-input-group';
-        var placeholder = getOrdinalWord(currentInputs.length + 1);
-        newGroup.innerHTML = 
-          '<input type="text" class="word-input" placeholder="' + placeholder + '" maxlength="12" required>';
-        
-        wordInputs.appendChild(newGroup);
-        
-        newGroup.querySelector('.word-input').addEventListener('input', function() {
-          if (typeof validateAndPreview === 'function') {
-            validateAndPreview();
-          }
-        });
-        
-        updateAddWordButton();
-        if (typeof validateAndPreview === 'function') {
-          validateAndPreview();
-        }
-      }
-    }
-
-    function removeLastWord() {
-      var wordInputs = document.getElementById('wordInputs');
-      var currentInputs = wordInputs.querySelectorAll('.word-input-group');
-      
-      if (currentInputs.length > 2) {
-        currentInputs[currentInputs.length - 1].remove();
-        updateAddWordButton();
-        if (typeof validateAndPreview === 'function') {
-          validateAndPreview();
-        }
-      }
-    }
-
-    function getOrdinalWord(num) {
-      var ordinals = ['First', 'Second', 'Third', 'Fourth', 'Fifth'];
-      return ordinals[num - 1] + ' word';
-    }
-
-    function updateAddWordButton() {
-      var wordInputs = document.getElementById('wordInputs');
-      var currentInputs = wordInputs.querySelectorAll('.word-input-group');
-      var addBtn = document.getElementById('addWordBtn');
-      var removeBtn = document.getElementById('removeWordBtn');
-      
-      if (currentInputs.length >= 5) {
-        addBtn.disabled = true;
-        addBtn.textContent = 'Maximum 5 words';
-      } else {
-        addBtn.disabled = false;
-        addBtn.textContent = 'Add Word';
-      }
-      
-      if (currentInputs.length <= 2) {
-        removeBtn.disabled = true;
-      } else {
-        removeBtn.disabled = false;
-      }
-      
-      currentInputs.forEach(function(group, index) {
-        var input = group.querySelector('.word-input');
-        if (input && !input.value) {
-          input.placeholder = getOrdinalWord(index + 1);
-        }
-      });
-    }
-
-    function validateAndPreview() {
-      var category1Input = document.getElementById('category1Input');
-      var category2Input = document.getElementById('category2Input');
-      var wordInputs = document.querySelectorAll('.word-input');
-      var previewSection = document.getElementById('previewSection');
-      var createBtn = document.getElementById('createBtn');
-      var copyBtn = document.getElementById('copyBtn');
-      
-      var category1 = category1Input.value.trim();
-      var category2 = category2Input.value.trim();
-      var categories = category1 && category2 ? category1 + ' + ' + category2 : '';
-      
-      var words = Array.from(wordInputs).map(function(input) {
-        return input.value.trim().toUpperCase();
-      }).filter(function(word) {
-        return word.length > 0;
-      });
-      
-      var isValid = categories.length > 0 && words.length >= 2 && 
-                   words.every(function(word) { 
-                     var cleanWord = word.replace(/\s+/g, '');
-                     return cleanWord.length > 0 && /^[A-Z\s]+$/.test(word); 
-                   });
-      
-      if (isValid) {
-        updatePreview(categories, words);
-        previewSection.classList.add('active');
-        
-        createBtn.disabled = false;
-        copyBtn.disabled = false;
-        copyBtn.style.opacity = '1';
-        copyBtn.style.cursor = 'pointer';
-        
-        var shareBtn = document.getElementById('shareBtn');
-        shareBtn.disabled = false;
-        shareBtn.style.opacity = '1';
-        shareBtn.style.cursor = 'pointer';
-        
-        var hintText = document.getElementById('hintInput').value.trim();
-        var puzzleData = {
-          categories: categories.toUpperCase(),
-          words: words,
-          answer: words.join(' '),
-          hint: hintText
-        };
-        var encodedPuzzle = btoa(JSON.stringify(puzzleData));
-        var shareUrl = window.location.origin + window.location.pathname + '?puzzle=' + encodedPuzzle;
-        document.getElementById('shareUrlInput').value = shareUrl;
-        
-      } else {
-        previewSection.classList.remove('active');
-        createBtn.disabled = true;
-        
-        copyBtn.disabled = true;
-        copyBtn.style.opacity = '0.5';
-        copyBtn.style.cursor = 'not-allowed';
-        
-        var shareBtn = document.getElementById('shareBtn');
-        shareBtn.disabled = true;
-        shareBtn.style.opacity = '0.5';
-        shareBtn.style.cursor = 'not-allowed';
-      }
-      
-      document.getElementById('categoriesError').style.display = 'none';
-      document.getElementById('wordsError').style.display = 'none';
-    }
-
-    function updatePreview(categories, words) {
-      var previewCategories = document.getElementById('previewCategories');
-      var previewPuzzle = document.getElementById('previewPuzzle');
-      
-      previewCategories.textContent = categories.toUpperCase();
-      
-      previewPuzzle.innerHTML = '';
-      words.forEach(function(word) {
-        var cleanWord = word.replace(/\s+/g, '');
-        if (cleanWord.length > 0) {
-          var wordDiv = document.createElement('div');
-          wordDiv.className = 'preview-word';
-          
-          for (var i = 0; i < cleanWord.length; i++) {
-            var tile = document.createElement('div');
-            tile.className = 'preview-tile';
-            tile.textContent = cleanWord[i];
-            wordDiv.appendChild(tile);
-          }
-          
-          previewPuzzle.appendChild(wordDiv);
-        }
-      });
-    }
-
-    function previewPuzzle() {
-      var shareUrlInput = document.getElementById('shareUrlInput');
-      var shareUrl = shareUrlInput.value;
-      
-      if (shareUrl) {
-        // Add preview parameter to the URL
-        var previewUrl = shareUrl + '&preview=true';
-        
-        trackCustomPuzzle('previewed');
-        
-        // Open in same tab/window
-        window.location.href = previewUrl;
-      }
-    }
-
-    async function createPuzzle() {
-      var category1Input = document.getElementById('category1Input');
-      var category2Input = document.getElementById('category2Input');
-      var wordInputs = document.querySelectorAll('.word-input');
-      var categoriesError = document.getElementById('categoriesError');
-      var wordsError = document.getElementById('wordsError');
-      
-      var category1 = category1Input.value.trim();
-      var category2 = category2Input.value.trim();
-      var categories = category1 && category2 ? category1 + ' + ' + category2 : '';
-      
-      var words = Array.from(wordInputs).map(function(input) {
-        return input.value.trim().toUpperCase().replace(/\s+/g, ' ');
-      }).filter(function(word) {
-        return word.length > 0;
-      });
-      
-      words = words.map(function(word) {
-        return word.replace(/\s+/g, ' ').trim();
-      });
-      
-      var hasErrors = false;
-      
-      if (!category1 || !category2) {
-        categoriesError.textContent = 'Both categories are required';
-        categoriesError.style.display = 'block';
-        hasErrors = true;
-      } else if (category1.length > 25 || category2.length > 25) {
-        categoriesError.textContent = 'Each category must be 25 characters or less';
-        categoriesError.style.display = 'block';
-        hasErrors = true;
-      }
-      
-      if (words.length < 2) {
-        wordsError.textContent = 'At least 2 words are required';
-        wordsError.style.display = 'block';
-        hasErrors = true;
-      } else if (words.some(function(word) { 
-        var cleanWord = word.replace(/\s+/g, '');
-        return !cleanWord || !/^[A-Z\s]+$/.test(word); 
-      })) {
-        wordsError.textContent = 'Words can only contain letters and spaces';
-        wordsError.style.display = 'block';
-        hasErrors = true;
-      } else if (words.some(function(word) { return word.length > 12; })) {
-        wordsError.textContent = 'Each word must be 12 characters or less';
-        wordsError.style.display = 'block';
-        hasErrors = true;
-      }
-      
-      if (hasErrors) {
-        return;
-      }
-      
-      savedFormData = {
-        category1: category1,
-        category2: category2,
-        words: Array.from(wordInputs).map(function(input) {
-          return input.value.trim();
-        }).filter(function(word) {
-          return word.length > 0;
-        }),
-        hint: document.getElementById('hintInput').value.trim()
-      };
-      
-      var hintText = document.getElementById('hintInput').value.trim();
-      var puzzleData = {
-        categories: categories.toUpperCase(),
-        words: words,
-        answer: words.join(' '),
-        hint: hintText
-      };
-      
-      isCustomPuzzle = true;
-      
-      trackCustomPuzzle('created');
-      
-      gameState.puzzleAnswer = puzzleData.answer;
-      gameState.categoryText = puzzleData.categories;
-      gameState.words = puzzleData.words;
-      gameState.customHint = hintText || null;
-      gameState.score = 10;
-      gameState.penalties = [];
-      gameState.letterTiles = [];
-      gameState.currentActiveTile = null;
-      gameState.hintUsed = false;
-      gameState.puzzleId = `custom-shared-${Date.now()}`;
-      
-      // Add mobile preview class for proper layout
-      if (window.innerWidth <= 768 || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-        document.body.classList.add('custom-puzzle-preview');
-        console.log('Added custom-puzzle-preview class for mobile layout');
-      }
-      
-      const customId = await saveCustomPuzzle(puzzleData);
-      if (customId) {
-        gameState.puzzleId = `custom-${customId}`;
-        
-        trackPunzzleEvent('custom_puzzle_created', 'user_generated', gameState.categoryText);
-        
-        try {
-          if (typeof AnalyticsDB !== 'undefined' && AnalyticsDB && AnalyticsDB.trackCompletion) {
-            await AnalyticsDB.trackCompletion({
-              puzzleId: gameState.puzzleId,
-              puzzleType: 'custom_created',
-              categories: gameState.categoryText,
-              answer: gameState.puzzleAnswer,
-              date: new Date().toISOString().split('T')[0],
-              completed: false,
-              score: 0,
-              timeSpent: 0
-            });
-          }
-        } catch (error) {
-          console.error('Error tracking custom puzzle creation:', error);
-        }
-      }
-      
-      var encodedPuzzle = btoa(JSON.stringify(puzzleData));
-      var shareUrl = window.location.origin + window.location.pathname + '?puzzle=' + encodedPuzzle;
-      document.getElementById('shareUrlInput').value = shareUrl;
-      
-      document.getElementById('categoryText').textContent = gameState.categoryText;
-      
-      document.getElementById('dateDisplay').innerHTML = 
-        'Custom Punzzle · <a href="#" onclick="copyPuzzleUrl(); return false;">Copy link</a>';
-
-      if (!gameState.customHint) {
-        document.getElementById('hintRestartBtn').textContent = 'Restart';
-        document.getElementById('mobileHintRestartBtn').textContent = 'Restart';
-      } else {
-        document.getElementById('hintRestartBtn').textContent = 'Hint (3)';
-        document.getElementById('mobileHintRestartBtn').textContent = 'Hint (-)';
-      }
-      
-      document.getElementById('createWrapper').classList.remove('active');
-      document.body.classList.remove('modal-open');
-      document.getElementById('gameContainer').classList.remove('game-hidden', 'content-blur');
-      
-      // Add game-active class to show mobile controls
-      document.body.classList.add('game-active');
-      
-      if (!hasStartedGame) {
-        document.getElementById('startModal').style.display = 'flex';
-      } else {
-        startGame();
-      }
-      
-      var hamburgerMenu = document.getElementById('hamburgerMenu');
-      if (hamburgerMenu) {
-        hamburgerMenu.style.display = 'none';
-      }
-    }
-
-    function removeCustomPreviewClass() {
-      document.body.classList.remove('custom-puzzle-preview');
-      console.log('Removed custom-puzzle-preview class');
-    }
-
-    function copyPuzzleUrl() {
-      var shareUrlInput = document.getElementById('shareUrlInput');
-      var shareUrl = shareUrlInput.value;
-      
-      trackCustomPuzzle('shared');
-      
-      var tempInput = document.createElement('input');
-      tempInput.value = shareUrl;
-      document.body.appendChild(tempInput);
-      tempInput.select();
-      tempInput.setSelectionRange(0, 99999);
-      
-      try {
-        document.execCommand('copy');
-        alert('Punzzle link copied to clipboard!');
-      } catch (err) {
-        if (navigator.clipboard) {
-          navigator.clipboard.writeText(shareUrl).then(function() {
-            alert('Punzzle link copied to clipboard!');
-          }).catch(function() {
-            alert('Please copy the link manually: ' + shareUrl);
-          });
-        } else {
-          alert('Please copy the link manually: ' + shareUrl);
-        }
-      }
-      
-      document.body.removeChild(tempInput);
-    }
-
-    function shareCreatedPuzzle() {
-      var shareUrlInput = document.getElementById('shareUrlInput');
-      var shareUrl = shareUrlInput.value;
-      var category1 = document.getElementById('category1Input').value.trim();
-      var category2 = document.getElementById('category2Input').value.trim();
-      var categories = category1 + ' + ' + category2;
-      
-      trackCustomPuzzle('shared_native');
-      
-      var shareText = 'Can you solve my Punzzle?\n\n' + categories.toUpperCase() + '\n\n' + shareUrl;
-      
-      if (navigator.share) {
-        navigator.share({
-          title: 'Custom Punzzle Challenge',
-          text: shareText,
-          url: shareUrl
-        }).catch(function(err) {
-          // User cancelled share, do nothing
-        });
-      } else {
-        copyPuzzleUrl();
-      }
-    }
-
-    // Hamburger menu functionality
-    function toggleHamburgerMenu() {
-      var button = document.getElementById('hamburgerButton');
-      var dropdown = document.getElementById('hamburgerDropdown');
-      
-      button.classList.toggle('active');
-      dropdown.classList.toggle('active');
-      
-      if (button.classList.contains('active')) {
-        trackPunzzleEvent('hamburger_menu_opened', 'navigation', 'menu');
-      } else {
-        trackPunzzleEvent('hamburger_menu_closed', 'navigation', 'menu');
-      }
-    }
-    
-    function closeHamburgerMenu() {
-      var button = document.getElementById('hamburgerButton');
-      var dropdown = document.getElementById('hamburgerDropdown');
-      
-      button.classList.remove('active');
-      dropdown.classList.remove('active');
-    }
-    
-    document.addEventListener('click', function(event) {
-      var hamburgerMenu = document.getElementById('hamburgerMenu');
-      var hamburgerButton = document.getElementById('hamburgerButton');
-      var hamburgerDropdown = document.getElementById('hamburgerDropdown');
-      
-      if (hamburgerMenu && !hamburgerMenu.contains(event.target)) {
-        hamburgerButton.classList.remove('active');
-        hamburgerDropdown.classList.remove('active');
-      }
-    });
-
-    // Feedback form functions
-    function showFeedbackForm() {
-      trackNavigation('feedback_form');
-      
-      closeHamburgerMenu();
-      
-      document.getElementById('feedbackWrapper').classList.add('active');
-      document.body.classList.add('modal-open');
-      
-      var gameContainer = document.getElementById('gameContainer');
-      if (!gameContainer.classList.contains('game-hidden')) {
-        gameContainer.classList.add('content-blur');
-      }
-      
-      var scoreCard = document.getElementById('scoreCard');
-      if (scoreCard.style.display === 'flex') {
-        scoreCard.classList.add('content-blur');
-      }
-    }
-
-    function closeFeedbackModal(event) {
-      if (event && event.target !== event.currentTarget) {
-        return;
-      }
-      closeFeedbackForm();
-    }
-
-    function closeFeedbackForm() {
-      document.getElementById('feedbackWrapper').classList.remove('active');
-      document.body.classList.remove('modal-open');
-      
-      document.getElementById('gameContainer').classList.remove('content-blur');
-      document.getElementById('scoreCard').classList.remove('content-blur');
-      
-      var form = document.getElementById('feedbackForm');
-      if (form) {
-        form.reset();
-      }
-    }
-
-    // FAQ functions
-    function showFAQ() {
-      trackNavigation('faq');
-      
-      closeHamburgerMenu();
-      
-      document.getElementById('faqWrapper').classList.add('active');
-      document.body.classList.add('modal-open');
-      
-      var gameContainer = document.getElementById('gameContainer');
-      if (!gameContainer.classList.contains('game-hidden')) {
-        gameContainer.classList.add('content-blur');
-      }
-      
-      var scoreCard = document.getElementById('scoreCard');
-      if (scoreCard.style.display === 'flex') {
-        scoreCard.classList.add('content-blur');
-      }
-    }
-
-    function closeFAQModal(event) {
-      if (event && event.target !== event.currentTarget) {
-        return;
-      }
-      closeFAQ();
-    }
-
-    function closeFAQ() {
-      document.getElementById('faqWrapper').classList.remove('active');
-      document.body.classList.remove('modal-open');
-      
-      document.getElementById('gameContainer').classList.remove('content-blur');
-      document.getElementById('scoreCard').classList.remove('content-blur');
-    }
-
-    function handleFeedbackSubmit(event) {
-      event.preventDefault();
-      
-      var name = document.getElementById('userName').value;
-      var email = document.getElementById('userEmail').value;
-      var category = document.getElementById('category').value;
-      var message = document.getElementById('message').value;
-      
-      if (!name || !email || !category || !message) {
-        alert('Please fill in all fields');
-        return false;
-      }
-      
-      if (typeof trackPunzzleEvent === 'function') {
-        trackPunzzleEvent('contact_form_submitted', 'engagement', category);
-      }
-      
-      var submitBtn = event.target.querySelector('button[type="submit"]');
-      var originalText = submitBtn.textContent;
-      submitBtn.textContent = 'Sending...';
-      submitBtn.disabled = true;
-      
-      var formData = new FormData(event.target);
-      
-      fetch('https://api.web3forms.com/submit', {
-        method: 'POST',
-        body: formData
-      })
-      .then(function(response) {
-        return response.json();
-      })
-      .then(function(data) {
-        if (data.success) {
-          alert('Thank you for your message! We\'ll get back to you soon.');
-          closeFeedbackForm();
-        } else {
-          alert('Sorry, there was an error sending your message. Please try again.');
-        }
-      })
-      .catch(function(error) {
-        console.error('Error:', error);
-        alert('Sorry, there was an error sending your message. Please try again.');
-      })
-      .finally(function() {
-        submitBtn.textContent = originalText;
-        submitBtn.disabled = false;
-      });
-      
-      return false;
-    }
-
-    // Helper function to save custom puzzle
-    async function saveCustomPuzzle(puzzleData) {
-      try {
-        if (typeof db !== 'undefined' && db.collection) {
-          const docRef = await db.collection('customPuzzles').add({
-            ...puzzleData,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            views: 0,
-            plays: 0,
-            completed: 0
-          });
-          return docRef.id;
-        } else {
-          console.warn('Firebase db not available, puzzle not saved to database');
-          return null;
-        }
-      } catch (error) {
-        console.error('Error saving custom puzzle:', error);
-        return null;
-      }
-    }
-  </script>
-
-</body>
-</html>
