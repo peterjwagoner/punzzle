@@ -41,13 +41,15 @@
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-QLL4GXB1ZX"></script>
   <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-QLL4GXB1ZX');
+    
     // Define randomizeCategory immediately to ensure it's available
     window.randomizeCategory = function(categoryNumber) {
       var categoryList = [
-        "Movie stars", "TV Shows", "Cartoons", "Famous Athletes", "Video Games",
-        "Sitcom Characters", "Superheroes", "Supervillains", "Oscar-Winning Films", "Reality Shows",
-        "Celebrity Couples", "Book Titles", "Tourist Attractions", "Countries", "Capital Cities",
-        "U.S. States", "National Parks", "Places in Europe", "Places You Swim", "Cities with Subways",
+
         "Islands", "Airports", "Childhood Snacks", "Condiments", "Fast Food Chains", "Types of Pasta",
         "Fruits", "Vegetables", "Desserts", "Breakfast Foods", "Pizza Toppings",
         "Cocktails", "Candy Bars", "Spices or Herbs", "Non-Alcoholic Beverages", "Foods That Are Red",
@@ -2424,13 +2426,6 @@
       }
     }
   </script>
-
-</body>
-</html>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-QLL4GXB1ZX');
   </script>
   
   <!-- Firebase (Compatibility Version) -->
