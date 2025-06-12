@@ -2710,8 +2710,8 @@
       box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
       min-height: 520px;
       height: auto;
-       max-height: none;
-      overflow-y: visible;
+      max-height: calc(100vh - 2rem);
+      overflow-y: auto;
       display: flex;
       flex-direction: column;
     }
@@ -2796,17 +2796,14 @@
       background-color: #f8fafc;
       border: 1px solid #e5e5e5;
       border-radius: 6px;
-      padding: 0.75rem 1rem .5rem 1rem;
+      padding: 0.75rem 1rem 1rem 1rem;
       text-align: center;
-      flex: 0 0 auto;
+      flex: 0 1 auto;
       display: flex;
       flex-direction: column;
       min-height: 0;
-      max-height: fit-content; /* Only as tall as content */
       margin-bottom: 0.5rem;
       justify-content: center;
-    padding-bottom: 0.5rem; /* Reduce bottom padding */
-  }
     }
 
     .category-text {
@@ -3074,10 +3071,10 @@
     
   @media (min-width: 769px) {
   .game-container {
-    max-height: none; /* Leave space for margins */
+    max-height: calc(100vh - 4rem); /* Leave space for margins */
     height: auto;
     min-height: auto;
-    overflow-y: visible; /* Allow scrolling if needed */
+    overflow-y: auto; /* Allow scrolling if needed */
   }
 }
   /* When keyboard is active, ensure container stretches */
@@ -3884,7 +3881,7 @@ body.desktop-keyboard-active .game-container {
     /* Desktop-specific styles */
     @media (min-width: 769px) {
       .game-container {
-        max-height: none;
+        max-height: 700px;
         height: auto;
       }
       
