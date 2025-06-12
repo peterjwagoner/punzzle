@@ -3071,10 +3071,12 @@
     
   @media (min-width: 769px) {
   .game-container {
-    max-height: none;
+    max-height: calc(100vh - 4rem); /* Leave space for margins */
     height: auto;
-    min-height: 700px; /* Ensure minimum height */
+    min-height: auto;
+    overflow-y: auto; /* Allow scrolling if needed */
   }
+}
   /* When keyboard is active, ensure container stretches */
 body.desktop-keyboard-active .game-container {
   max-height: none !important;
