@@ -3075,7 +3075,12 @@
     height: auto;
     min-height: 700px; /* Ensure minimum height */
   }
-  
+  /* When keyboard is active, ensure container stretches */
+body.desktop-keyboard-active .game-container {
+  max-height: none !important;
+  height: auto !important;
+}
+
   /* When keyboard is active, ensure container stretches */
   body.desktop-keyboard-active .game-container {
     max-height: none !important;
