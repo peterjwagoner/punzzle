@@ -2796,7 +2796,7 @@
       background-color: #f8fafc;
       border: 1px solid #e5e5e5;
       border-radius: 6px;
-      padding: 0.75rem 1rem 0.5rem 1rem;
+      padding: 0.75rem 1rem 1rem 1rem;
       text-align: center;
       flex: 0 1 auto;
       display: flex;
@@ -3069,13 +3069,19 @@
       text-align: center;
     }
     
-    @media (min-width: 769px) {
-      .desktop-keyboard-toggle {
-        display: block;
-        .game-container {
-    max-height: 700px;
+  @media (min-width: 769px) {
+  .game-container {
+    max-height: none;
     height: auto;
-      }
+    min-height: 600px; /* Ensure minimum height */
+  }
+  
+  /* When keyboard is active, ensure container stretches */
+  body.desktop-keyboard-active .game-container {
+    max-height: none !important;
+    height: auto !important;
+  }
+}
       
       /* Override max-height when keyboard is active */
       body.desktop-keyboard-active .game-container {
