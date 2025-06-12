@@ -1,0 +1,4644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Punzzle - Word Puzzle Game</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="https://punzzle.com/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://punzzle.com/images/favicon-16x16.png">
+  <link href="https://fonts.googleapis.com/css2?family=Headland+One&display=swap" rel="stylesheet">
+  <link rel="apple-touch-icon" sizes="180x180" href="https://punzzle.com/images/apple-touch-icon.png">
+  <link rel="manifest" href="https://punzzle.com/images/site.webmanifest">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://punzzle.com/">
+  <meta property="og:title" content="Punzzle - Daily Word Puzzle Game">
+  <meta property="og:description" content="Find the pun that connects the categories! A new word puzzle every day where you solve clever puns by filling in missing letters.">
+  <meta property="og:image" content="https://punzzle.com/images/punzzle-preview.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Punzzle - Daily Word Puzzle Game">
+  <meta property="og:site_name" content="Punzzle">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@punzzle">
+  <meta name="twitter:creator" content="@punzzle">
+  <meta name="twitter:url" content="https://punzzle.com/">
+  <meta name="twitter:title" content="Punzzle - Daily Word Puzzle Game">
+  <meta name="twitter:description" content="Find the pun that connects the categories! A new word puzzle every day where you solve clever puns by filling in missing letters.">
+  <meta name="twitter:image" content="https://punzzle.com/images/punzzle-preview.png">
+  <meta name="twitter:image:alt" content="Punzzle - Daily Word Puzzle Game">
+
+  <!-- Additional SEO meta tags -->
+  <meta name="description" content="Find the pun that connects the categories! A new word puzzle every day where you solve clever puns by filling in missing letters.">
+  <meta name="keywords" content="word puzzle, pun game, daily puzzle, word game, crossword, brain teaser">
+  <meta name="author" content="Punzzle">
+  <link rel="canonical" href="https://punzzle.com/">
+  
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-QLL4GXB1ZX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-QLL4GXB1ZX');
+  </script>
+  
+  <!-- Firebase (Compatibility Version) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="firebase-setup.js"></script>
+
+  <script>
+    // Global loading state tracking
+    let loadingStateActive = false;
+    let loadingCleanupTimeout = null;
+    
+    // Enhanced loading state management
+    function showLoadingState() {
+      try {
+        // Clear any existing cleanup timeout
+        if (loadingCleanupTimeout) {
+          clearTimeout(loadingCleanupTimeout);
+          loadingCleanupTimeout = null;
+        }
+        
+        // Prevent duplicate loading indicators
+        if (loadingStateActive || document.getElementById('loadingIndicator')) {
+          return;
+        }
+        
+        loadingStateActive = true;
+        
+        // Create loading indicator
+        const loadingDiv = document.createElement('div');
+        loadingDiv.id = 'loadingIndicator';
+        loadingDiv.style.cssText = `
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: rgba(255, 255, 255, 0.9);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          z-index: 9999;
+          backdrop-filter: blur(2px);
+        `;
+        
+        const spinnerDiv = document.createElement('div');
+        spinnerDiv.className = 'loading';
+        spinnerDiv.style.cssText = `
+          display: inline-block;
+          width: 40px;
+          height: 40px;
+          border: 4px solid #f3f3f3;
+          border-top: 4px solid #326891;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+        `;
+        
+        loadingDiv.appendChild(spinnerDiv);
+        document.body.appendChild(loadingDiv);
+        
+        // Safety cleanup after 8 seconds (shorter timeout)
+        loadingCleanupTimeout = setTimeout(() => {
+          hideLoadingState();
+        }, 8000);
+        
+      } catch (error) {
+        console.error('Error showing loading state:', error);
+        loadingStateActive = false;
+      }
+    }
+
+    function hideLoadingState() {
+      try {
+        loadingStateActive = false;
+        
+        // Clear cleanup timeout
+        if (loadingCleanupTimeout) {
+          clearTimeout(loadingCleanupTimeout);
+          loadingCleanupTimeout = null;
+        }
+        
+        // Single cleanup attempt - no need for multiple timeouts
+        const loadingDiv = document.getElementById('loadingIndicator');
+        if (loadingDiv && loadingDiv.parentNode) {
+          loadingDiv.parentNode.removeChild(loadingDiv);
+        }
+        
+      } catch (error) {
+        console.error('Error hiding loading state:', error);
+      }
+    }
+    
+    // Force cleanup on page visibility change
+    document.addEventListener('visibilitychange', function() {
+      if (document.visibilityState === 'visible') {
+        setTimeout(hideLoadingState, 100);
+      }
+    });
+    
+    // Force cleanup on page load
+    window.addEventListener('load', function() {
+      setTimeout(hideLoadingState, 500);
+    });
+    
+    // Force cleanup before page unload
+    window.addEventListener('beforeunload', function() {
+      hideLoadingState();
+    });
+
+    // Test if preview image is accessible
+    function testPreviewImage() {
+      const img = new Image();
+      img.onload = function() {
+        console.log('Preview image loaded successfully');
+      };
+      img.onerror = function() {
+        console.error('Preview image failed to load - check if https://punzzle.com/images/punzzle-preview.png is accessible');
+      };
+      img.src = 'https://punzzle.com/images/punzzle-preview.png';
+    }
+
+    // Dynamic meta tag updates for shared custom puzzles
+    function updateMetaTags(title, description) {
+      updateMetaTag('og:title', title, 'property');
+      updateMetaTag('og:description', description, 'property');
+      updateMetaTag('twitter:title', title, 'name');
+      updateMetaTag('twitter:description', description, 'name');
+      document.title = title;
+    }
+
+    function updateMetaTag(attribute, content, type = 'property') {
+      let meta = document.querySelector(`meta[${type}="${attribute}"]`);
+      if (meta) {
+        meta.setAttribute('content', content);
+      }
+    }
+
+    // Track link clicks to Firebase
+    async function trackLinkClick(linkText, linkType) {
+      try {
+        if (typeof db !== 'undefined' && db.collection) {
+          await db.collection('linkClicks').add({
+            linkText: linkText,
+            linkType: linkType,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            url: window.location.href,
+            puzzleId: gameState ? gameState.puzzleId : null
+          });
+        }
+      } catch (error) {
+        console.error('Error tracking link click:', error);
+      }
+    }
+
+    // Wait for DOM to be ready
+    document.addEventListener('DOMContentLoaded', function() {
+      // Cleanup any existing loading states
+      setTimeout(hideLoadingState, 100);
+      
+      // Global click tracking
+      document.addEventListener('click', function(e) {
+        if (typeof gtag === 'undefined') return;
+        
+        const link = e.target.closest('a');
+        const button = e.target.closest('button');
+        
+        if (link && link.href) {
+          const linkText = link.textContent.trim();
+          const linkHref = link.getAttribute('href');
+          
+          if (linkHref && linkHref !== '#' && !linkHref.startsWith('javascript:')) {
+            gtag('event', 'link_click', {
+              'event_category': 'navigation',
+              'event_label': linkText || linkHref
+            });
+            trackLinkClick(linkText || linkHref, 'link');
+          }
+        }
+        
+        if (button) {
+          const buttonText = button.textContent.trim();
+          const buttonId = button.id || button.className || 'unnamed_button';
+          
+          gtag('event', 'button_click', {
+            'event_category': 'interaction',
+            'event_label': buttonText || buttonId
+          });
+          
+          trackLinkClick(buttonText || buttonId, 'button');
+          
+          // Special tracking for game buttons
+          if (buttonText.includes('Random Letter')) {
+            gtag('event', 'feature_use', {
+              'event_category': 'gameplay',
+              'event_label': 'random_letter_button'
+            });
+          } else if (buttonText.includes('Random Word')) {
+            gtag('event', 'feature_use', {
+              'event_category': 'gameplay',
+              'event_label': 'random_word_button'
+            });
+          } else if (buttonText.includes('Hint') || buttonText.includes('Restart')) {
+            gtag('event', 'feature_use', {
+              'event_category': 'gameplay',
+              'event_label': 'hint_restart_button'
+            });
+          } else if (buttonText.includes('Play')) {
+            gtag('event', 'game_start', {
+              'event_category': 'gameplay',
+              'event_label': 'play_button'
+            });
+          } else if (buttonText.includes('Share')) {
+            gtag('event', 'social_share', {
+              'event_category': 'engagement',
+              'event_label': 'share_button'
+            });
+          } else if (buttonText.includes('More Punzzles')) {
+            gtag('event', 'more_puzzles', {
+              'event_category': 'engagement',
+              'event_label': 'more_puzzles_button'
+            });
+          }
+        }
+      });
+      
+      // Track mobile keyboard clicks
+      const mobileKeyboard = document.getElementById('mobileKeyboard');
+      if (mobileKeyboard) {
+        mobileKeyboard.addEventListener('click', function(e) {
+          const key = e.target.closest('.key-btn');
+          if (key && typeof gtag !== 'undefined') {
+            const keyText = key.textContent.trim();
+            gtag('event', 'mobile_keyboard', {
+              'event_category': 'interaction',
+              'event_label': keyText === '⌫' ? 'backspace' : 'letter_key'
+            });
+            trackLinkClick('Mobile Keyboard: ' + (keyText === '⌫' ? 'Backspace' : 'Letter'), 'keyboard');
+          }
+        });
+      }
+    });
+  </script>
+  
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      background-color: #fafafa;
+      color: #1a1a1a;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      overflow: hidden;
+    }
+    
+    body.modal-open {
+      overflow: hidden;
+    }
+
+    .content-blur {
+      pointer-events: none;
+    }
+    
+    .game-container {
+      background-color: #ffffff;
+      border: 1px solid #e5e5e5;
+      border-radius: 8px;
+      margin: 1rem;
+      padding: 1rem 1rem 0.75rem 1rem;
+      width: calc(100% - 2rem);
+      max-width: 500px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      min-height: 520px;
+      height: auto;
+      max-height: calc(100vh - 2rem);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .game-hidden {
+      display: none;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 0;
+      padding: 0.5rem 0;
+      flex-shrink: 0;
+    }
+    
+    .create-container .header {
+      position: static;
+      background-color: transparent;
+      z-index: auto;
+      padding: 0.5rem 0 1rem 0;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .header-title-group {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .header-logo {
+      width: 40px;
+      height: 40px;
+      object-fit: contain;
+      margin-bottom: 0.5rem;
+    }
+    
+    .create-container .header-logo {
+      width: 50px;
+      height: 50px;
+      display: block;
+      margin: 0 auto 0.75rem auto;
+    }
+    
+    .game-title {
+      font-family: 'Headland One', serif;
+      font-size: 2.1rem;
+      font-weight: 400;
+      margin: 0;
+      display: inline-block;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+    }
+    
+    #createContainer .game-title,
+    #feedbackContainer .game-title,
+    #faqContainer .game-title {
+      font-family: 'Headland One', serif;
+      font-weight: 400;
+      font-size: 2.1rem;
+      line-height: 1.2;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+    }
+
+    .date-display {
+      font-size: 0.875rem;
+      color: #666;
+      margin-top: 0.75rem;
+      margin-bottom: 0;
+      display: block;
+      visibility: visible;
+      opacity: 1;
+      text-align: center;
+    }
+    
+    .gameplay-example-section {
+      background-color: #f8fafc;
+      border: 1px solid #e5e5e5;
+      border-radius: 6px;
+      padding: 0.75rem 1rem 1rem 1rem;
+      text-align: center;
+      flex: 0 1 auto;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      margin-bottom: 0.5rem;
+      justify-content: center;
+    }
+
+    .category-text {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #326891;
+      padding: 0.75rem 1rem;
+      background-color: rgba(50, 104, 145, 0.1);
+      border: 1px solid rgba(50, 104, 145, 0.2);
+      border-radius: 6px;
+      text-transform: uppercase;
+      word-wrap: break-word;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      flex-shrink: 0;
+      text-align: center;
+    }
+    
+    .puzzle-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.25rem;
+      margin: 0.5rem 0;
+      padding: 0.5rem;
+      flex: 1;
+      justify-content: center;
+      min-height: 0;
+      overflow: hidden;
+    }
+    
+    .word-group {
+      display: flex;
+      gap: 0.25rem;
+      justify-content: center;
+      flex-wrap: nowrap;
+      max-width: 100%;
+      padding: 0.25rem;
+      margin: 0 auto;
+    }
+    
+    .tile {
+      width: clamp(32px, 6vw, 48px);
+      height: clamp(32px, 6vw, 48px);
+      background-color: #ffffff;
+      border: 2px solid #d3d6da;
+      border-radius: 4px;
+      font-size: clamp(0.8rem, 2vw, 1.2rem);
+      font-weight: 400;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+      text-transform: uppercase;
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .tile.revealed {
+      background-color: #326891;
+      border-color: #326891;
+      color: white;
+    }
+    
+    .tile.active {
+      border-color: #326891;
+      box-shadow: 0 0 0 2px rgba(50, 104, 145, 0.2);
+      background-color: #f0f7ff;
+    }
+    
+    .tile.user-filled {
+      background-color: #ffffff;
+      color: #1a1a1a;
+      border-color: #326891;
+    }
+    
+    .tile.hint-completed {
+      background-color: #f79009;
+      border-color: #f79009;
+      color: white;
+    }
+
+    .fox-popup {
+      position: absolute;
+      width: 80%;
+      height: 80%;
+      bottom: -100%;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      pointer-events: none;
+      transition: bottom 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+    
+    .fox-popup.active {
+      bottom: 0;
+    }
+    
+    .fox-popup img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .tiles-medium .tile {
+      width: clamp(28px, 5vw, 40px);
+      height: clamp(28px, 5vw, 40px);
+      font-size: clamp(0.7rem, 1.8vw, 1rem);
+    }
+    
+    .tiles-small .tile {
+      width: clamp(24px, 4vw, 32px);
+      height: clamp(24px, 4vw, 32px);
+      font-size: clamp(0.6rem, 1.5vw, 0.9rem);
+    }
+    
+    .progress-section {
+      margin-bottom: 0.75rem;
+      padding: 0.5rem 0;
+      flex-shrink: 0;
+    }
+    
+    .message-area {
+      min-height: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      margin-top: auto;
+      margin-bottom: 0.5rem;
+      flex-shrink: 0;
+      padding: 0.5rem;
+    }
+    
+    .message {
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin: 0;
+    }
+    
+    .message.success {
+      color: #00875a;
+    }
+    
+    .message.error {
+      color: #c9372c;
+    }
+    
+    .clue {
+      font-size: 0.8rem;
+      color: #666666;
+      font-style: italic;
+      margin-top: 0.25rem;
+      margin-bottom: 0;
+    }
+    
+    .score-display {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    
+    .score-label {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #666666;
+      flex: 1;
+      text-align: left;
+    }
+    
+    .score-value {
+      font-size: 1.125rem;
+      font-weight: 700;
+      flex: 1;
+      text-align: right;
+    }
+    
+    .score-value.negative {
+      color: #c9372c;
+    }
+    
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background-color: #e5e5e5;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background-color: #326891;
+      transition: width 0.3s ease-out;
+      border-radius: 3px;
+    }
+    
+    .key-popup {
+      position: fixed;
+      background-color: white;
+      border: 1px solid #d0d0d0;
+      border-radius: 8px;
+      padding: 12px 20px;
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: #333;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+      z-index: 1002;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateX(-50%) scale(0.5) translateY(10px);
+      transition: opacity 0.1s ease-out, transform 0.1s ease-out;
+      min-width: 56px;
+      text-align: center;
+      transform-origin: center bottom;
+    }
+    
+    .key-popup.active {
+      opacity: 1;
+      transform: scale(1) translateX(-50%);
+    }
+    
+    .key-popup::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 8px solid transparent;
+      border-right: 8px solid transparent;
+      border-top: 8px solid white;
+    }
+    
+    .key-popup::before {
+      content: '';
+      position: absolute;
+      bottom: -9px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 9px solid transparent;
+      border-right: 9px solid transparent;
+      border-top: 9px solid #d0d0d0;
+    }
+    
+    .controls-section {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0;
+      flex-shrink: 0;
+    }
+    
+    /* Desktop keyboard toggle button */
+    .desktop-keyboard-toggle {
+      display: none;
+      margin-top: 0.75rem;
+      text-align: center;
+    }
+    
+    @media (min-width: 769px) {
+      .desktop-keyboard-toggle {
+        display: block;
+      }
+      
+      /* Override max-height when keyboard is active */
+      body.desktop-keyboard-active .game-container {
+        max-height: none !important;
+        height: auto !important;
+      }
+    }
+    
+    .desktop-keyboard-toggle button {
+      background-color: #ffffff;
+      color: #666666;
+      border: 1px solid #d0d0d0;
+      padding: 0.5rem 1rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .desktop-keyboard-toggle button:hover {
+      background-color: #f8fafc;
+      color: #1a1a1a;
+    }
+    
+    /* Desktop keyboard styles */
+    .desktop-keyboard-wrapper {
+      display: none;
+      margin-top: 1rem;
+      padding: 0.75rem;
+      background-color: #fafafa;
+      border: 1px solid #e5e5e5;
+      border-radius: 6px;
+    }
+    
+    @media (min-width: 769px) {
+      body.desktop-keyboard-active .desktop-keyboard-wrapper {
+        display: block;
+      }
+      
+      .desktop-keyboard {
+        max-width: 500px;
+        margin: 0 auto;
+      }
+      
+      .desktop-keyboard .keyboard-row {
+        display: flex;
+        justify-content: center;
+        gap: 4px;
+        margin-bottom: 6px;
+      }
+      
+      .desktop-keyboard .keyboard-row:last-child {
+        margin-bottom: 0;
+      }
+      
+      .desktop-keyboard .key-btn {
+        background-color: white;
+        border: 1px solid #d0d0d0;
+        border-radius: 6px;
+        padding: 8px 12px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #333;
+        cursor: pointer;
+        transition: all 0.1s ease;
+        text-align: center;
+        user-select: none;
+        -webkit-user-select: none;
+        min-width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .desktop-keyboard .key-btn:hover {
+        background-color: #f0f0f0;
+        border-color: #326891;
+      }
+      
+      .desktop-keyboard .key-btn:active {
+        background-color: #e0e0e0;
+        transform: scale(0.95);
+      }
+      
+      .desktop-keyboard .key-btn.special {
+        background-color: #326891;
+        color: white;
+        border-color: #326891;
+        min-width: 60px;
+      }
+      
+      .desktop-keyboard .key-btn.special:hover {
+        background-color: #2c5a7a;
+      }
+      
+      .desktop-keyboard .key-btn.special:active {
+        background-color: #2a5a78;
+      }
+      
+      .desktop-keyboard .key-spacer {
+        width: 18px;
+      }
+    }
+    
+    .button {
+      display: inline-flex;
+
+      align-items: center;
+      justify-content: center;
+      padding: 0.75rem 1.5rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      border: 1px solid #d0d0d0;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      user-select: none;
+      min-height: 44px;
+      background-color: #ffffff;
+      color: #666666;
+      flex: 1;
+    }
+    
+    .button.hint-used {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+    
+    .button:hover {
+      background-color: #f8fafc;
+      color: #1a1a1a;
+
+    }
+    
+    .hamburger-menu {
+      position: fixed;
+      top: 1rem;
+      left: 1rem;
+      z-index: 2000;
+    }
+    
+    .hamburger-button {
+      background: white;
+      border: none;
+      border-radius: 6px;
+      width: 44px;
+      height: 44px;
+      padding: 8px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s ease;
+    }
+    
+    .hamburger-button:hover {
+      background-color: #f8fafc;
+    }
+    
+    .hamburger-button.active {
+      background-color: white;
+    }
+    
+    .hamburger-line {
+      width: 20px;
+      height: 2px;
+      background-color: #666;
+      transition: all 0.2s ease;
+    }
+    
+    .hamburger-button.active .hamburger-line {
+      background-color: #326891;
+    }
+    
+    .hamburger-button.active .hamburger-line:nth-child(1) {
+      transform: rotate(45deg) translate(5px, 5px);
+    }
+    
+    .hamburger-button.active .hamburger-line:nth-child(2) {
+      opacity: 0;
+    }
+    
+    .hamburger-button.active .hamburger-line:nth-child(3) {
+      transform: rotate(-45deg) translate(7px, -6px);
+    }
+    
+    .hamburger-dropdown {
+      position: absolute;
+      top: 52px;
+      left: 0;
+      background: white;
+      border: 1px solid #d0d0d0;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      min-width: 160px;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      transition: all 0.2s ease;
+    }
+    
+    .hamburger-dropdown.active {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+    
+    .hamburger-dropdown a {
+      display: block;
+      padding: 0.75rem 1rem;
+      color: #1a1a1a;
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      border-bottom: 1px solid #f0f0f0;
+      transition: background-color 0.2s ease;
+    }
+    
+    .hamburger-dropdown a:last-child {
+      border-bottom: none;
+    }
+    
+    .hamburger-dropdown a:hover {
+      background-color: #f8fafc;
+      color: #326891;
+    }
+    
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      padding: 1rem;
+    }
+    
+    .modal {
+      background-color: #ffffff;
+      border: 1px solid #e5e5e5;
+      border-radius: 8px;
+      width: 100%;
+      max-width: 400px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 2rem;
+      text-align: center;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .modal-title {
+      font-family: 'Headland One', serif;
+      font-weight: 400;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      margin-top: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    .modal-content p {
+      color: #666666;
+      line-height: 1.3;
+      margin-bottom: 1.5rem;
+    }
+    
+    .desktop-break {
+      display: none;
+    }
+    
+    @media (min-width: 769px) {
+      .desktop-break {
+        display: block;
+      }
+    }
+    
+    .example-section {
+      background-color: #f8fafc;
+      border: 1px solid #e5e5e5;
+      border-radius: 6px;
+      padding: 1.25rem;
+      margin: 1rem 0;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 140px;
+    }
+    
+    .example-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .example-categories {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #326891;
+      margin-bottom: 0.75rem;
+      padding: 0.4rem 0.6rem;
+      background-color: rgba(50, 104, 145, 0.1);
+      border: 1px solid rgba(50, 104, 145, 0.2);
+      border-radius: 4px;
+      display: inline-block;
+      text-transform: uppercase;
+    }
+    
+    .example-puzzle {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0;
+    }
+    
+    .example-word {
+      display: flex;
+      gap: 0.3rem;
+      justify-content: center;
+    }
+    
+    .example-tile {
+      width: 28px;
+      height: 28px;
+      background-color: #326891;
+      color: white;
+      border: 1px solid #326891;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .modal-button {
+      background-color: #326891;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      min-width: 100px;
+      margin: 0.5rem;
+      flex: 1;
+    }
+    
+    
+    .modal-button:hover {
+      background-color: #2c5a7a;
+    }
+    
+    .modal-button:active {
+      background-color: #1e3a52;
+      transform: translateY(1px);
+    }
+    
+    body:has(#startModal[style*="display: flex"]) .hamburger-menu,
+    body:has(#scoreCard[style*="display: flex"]) .hamburger-menu,
+    body:has(.create-wrapper.active) .hamburger-menu,
+    body:has(#feedbackWrapper.active) .hamburger-menu,
+    body:has(#faqWrapper.active) .hamburger-menu {
+      display: none !important;
+    }
+    
+    .logo {
+      width: 60px;
+      height: 60px;
+      object-fit: contain;
+    }
+    
+    .scorecard-logo-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 0;
+      margin-top: -0.5rem;
+    }
+    
+    .scorecard-logo {
+      width: 50px;
+      height: 50px;
+      object-fit: contain;
+      margin-bottom: 0.5rem;
+    }
+    
+    .scorecard-url {
+      font-family: 'Headland One', serif;
+      font-size: 0.875rem;
+      color: #1a1a1a;
+      margin-bottom: 0;
+      font-weight: 400;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+    }
+    
+    .create-wrapper {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      overflow-y: auto;
+      z-index: 2000;
+      display: none;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 2rem 1rem;
+    }
+    
+    .create-wrapper.active {
+      display: flex;
+    }
+    
+    .create-container {
+      background-color: #ffffff;
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      position: relative;
+      max-height: calc(100vh - 4rem);
+      overflow-y: auto;
+      margin-top: 0;
+    }
+    
+    .create-close-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #666;
+      z-index: 10;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+    }
+    
+    .create-close-btn:hover {
+      background-color: #f0f0f0;
+      color: #333;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 0.5rem;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #d0d0d0;
+      border-radius: 6px;
+      font-size: 1rem;
+      background-color: #ffffff;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #326891;
+      box-shadow: 0 0 0 2px rgba(50, 104, 145, 0.2);
+    }
+    
+    .form-input:hover {
+      border-color: #94a3b8;
+    }
+    
+    .form-select {
+      width: 100%;
+      padding: 0.75rem 2.5rem 0.75rem 0.75rem;
+      border: 1px solid #d0d0d0;
+      border-radius: 6px;
+      font-size: 1rem;
+      background-color: #ffffff;
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+      background-position: right 0.75rem center;
+      background-repeat: no-repeat;
+      background-size: 1.25rem;
+      appearance: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .form-select:focus {
+      outline: none;
+      border-color: #326891;
+      box-shadow: 0 0 0 2px rgba(50, 104, 145, 0.2);
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23326891' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    }
+    
+    .form-select:hover {
+      border-color: #94a3b8;
+    }
+    
+    .form-select option {
+      padding: 0.5rem;
+      background-color: #ffffff;
+      color: #1a1a1a;
+    }
+
+    .word-inputs {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .word-input-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .word-input {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #d0d0d0;
+      border-radius: 6px;
+      font-size: 1rem;
+      background-color: #ffffff;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+    
+    .word-input:focus {
+      outline: none;
+      border-color: #326891;
+      box-shadow: 0 0 0 2px rgba(50, 104, 145, 0.2);
+    }
+    
+    .word-input:hover {
+      border-color: #94a3b8;
+    }
+
+    .word-buttons-container {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .remove-word-btn {
+      background-color: #c9372c;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    .remove-word-btn:hover {
+      background-color: #a02e24;
+    }
+
+    .remove-word-btn:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+
+    .add-word-btn {
+      background-color: #326891;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    .add-word-btn:hover {
+      background-color: #2c5a7a;
+    }
+
+    .add-word-btn:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+
+    .random-category-btn {
+      background-color: #326891;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      display: inline-block;
+      width: auto;
+      min-width: auto;
+    }
+
+    .random-category-btn:hover {
+      background-color: #2c5a7a;
+    }
+
+    .create-actions {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+      margin-top: 2rem;
+    }
+
+    .create-actions .create-btn {
+      flex: 0 0 auto;
+      min-width: 100px;
+    }
+
+    .create-btn {
+      background-color: #326891;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      min-width: 100px;
+      transition: background-color 0.2s ease;
+    }
+
+    .create-btn:hover {
+      background-color: #2c5a7a;
+    }
+
+    .create-btn:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+
+    .cancel-btn {
+      background-color: #ffffff;
+      color: #666666;
+      border: 1px solid #d0d0d0;
+      padding: 0.75rem 1.5rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      min-width: 120px;
+    }
+
+    .cancel-btn:hover {
+      background-color: #f8fafc;
+      color: #1a1a1a;
+    }
+
+    .error-message {
+      color: #c9372c;
+      font-size: 0.875rem;
+      margin-top: 0.5rem;
+      display: none;
+    }
+
+    .preview-section {
+      background-color: #f8fafc;
+      border: 1px solid #e5e5e5;
+      border-radius: 6px;
+      padding: 1rem;
+      margin-top: 1rem;
+      display: none;
+    }
+
+    .preview-section.active {
+      display: block;
+    }
+
+    .preview-title {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #666666;
+      margin-bottom: 0.75rem;
+      text-align: center;
+    }
+
+    .preview-categories {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #326891;
+      margin-bottom: 0.75rem;
+      padding: 0.4rem 0.6rem;
+      background-color: rgba(50, 104, 145, 0.1);
+      border: 1px solid rgba(50, 104, 145, 0.2);
+      border-radius: 4px;
+      display: inline-block;
+      text-transform: uppercase;
+      text-align: center;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .preview-puzzle {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .preview-word {
+      display: flex;
+      gap: 0.25rem;
+      justify-content: center;
+    }
+
+    .preview-tile {
+      width: 24px;
+      height: 24px;
+      background-color: #326891;
+      color: white;
+      border: 1px solid #326891;
+      border-radius: 3px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .share-url-input {
+      display: none;
+    }
+
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #326891;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .copyright-footer {
+      display: none; /* Hidden by default (mobile) */
+    }
+
+    /* Desktop-specific styles */
+    @media (min-width: 769px) {
+      .game-container {
+        max-height: 700px;
+        height: auto;
+      }
+      
+      .gameplay-example-section {
+        max-height: 600px;
+        padding: 1.5rem 1.5rem 1.75rem 1.5rem;
+        margin-bottom: 1rem;
+      }
+      
+      .puzzle-container {
+        gap: 0.5rem;
+        margin: 1rem 0;
+        padding: 1rem;
+      }
+      
+      .copyright-footer {
+        display: block;
+        position: fixed;
+        bottom: 1rem;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 0.75rem;
+        color: #666;
+        text-align: center;
+        z-index: 100;
+        pointer-events: none;
+      }
+      
+      /* Desktop: Hide mobile elements completely */
+      .fixed-bottom-section,
+      .mobile-keyboard {
+        display: none !important;
+      }
+      
+      /* Desktop: Always show controls */
+      .game-container .progress-section,
+      .game-container .controls-section {
+        display: flex !important;
+      }
+      
+      .game-container .progress-section {
+        display: block !important;
+      }
+    }
+
+    /* Mobile-specific styles - ENHANCED FOR PROPER MOBILE SUPPORT */
+    @media (max-width: 768px) {
+      body {
+        height: 100vh !important;
+        overflow: hidden !important;
+      }
+      
+      .hamburger-menu {
+        top: 0.5rem !important;
+        left: 0.5rem !important;
+      }
+      
+      .header {
+        padding-left: 3rem !important;
+        padding: 0.5rem 0 !important;
+        margin-bottom: 0.5rem !important;
+        flex-shrink: 0 !important;
+      }
+      
+      .date-display {
+        padding-left: 2.5rem !important;
+        margin-left: -2.5rem !important;
+        text-align: center !important;
+      }
+      
+      .game-container {
+        margin: 0 !important;
+        padding: 0.5rem !important;
+        border: none !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        width: 100% !important;
+        max-width: none !important;
+        background-color: #ffffff !important;
+        display: flex !important;
+        flex-direction: column !important;
+        min-height: 100vh !important;
+      }
+      
+      /* When game is not active */
+      body:not(.game-active) .game-container {
+        height: 100vh !important;
+        overflow-y: auto !important;
+      }
+      
+      /* Mobile gameplay section */
+      .gameplay-example-section {
+        flex: 1 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        padding: 0.5rem !important;
+        min-height: 200px !important;
+        overflow: visible !important;
+      }
+      
+      /* Mobile puzzle container */
+      .puzzle-container {
+        flex: 1 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        align-items: center !important;
+        gap: 0.5rem !important;
+        padding: 1rem 0 !important;
+      }
+      
+      /* Mobile tiles */
+      .tile {
+        width: 40px !important;
+        height: 40px !important;
+        font-size: 1rem !important;
+      }
+      
+      .tiles-medium .tile {
+        width: 36px !important;
+        height: 36px !important;
+        font-size: 0.9rem !important;
+      }
+      
+      .tiles-small .tile {
+        width: 32px !important;
+        height: 32px !important;
+        font-size: 0.8rem !important;
+      }
+      
+      /* Mobile message area */
+      .message-area {
+        display: none !important;
+      }
+      
+      /* Mobile inline message */
+      .mobile-inline-message {
+        display: block !important;
+        font-size: 0.75rem !important;
+        font-weight: 600 !important;
+        color: #666 !important;
+        text-align: center !important;
+        flex: 1 !important;
+        padding: 0 0.5rem !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+      }
+      
+      .mobile-inline-message.success {
+        color: #00875a !important;
+      }
+      
+      .mobile-inline-message.error {
+        color: #c9372c !important;
+      }
+      
+      /* Hide desktop score elements on mobile */
+      #scoreValue,
+      #progressFill,
+      #hintRestartBtn {
+        display: none !important;
+      }
+      
+      /* Show mobile score elements */
+      #mobileScoreValue,
+      #mobileProgressFill,
+      #mobileHintRestartBtn {
+        display: block !important;
+      }
+      
+      /* Create form adjustments for mobile */
+      .create-container {
+        width: 100%;
+        padding: 1.5rem 1rem;
+        margin: 0;
+        margin-top: 0;
+        max-height: calc(100vh - 2rem);
+        border-radius: 8px;
+      }
+      
+      #createContainer .game-title,
+      #feedbackContainer .game-title,
+      #faqContainer .game-title,
+      .modal-title,
+      .scorecard-title {
+        font-size: 2.1rem;
+      }
+      
+      .create-close-btn {
+        top: 6px;
+        right: 6px;
+      }
+      
+      .form-select {
+        font-size: 16px;
+        padding: 0.75rem 2.5rem 0.75rem 0.75rem;
+      }
+      
+      .form-input {
+        font-size: 16px;
+      }
+      
+      .word-input {
+        font-size: 16px;
+      }
+      
+      .create-container .header {
+        padding: 0.5rem 0;
+      }
+      
+      .create-container .header-logo {
+        display: block;
+        width: 45px;
+        height: 45px;
+        margin: 0 auto 0.5rem auto;
+      }
+
+      .create-actions {
+        display: flex;
+        gap: 0.25rem;
+        justify-content: center;
+        margin-top: 1rem;
+      }
+
+      .create-actions .create-btn {
+        flex: 1;
+        min-width: 70px;
+        padding: 0.75rem 0.5rem;
+        font-size: 0.8rem;
+      }
+      
+      #morePunzzlesContent {
+        padding: 2rem 1rem !important;
+      }
+      
+      .modal-button {
+        font-size: 0.8rem !important;
+      }
+    }
+
+    /* CRITICAL MOBILE STYLES FOR GAME ACTIVE STATE */
+    .fixed-bottom-section {
+      position: fixed;
+      bottom: 145px;
+      left: 0;
+      right: 0;
+      background-color: white;
+      padding: 0.75rem 1rem;
+      z-index: 200;
+      display: none;
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.0);
+      height: 120px;
+    }
+    
+    .mobile-keyboard {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      width: 100%;
+      background-color: #fafafa;
+      padding: 8px;
+      z-index: 500;
+      display: none;
+      border-top: 1px solid #ffffff;
+    }
+
+    /* Mobile: Show mobile elements when game is active */
+    @media (max-width: 768px) {
+      /* When game is active - show mobile controls and adjust height */
+      body.game-active .game-container {
+        height: calc(100vh - 284px) !important;
+        overflow-y: auto !important;
+      }
+      
+      body.game-active .fixed-bottom-section {
+        display: block !important;
+      }
+      
+      body.game-active .mobile-keyboard {
+        display: block !important;
+      }
+      
+      /* Hide desktop controls on mobile when game is active */
+      body.game-active .game-container .progress-section,
+      body.game-active .game-container .controls-section {
+        display: none !important;
+      }
+      
+      /* Fixed bottom section styling */
+      .fixed-bottom-section .progress-section {
+        margin-bottom: 0.75rem;
+        padding: 0;
+        margin-top: 0;
+      }
+      
+      .fixed-bottom-section .score-display {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+        gap: 0.25rem;
+      }
+      
+      .fixed-bottom-section .score-label {
+        flex: 0 0 auto;
+        text-align: left;
+        min-width: 40px;
+      }
+      
+      .fixed-bottom-section .score-value {
+        flex: 0 0 auto;
+        text-align: right;
+        min-width: 25px;
+      }
+      }
+
+      .fixed-bottom-section .controls-section {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 0;
+      }
+      
+      /* Mobile keyboard styling */
+      .keyboard-row {
+        display: flex;
+        justify-content: center;
+        gap: 4px;
+        margin-bottom: 6px;
+      }
+
+      .keyboard-row:last-child {
+        margin-bottom: 0;
+      }
+
+      .key-btn {
+        background-color: white;
+        border: 1px solid #d0d0d0;
+        border-radius: 6px;
+        padding: 8px 4px;
+        font-size: clamp(0.8rem, 2.2vw, 1rem);
+        font-weight: 600;
+        color: #333;
+        cursor: pointer;
+        transition: all 0.1s ease;
+        text-align: center;
+        user-select: none;
+        -webkit-user-select: none;
+        flex: 1;
+        min-width: 0;
+        position: relative;
+        transform: scale(1);
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .key-btn.pressed {
+        background-color: #e0e0e0;
+        transform: scale(0.95);
+      }
+      
+      .key-btn.special {
+        background-color: #326891;
+        color: white;
+        border-color: #326891;
+        flex: 1.5;
+        font-size: clamp(0.7rem, 2vw, 0.9rem);
+      }
+
+      .key-btn.special.pressed {
+        background-color: #2a5a78;
+      }
+      
+      .key-spacer {
+        flex: 0.5;
+        max-width: 18px;
+      }
+      
+      /* Make mobile control buttons smaller */
+      .fixed-bottom-section .button {
+        font-size: 0.65rem !important;
+        padding: 0.4rem 0.5rem !important;
+        min-height: 32px !important;
+        line-height: 1.2 !important;
+      }
+    }
+
+    /* Additional mobile styles for better compatibility */
+    @media (max-width: 768px) {
+      body.custom-preview .game-title {
+        font-size: 1.5rem !important;
+        margin: 0 !important;
+      }
+      
+      body.custom-preview .date-display {
+        font-size: 0.75rem !important;
+        margin: 0 !important;
+      }
+      
+      body.custom-preview .fixed-bottom-section,
+      body.custom-preview .mobile-keyboard {
+        display: none !important;
+      }
+      
+      body.custom-preview .gameplay-example-section {
+        height: 100%;
+        overflow-y: auto;
+      }
+      
+      /* Ensure header stays at top on preview */
+      body.custom-preview .header {
+        position: sticky !important;
+        top: 0 !important;
+        background-color: #ffffff !important;
+        z-index: 100 !important;
+        border-bottom: 1px solid #e5e5e5 !important;
+        margin-bottom: 0.5rem !important;
+      }
+      
+      body.custom-preview .game-container {
+        padding-top: 0 !important;
+        overflow-y: auto !important;
+      }
+    }
+
+    .create-container,
+    #createContainer,
+    #feedbackContainer,
+    #faqContainer {
+      -webkit-overflow-scrolling: touch;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
+
+    /* Only add padding when these are actually modal dialogs */
+    .create-wrapper.active .create-container,
+    #feedbackWrapper.active #feedbackContainer,
+    #faqWrapper.active #faqContainer {
+      /* Add some padding at top/bottom for easier scrolling */
+      padding-top: 3rem;
+      padding-bottom: 6rem;
+    }
+  </style>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      let keyPopup = null;
+      let activeKey = null;
+      
+      // Only cleanup if we're sure content is ready
+      setTimeout(() => {
+        if (document.readyState === 'complete') {
+          hideLoadingState();
+        }
+      }, 300);
+      
+      function createKeyPopup() {
+        keyPopup = document.createElement('div');
+        keyPopup.className = 'key-popup';
+        document.body.appendChild(keyPopup);
+      }
+      
+      function showKeyPopup(keyElement) {
+        if (!keyPopup) createKeyPopup();
+        
+        const keyText = keyElement.textContent.trim();
+        const keyRect = keyElement.getBoundingClientRect();
+        
+        keyPopup.textContent = keyText;
+        keyPopup.style.left = (keyRect.left + keyRect.width / 2) + 'px';
+        keyPopup.style.top = (keyRect.top - 40) + 'px';
+        
+        keyElement.classList.add('pressed');
+        keyPopup.classList.add('active');
+        
+        activeKey = keyElement;
+      }
+      
+      function hideKeyPopup() {
+        if (activeKey) {
+          activeKey.classList.remove('pressed');
+        }
+        if (keyPopup) {
+          keyPopup.classList.remove('active');
+        }
+        activeKey = null;
+      }
+      
+      const keyButtons = document.querySelectorAll('.key-btn');
+      
+      keyButtons.forEach(button => {
+        button.addEventListener('touchstart', function(e) {
+          e.preventDefault();
+          showKeyPopup(this);
+        }, { passive: false });
+        
+        button.addEventListener('touchend', function(e) {
+          e.preventDefault();
+          hideKeyPopup();
+          const keyValue = this.textContent.trim() === '⌫' ? 'Backspace' : this.textContent.trim();
+          handleKey(keyValue);
+        }, { passive: false });
+      });
+    });
+  </script>
+</head>
+<body>
+  <!-- Hamburger Menu -->
+  <div id="hamburgerMenu" class="hamburger-menu">
+    <button id="hamburgerButton" class="hamburger-button" onclick="toggleHamburgerMenu()">
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
+    </button>
+    <div id="hamburgerDropdown" class="hamburger-dropdown">
+      <a href="#" onclick="showMakeYourOwn(); closeHamburgerMenu(); return false;">Make Your Own</a>
+      <a href="#" onclick="showFAQ(); closeHamburgerMenu(); return false;">FAQ</a>
+      <a href="#" onclick="showFeedbackForm(); closeHamburgerMenu(); return false;">Contact</a>
+    </div>
+  </div>
+
+  <!-- Start Modal -->
+  <div id="startModal" class="modal-overlay" style="display: none;">
+    <div class="modal">
+      <div class="logo-container">
+        <a href="/" style="text-decoration: none;">
+          <img src="https://punzzle.com/images/foxholefox.png" alt="Punzzle Fox" class="logo">
+        </a>
+      </div>
+      <h2 class="modal-title"><a href="/" style="text-decoration: none; color: inherit;">Punzzle</a></h2>
+      <div class="modal-content">
+        <p>Find the pun that connects the categories. <br class="desktop-break"><em>For example:</em></p>
+        
+        <div class="example-section">
+          <div class="example-content">
+            <div class="example-categories">
+              <strong>POP STARS + CONDIMENTS</strong>
+            </div>
+            
+            <div class="example-puzzle">
+              <div class="example-word">
+                <div class="example-tile">C</div>
+                <div class="example-tile">E</div>
+                <div class="example-tile">L</div>
+                <div class="example-tile">I</div>
+                <div class="example-tile">N</div>
+                <div class="example-tile">E</div>
+              </div>
+              <div class="example-word">
+                <div class="example-tile">D</div>
+                <div class="example-tile">I</div>
+                <div class="example-tile">J</div>
+                <div class="example-tile">O</div>
+                <div class="example-tile">N</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <button class="modal-button" onclick="startGame()">Play</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Score Card Modal -->
+  <div id="scoreCard" style="display: none;" class="modal-overlay">
+    <div class="modal" style="position: relative;">
+      <button onclick="closeScoreModal()" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 24px; cursor: pointer; color: #666; z-index: 10; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 4px; transition: all 0.2s ease;" onmouseover="this.style.backgroundColor='#f0f0f0'; this.style.color='#333';" onmouseout="this.style.backgroundColor='transparent'; this.style.color='#666';">&times;</button>
+      <div class="scorecard-logo-container">
+        <a href="/" style="text-decoration: none;">
+          <img src="https://punzzle.com/images/foxholefox.png" alt="Punzzle Fox" class="scorecard-logo">
+        </a>
+        <div class="scorecard-url"><a href="/" style="text-decoration: none; color: inherit;">Punzzle.com</a></div>
+      </div>
+      <h2 class="modal-title scorecard-title" id="scoreCardTitle" style="margin-top: 0; margin-bottom: 1rem; position: relative; z-index: 10;">You got it!</h2>
+
+      <div class="modal-content" style="margin-top: 1rem;">
+        <div style="background-color: #f8fafc; border: 1px solid #e5e5e5; border-radius: 6px; padding: 1rem; margin: 1rem 0; display: flex; justify-content: center; align-items: center;" id="categoryContainer">
+          <div style="font-size: 0.875rem; font-weight: 600; color: #326891; margin-bottom: 0;" id="scoreCardCategories">
+            ACTORS + VEGETABLES
+          </div>
+        </div>
+        
+        <div style="background-color: #fafafa; border: 1px solid #e5e5e5; padding: 1rem; border-radius: 6px; margin: 1rem 0;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <span style="font-size: 0.875rem; color: #666;">Starting points</span>
+            <span style="font-size: 0.875rem; font-weight: 600;">10</span>
+          </div>
+          <div id="penaltiesContainer"></div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #d0d0d0;">
+            <span style="font-size: 1rem; font-weight: 700;">Final score</span>
+            <span style="font-size: 1rem; font-weight: 700;" id="finalScoreDisplay">10</span>
+          </div>
+        </div>
+        
+        <div style="display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 1rem;">
+            <button class="modal-button" onclick="showMakeYourOwn()">Make your own</button>
+          <button class="modal-button" onclick="shareCompletedPuzzle()">Share</button>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+
+  <!-- Make Your Own Container -->
+  <div class="create-wrapper" id="createWrapper" onclick="closeCreateModal(event)">
+    <div class="create-container" id="createContainer" onclick="event.stopPropagation()">
+      <button class="create-close-btn" onclick="showMainGame()" title="Close">&times;</button>
+      <div class="header">
+        <a href="/" style="text-decoration: none;">
+          <img src="https://punzzle.com/images/foxholefox.png" alt="Punzzle Fox" class="header-logo">
+        </a>
+        <h1 class="game-title">Make Your Own <a href="/" style="text-decoration: none; color: inherit;">Punzzle</a></h1>
+      </div>
+
+      <form id="createForm" onsubmit="return false;">
+        <div class="form-group">
+          <label class="form-label">Categories</label>
+          <div style="display: flex; flex-direction: column; gap: 0;">
+            <input type="text" id="category1Input" class="form-input" placeholder="First category (e.g., ACTORS)" maxlength="25" required>
+            <div style="margin-top: 0.5rem; margin-bottom: 1.5rem;"><button type="button" class="random-category-btn" onclick="randomizeCategory(1)">Random Category</button></div>
+            <input type="text" id="category2Input" class="form-input" placeholder="Second category (e.g., VEGETABLES)" maxlength="25" required>
+            <div style="margin-top: 0.5rem;"><button type="button" class="random-category-btn" onclick="randomizeCategory(2)">Random Category</button></div>
+          </div>
+          <div class="error-message" id="categoriesError"></div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Answer Words</label>
+          <div class="word-inputs" id="wordInputs">
+            <div class="word-input-group">
+              <input type="text" class="word-input" placeholder="First word" maxlength="12" required>
+            </div>
+            <div class="word-input-group">
+              <input type="text" class="word-input" placeholder="Second word" maxlength="12" required>
+            </div>
+          </div>
+          <div class="word-buttons-container">
+            <button type="button" class="add-word-btn" id="addWordBtn" onclick="addWordInput()">Add Word</button>
+            <button type="button" class="remove-word-btn" id="removeWordBtn" onclick="removeLastWord()" disabled>Remove Word</button>
+          </div>
+          <div class="error-message" id="wordsError"></div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Hint (Optional)</label>
+          <input type="text" id="hintInput" class="form-input" placeholder="e.g., A former child star" maxlength="50">
+        </div>
+
+        <div class="preview-section" id="previewSection">
+          <div class="preview-title">View</div>
+          <div class="preview-categories" id="previewCategories"></div>
+          <div class="preview-puzzle" id="previewPuzzle"></div>
+        </div>
+
+        <input type="text" class="share-url-input" id="shareUrlInput" readonly>
+
+        <div class="create-actions">
+          <button type="submit" class="create-btn" id="createBtn" disabled>Preview</button>
+          <button type="button" class="create-btn" onclick="shareCreatedPuzzle()" disabled id="shareBtn" style="opacity: 0.5; cursor: not-allowed;">Share</button>
+          <button type="button" class="create-btn" id="copyBtn" onclick="copyPuzzleUrl()" disabled style="opacity: 0.5; cursor: not-allowed;">Copy Link</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Feedback Form Container -->
+  <div class="create-wrapper" id="feedbackWrapper" onclick="closeFeedbackModal(event)">
+    <div class="create-container" id="feedbackContainer" onclick="event.stopPropagation()">
+      <button class="create-close-btn" onclick="closeFeedbackForm()">&times;</button>
+      <div class="header">
+        <a href="/" style="text-decoration: none;">
+          <img src="https://punzzle.com/images/foxholefox.png" alt="Punzzle Fox" class="header-logo">
+        </a>
+        <h1 class="game-title">Share Your Thoughts</h1>
+      </div>
+
+      <form id="feedbackForm" action="https://api.web3forms.com/submit" method="POST" onsubmit="handleFeedbackSubmit(event)">
+        <input type="hidden" name="access_key" value="350548ad-cde7-4679-b820-28458547077d">
+        <input type="hidden" name="subject" value="New Punzzle Contact Form Submission">
+        
+        <div class="form-group">
+          <label class="form-label" for="userName">Name</label>
+          <input type="text" id="userName" name="name" class="form-input" placeholder="Your name" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="userEmail">Email</label>
+          <input type="email" id="userEmail" name="email" class="form-input" placeholder="your@email.com" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="category">Category</label>
+          <select id="category" name="category" class="form-select" required>
+            <option value="">Select a category</option>
+            <option value="Question">Question</option>
+            <option value="Feedback">Feedback</option>
+            <option value="Suggestion">Suggestion</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="message">Message</label>
+          <textarea id="message" name="message" class="form-input" rows="6" placeholder="Share your thoughts..." required style="resize: vertical; min-height: 120px; width: 100%; font-family: inherit;"></textarea>
+        </div>
+
+        <div class="create-actions">
+          <button type="button" class="cancel-btn" onclick="closeFeedbackForm()">Cancel</button>
+          <button type="submit" class="create-btn">Send</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- FAQ Container -->
+  <div class="create-wrapper" id="faqWrapper" onclick="closeFAQModal(event)">
+    <div class="create-container" id="faqContainer" onclick="event.stopPropagation()">
+      <button class="create-close-btn" onclick="closeFAQ()">&times;</button>
+      <div class="header">
+        <a href="/" style="text-decoration: none;">
+          <img src="https://punzzle.com/images/foxholefox.png" alt="Punzzle Fox" class="header-logo">
+        </a>
+        <h1 class="game-title">FAQ</h1>
+      </div>
+
+      <div style="margin-top: 2rem; text-align: center;">
+        <div class="form-group">
+          <p style="font-weight: 600; color: #1a1a1a; margin-bottom: 0.5rem;">Q: What's the Fox's name?</p>
+          <p style="color: #666; margin-bottom: 0;">A: Oliver.</p>
+        </div>
+      </div>
+      <div class="create-actions" style="margin-top: 3rem;">
+        <button type="button" class="create-btn" onclick="closeFAQ()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="game-container game-hidden" id="gameContainer">
+    <div class="header">
+      <div class="header-title-group">
+        <h1 class="game-title">
+          <a href="/" style="text-decoration: none; color: inherit;">Punzzle</a>
+        </h1>
+      </div>
+      <div class="date-display" id="dateDisplay">
+        <a href="?skipIntro=true">Today's Puzzle</a> · Loading...
+      </div>
+    </div>
+    
+    <div class="category-section">
+      <div class="gameplay-example-section">
+        <div class="category-text" id="categoryText">ACTORS + VEGETABLES</div>
+        <div class="puzzle-container" id="puzzleContainer"></div>
+        <div class="message-area">
+          <div id="message" class="message">&nbsp;</div>
+          <div id="clue" class="clue">&nbsp;</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="progress-section">
+      <div class="score-display">
+        <span class="score-label">Score</span>
+        <span class="score-value" id="scoreValue">10</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+    </div>
+    
+    <div class="controls-section">
+      <button onclick="revealRandomLetter()" class="button">Random Letter (-1)</button>
+      <button onclick="revealRandomWord()" class="button">Random Word (-5)</button>
+      <button onclick="handleHintOrRestart()" class="button" id="hintRestartBtn">Hint (-3)</button>
+    </div>
+    
+    <!-- Desktop keyboard toggle -->
+    <div class="desktop-keyboard-toggle">
+      <button onclick="toggleDesktopKeyboard()" id="desktopKeyboardToggle">Show Keyboard</button>
+    </div>
+    
+    <!-- Desktop keyboard -->
+    <div class="desktop-keyboard-wrapper">
+      <div class="desktop-keyboard">
+        <div class="keyboard-row">
+          <button class="key-btn" onclick="handleDesktopKey('Q')">Q</button>
+          <button class="key-btn" onclick="handleDesktopKey('W')">W</button>
+          <button class="key-btn" onclick="handleDesktopKey('E')">E</button>
+          <button class="key-btn" onclick="handleDesktopKey('R')">R</button>
+          <button class="key-btn" onclick="handleDesktopKey('T')">T</button>
+          <button class="key-btn" onclick="handleDesktopKey('Y')">Y</button>
+          <button class="key-btn" onclick="handleDesktopKey('U')">U</button>
+          <button class="key-btn" onclick="handleDesktopKey('I')">I</button>
+          <button class="key-btn" onclick="handleDesktopKey('O')">O</button>
+          <button class="key-btn" onclick="handleDesktopKey('P')">P</button>
+        </div>
+        <div class="keyboard-row">
+          <div class="key-spacer"></div>
+          <button class="key-btn" onclick="handleDesktopKey('A')">A</button>
+          <button class="key-btn" onclick="handleDesktopKey('S')">S</button>
+          <button class="key-btn" onclick="handleDesktopKey('D')">D</button>
+          <button class="key-btn" onclick="handleDesktopKey('F')">F</button>
+          <button class="key-btn" onclick="handleDesktopKey('G')">G</button>
+          <button class="key-btn" onclick="handleDesktopKey('H')">H</button>
+          <button class="key-btn" onclick="handleDesktopKey('J')">J</button>
+          <button class="key-btn" onclick="handleDesktopKey('K')">K</button>
+          <button class="key-btn" onclick="handleDesktopKey('L')">L</button>
+          <div class="key-spacer"></div>
+        </div>
+        <div class="keyboard-row">
+          <div class="key-spacer"></div>
+          <button class="key-btn" onclick="handleDesktopKey('Z')">Z</button>
+          <button class="key-btn" onclick="handleDesktopKey('X')">X</button>
+          <button class="key-btn" onclick="handleDesktopKey('C')">C</button>
+          <button class="key-btn" onclick="handleDesktopKey('V')">V</button>
+          <button class="key-btn" onclick="handleDesktopKey('B')">B</button>
+          <button class="key-btn" onclick="handleDesktopKey('N')">N</button>
+          <button class="key-btn" onclick="handleDesktopKey('M')">M</button>
+          <button class="key-btn special" onclick="handleDesktopKey('Backspace')">⌫</button>
+          <div class="key-spacer"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fixed Bottom Section for Mobile -->
+
+  <div class="fixed-bottom-section" id="fixedBottomSection">
+    <div class="progress-section">
+      <div class="score-display">
+        <span class="score-label">Score</span>
+        <span class="mobile-inline-message" id="mobileMessage"></span>
+        <span class="score-value" id="mobileScoreValue">10</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="mobileProgressFill"></div>
+      </div>
+    </div>
+    
+    <div class="controls-section">
+      <button onclick="revealRandomLetter()" class="button">Random Letter (-1)</button>
+      <button onclick="revealRandomWord()" class="button">Random Word (-5)</button>
+      <button onclick="handleHintOrRestart()" class="button" id="mobileHintRestartBtn">Hint (-3)</button>
+    </div>
+  </div>
+
+  <!-- Mobile Keyboard -->
+  <div class="mobile-keyboard" id="mobileKeyboard">
+    <div class="keyboard-row">
+      <button class="key-btn">Q</button>
+      <button class="key-btn">W</button>
+      <button class="key-btn">E</button>
+      <button class="key-btn">R</button>
+      <button class="key-btn">T</button>
+      <button class="key-btn">Y</button>
+      <button class="key-btn">U</button>
+      <button class="key-btn">I</button>
+      <button class="key-btn">O</button>
+      <button class="key-btn">P</button>
+    </div>
+    <div class="keyboard-row">
+      <div class="key-spacer"></div>
+      <button class="key-btn">A</button>
+      <button class="key-btn">S</button>
+      <button class="key-btn">D</button>
+      <button class="key-btn">F</button>
+      <button class="key-btn">G</button>
+      <button class="key-btn">H</button>
+      <button class="key-btn">J</button>
+      <button class="key-btn">K</button>
+      <button class="key-btn">L</button>
+      <div class="key-spacer"></div>
+    </div>
+    <div class="keyboard-row">
+      <div class="key-spacer"></div>
+      <button class="key-btn">Z</button>
+      <button class="key-btn">X</button>
+      <button class="key-btn">C</button>
+      <button class="key-btn">V</button>
+      <button class="key-btn">B</button>
+      <button class="key-btn">N</button>
+      <button class="key-btn">M</button>
+      <button class="key-btn special">⌫</button>
+      <div class="key-spacer"></div>
+    </div>
+  </div>
+
+  <!-- Copyright Footer (Desktop Only) -->
+  <div class="copyright-footer">Copyright Lowercase Studios</div>
+
+  <script>
+    // Define randomizeCategory immediately to ensure it's available
+    window.randomizeCategory = function(categoryNumber) {
+      var categoryList = [
+        "Movie stars", "TV Shows", "Cartoons", "Famous Athletes", "Video Games",
+        "Sitcom Characters", "Superheroes", "Supervillains", "Oscar-Winning Films", "Reality Shows",
+        "Celebrity Couples", "Book Titles", "Tourist Attractions", "Countries", "Capital Cities",
+        "U.S. States", "National Parks", "Places in Europe", "Places You Swim", "Cities with Subways",
+        "Islands", "Airports", "Childhood Snacks", "Condiments", "Fast Food Chains", "Types of Pasta",
+        "Fruits", "Vegetables", "Desserts", "Breakfast Foods", "Pizza Toppings",
+        "Cocktails", "Candy Bars", "Spices or Herbs", "Non-Alcoholic Beverages", "Foods That Are Red",
+        "Summer Activities", "School Supplies", "Hobbies", "Ways to Get Around", "Housework or Chores",
+        "Board Games", "Party Themes", "Things That Are Round", "Things That Are Sticky", "Things with Wheels",
+        "Things That Make Noise", "Things That Can Break", "Things That Are Cold", "Things with Stripes",
+        "Things That Float", "Things You Keep Hidden", "Things You Can't Touch", "Classic Costumes",
+        "Halloween Candies", "Christmas Songs", "Thanksgiving Foods", "New Year's Resolutions",
+        "Birthday Traditions", "Party Decorations", "Costumes for Couples", "Dangerous Animals",
+        "Zoo Animals", "Dog Breeds", "Sea Creatures", "Birds", "Farm Animals", "Things Found in a Forest",
+        "Bugs or Insects", "Diseases", "Types of Doctors", "Weather", "Body Parts", "Planets",
+        "Inventions", "Types of Transportation", "Genres of Music", "School Subjects", "Famous Scientists"
+      ];
+      
+      var randomIndex = Math.floor(Math.random() * categoryList.length);
+      var randomCategory = categoryList[randomIndex];
+      
+      if (categoryNumber === 1) {
+        document.getElementById('category1Input').value = randomCategory;
+      } else if (categoryNumber === 2) {
+        document.getElementById('category2Input').value = randomCategory;
+      }
+      
+      if (typeof validateAndPreview === 'function') {
+        validateAndPreview();
+      }
+      
+      if (typeof trackPunzzleEvent === 'function') {
+        trackPunzzleEvent('random_category_used', 'feature_use', 'category_' + categoryNumber);
+      }
+    };
+
+
+    // Global variables
+    var isCustomPuzzle = false;
+    var hasStartedGame = false;
+
+    // Array of fallback puzzles
+    var puzzleDatabase = [
+      {
+        answer: "GAME OF SCONES",
+        categories: "HBO SHOWS + PASTRIES",
+        words: ["GAME OF", "SCONES"],
+        hint: "Winter is crumbing!"
+      },
+      {
+        answer: "NEIL PATRICK CARROTS",
+        categories: "ACTORS + VEGETABLES",
+        words: ["NEIL", "PATRICK", "CARROTS"],
+        hint: "A former child star"
+      },
+      {
+        answer: "CELINE DIJON",
+        categories: "POP STARS + CONDIMENTS",
+        words: ["CELINE", "DIJON"],
+        hint: "My heart will go on... this sandwich"
+      },
+      {
+        answer: "CRAZY RICH RAISINS",
+        categories: "ROMANTIC COMEDIES + SNACKS",
+        words: ["CRAZY", "RICH", "RAISINS"],
+        hint: "A wealthy dried fruit?"
+      }
+    ];
+
+    // Function to get puzzle index based on date
+    function getPuzzleIndexForDate(date) {
+      var startDate = new Date('2024-01-01');
+      var daysDiff = Math.floor((date - startDate) / (1000 * 60 * 60 * 24));
+      return Math.abs(daysDiff) % puzzleDatabase.length;
+    }
+
+    // Enhanced puzzle loading with robust fallback
+    async function loadPuzzleFromServer(date) {
+      console.log('Attempting to load puzzle from server for date:', date.toISOString().split('T')[0]);
+      
+      // Check if Firebase is available
+      if (typeof PuzzleDB === 'undefined' || !PuzzleDB || !PuzzleDB.getDailyPuzzle) {
+        console.log('PuzzleDB not available');
+        throw new Error('PuzzleDB not available');
+      }
+      
+      try {
+        const puzzle = await Promise.race([
+          PuzzleDB.getDailyPuzzle(date),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Server request timeout')), 5000))
+        ]);
+        
+        if (!puzzle) {
+          throw new Error('No puzzle found on server for this date');
+        }
+        
+        console.log('Server puzzle loaded successfully:', puzzle.categories);
+        return puzzle;
+      } catch (error) {
+        console.log('Server request failed:', error.message);
+        throw error;
+      }
+    }
+
+    // Enhanced function to load puzzle by date with smart fallback strategy
+    async function loadPuzzleByDate(date) {
+      console.log('=== loadPuzzleByDate() called for date:', date.toISOString().split('T')[0]);
+      
+      // Reset game state before loading new puzzle
+      console.log('Resetting game state...');
+      gameState.score = 10;
+      gameState.puzzleAnswer = "";
+      gameState.categoryText = "";
+      gameState.words = [];
+      gameState.letterTiles = [];
+      gameState.currentActiveTile = null;
+      gameState.penalties = [];
+      gameState.completedWithHints = false;
+      gameState.hintUsed = false;
+      gameState.customHint = null;
+      gameState.puzzleDate = null;
+      gameState.puzzleId = null;
+      
+      var puzzle = null;
+      var usesFallback = false;
+      
+      try {
+        console.log('Trying to load from server...');
+        puzzle = await loadPuzzleFromServer(date);
+        console.log('✓ Successfully loaded puzzle from server:', puzzle.categories);
+        
+      } catch (error) {
+        console.log('✗ Server load failed:', error.message);
+        console.log('Using fallback puzzle...');
+        
+        // Use fallback puzzle
+        const puzzleIndex = getPuzzleIndexForDate(date);
+        puzzle = puzzleDatabase[puzzleIndex];
+        usesFallback = true;
+        
+        console.log('✓ Fallback puzzle selected:', {
+          index: puzzleIndex,
+          categories: puzzle ? puzzle.categories : 'null',
+          answer: puzzle ? puzzle.answer : 'null'
+        });
+      }
+      
+      if (!puzzle) {
+        console.error('✗ No puzzle available (both server and fallback failed)');
+        throw new Error('No puzzle available (server and fallback both failed)');
+      }
+      
+      console.log('Setting game state with puzzle:', puzzle);
+      
+      // Set game state
+      gameState.puzzleAnswer = puzzle.answer;
+      gameState.categoryText = puzzle.categories;
+      gameState.words = puzzle.words;
+      gameState.customHint = puzzle.hint;
+      gameState.puzzleDate = date.toISOString().split('T')[0];
+      gameState.puzzleId = `daily-${gameState.puzzleDate}`;
+      
+      console.log('Game state updated:', {
+        answer: gameState.puzzleAnswer,
+        category: gameState.categoryText,
+        words: gameState.words,
+        hint: gameState.customHint
+      });
+      
+      // Update UI elements
+      var categoryElement = document.getElementById('categoryText');
+      var dateDisplayElement = document.getElementById('dateDisplay');
+      
+      if (!categoryElement) {
+        console.error('✗ Category element not found!');
+        throw new Error('Category UI element not found');
+      }
+      
+      if (!dateDisplayElement) {
+        console.error('✗ Date display element not found!');
+        throw new Error('Date display UI element not found');
+      }
+      
+      console.log('Updating UI elements...');
+      categoryElement.textContent = gameState.categoryText;
+      
+      // Format date for display
+      var dateString = date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+      
+      var prevDate = new Date(date);
+      prevDate.setDate(prevDate.getDate() - 1);
+      var prevDateParam = prevDate.toISOString().split('T')[0];
+      
+      var dateDisplayText = dateString;
+      if (usesFallback) {
+        // Only show (Demo) if not in private browsing
+        if (typeof window.isPrivateBrowsing !== 'undefined' && window.isPrivateBrowsing) {
+          // In private browsing, don't add (Demo) label for better UX
+        } else {
+          dateDisplayText += ' (Demo)';
+        }
+      }
+      
+      // Add Previous link to existing date display
+      var prevLinkHtml = '<a href="?date=' + prevDateParam + '&skipIntro=true">Previous</a> · ';
+      
+      dateDisplayElement.innerHTML = 
+        prevLinkHtml + dateDisplayText;
+      
+      console.log('✓ UI updated successfully');
+      console.log('=== loadPuzzleByDate() completed successfully');
+      return true;
+    }
+
+    // Game State
+    var gameState = {
+      score: 10,
+      puzzleAnswer: "",
+      categoryText: "",
+      words: [],
+      letterTiles: [],
+      currentActiveTile: null,
+      penalties: [],
+      completedWithHints: false,
+      hintUsed: false,
+      foxInterval: null,
+      currentFoxTile: null,
+      customHint: null,
+      puzzleDate: null,
+      puzzleId: null,
+      isBonus: false,
+      isPreview: false
+    };
+
+    // Google Analytics Enhanced Tracking
+    function trackPunzzleEvent(action, category, label, value) {
+      if (typeof gtag !== 'undefined') {
+        gtag('event', action, {
+          'event_category': category,
+          'event_label': label,
+          'value': value
+        });
+      }
+    }
+
+    function trackPuzzleStart(puzzleType, categories) {
+      trackPunzzleEvent('puzzle_start', puzzleType, categories);
+    }
+
+    async function trackPuzzleComplete(puzzleType, score, timeSpent, completed) {
+      trackPunzzleEvent('puzzle_complete', puzzleType, 'score_' + score, score);
+      if (timeSpent) {
+        trackPunzzleEvent('game_time', puzzleType, 'seconds', Math.round(timeSpent));
+      }
+      if (completed) {
+        trackPunzzleEvent('puzzle_solved', puzzleType, 'success', 1);
+      } else {
+        trackPunzzleEvent('puzzle_abandoned', puzzleType, 'with_hints', 1);
+      }
+      
+      if (!gameState.isPreview) {
+        const analyticsData = {
+          puzzleId: gameState.puzzleId || 'unknown',
+          puzzleType: puzzleType,
+          score: score,
+          completed: completed,
+          completedWithHints: gameState.completedWithHints || false,
+          timeSpent: Math.round(timeSpent),
+          hints: gameState.penalties.filter(p => p.reason === 'Hint').length,
+          randomLetters: gameState.penalties.filter(p => p.reason === 'Random letter').length,
+          randomWords: gameState.penalties.filter(p => p.reason === 'Random word').length,
+          incorrectGuesses: gameState.penalties.filter(p => p.reason === 'Incorrect answer').length,
+          categories: gameState.categoryText,
+          answer: gameState.puzzleAnswer,
+          date: gameState.puzzleDate || new Date().toISOString().split('T')[0],
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        
+        try {
+          if (typeof db !== 'undefined' && db.collection) {
+            await db.collection('gameStats').add(analyticsData);
+          }
+          
+          if (puzzleType === 'custom' && gameState.puzzleId && gameState.puzzleId.startsWith('custom-')) {
+            const customId = gameState.puzzleId.replace('custom-', '');
+            
+            if (typeof AnalyticsDB !== 'undefined' && AnalyticsDB && AnalyticsDB.trackCustomPuzzle) {
+              await AnalyticsDB.trackCustomPuzzle(customId, analyticsData);
+            }
+          }
+        } catch (error) {
+          console.error('Error tracking completion:', error);
+        }
+      }
+    }
+
+    function trackFeatureUse(feature, value) {
+      trackPunzzleEvent('feature_use', 'gameplay', feature, value);
+    }
+
+    function trackNavigation(link) {
+      trackPunzzleEvent('navigation', 'links', link);
+      
+      if (link === 'make_your_own') {
+        trackPunzzleEvent('feature_use', 'user_generated', 'opened_creator');
+      } else if (link === 'previous') {
+        trackPunzzleEvent('navigation', 'archive', 'previous_puzzle');
+      } else if (link === 'feedback_form') {
+        trackPunzzleEvent('engagement', 'feedback', 'opened_form');
+      }
+    }
+
+    function trackError(error) {
+      trackPunzzleEvent('error', 'gameplay', error);
+    }
+
+    function trackCustomPuzzle(action) {
+      trackPunzzleEvent('custom_puzzle', 'user_generated', action);
+    }
+
+    // Time tracking
+    var startTime = null;
+    
+    function startTimeTracking() {
+      startTime = Date.now();
+    }
+    
+    function getElapsedTime() {
+      return startTime ? (Date.now() - startTime) / 1000 : 0;
+    }
+
+    async function trackCustomPuzzleView(puzzleId) {
+      try {
+        if (typeof db !== 'undefined' && db.collection) {
+          const docRef = db.collection('customPuzzleStats').doc(puzzleId);
+          const doc = await docRef.get();
+          
+          if (doc.exists) {
+            await docRef.update({
+              views: firebase.firestore.FieldValue.increment(1),
+              lastViewed: firebase.firestore.FieldValue.serverTimestamp()
+            });
+          } else {
+            await docRef.set({
+              views: 1,
+              plays: 0,
+              completed: 0,
+              shares: 0,
+              playedAnother: 0,
+              totalScore: 0,
+              firstViewed: firebase.firestore.FieldValue.serverTimestamp(),
+              lastViewed: firebase.firestore.FieldValue.serverTimestamp()
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error tracking custom puzzle view:', error);
+      }
+    }
+
+    // ENHANCED INITIALIZATION - This is the key fix for mobile support
+    document.addEventListener('DOMContentLoaded', async function() {
+      console.log('=== DOMContentLoaded fired ===');
+      
+      var urlParams = new URLSearchParams(window.location.search);
+      var skipIntro = urlParams.get('skipIntro');
+      var optimized = urlParams.get('optimized');
+      
+      var pageType = 'daily';
+      if (urlParams.get('puzzle')) pageType = 'custom_shared';
+      if (urlParams.get('bonus')) pageType = 'bonus';
+      if (urlParams.get('date')) pageType = 'archive';
+      
+      trackPunzzleEvent('page_view', pageType, document.referrer || 'direct');
+      
+      var sharedPuzzle = urlParams.get('puzzle');
+      var bonusId = urlParams.get('bonus');
+      var dateParam = urlParams.get('date');
+      var isPreview = urlParams.get('preview') === 'true';
+      
+      // Always show loading when we need to fetch data
+      var needsLoading = bonusId || sharedPuzzle || dateParam || (typeof PuzzleDB !== 'undefined');
+      
+      if (needsLoading) {
+        showLoadingState();
+      }
+      
+      try {
+        // Handle bonus puzzle
+        if (bonusId) {
+          isCustomPuzzle = true;
+          
+          if (typeof PuzzleDB !== 'undefined' && PuzzleDB.getBonusPuzzle) {
+            const bonusPuzzle = await PuzzleDB.getBonusPuzzle(bonusId);
+            
+            if (bonusPuzzle) {
+              gameState.puzzleAnswer = bonusPuzzle.answer;
+              gameState.categoryText = bonusPuzzle.categories;
+              gameState.words = bonusPuzzle.words;
+              gameState.customHint = bonusPuzzle.hint || null;
+              gameState.puzzleId = `bonus-${bonusId}`;
+              gameState.isBonus = true;
+              gameState.isPreview = isPreview;
+              
+              document.getElementById('categoryText').textContent = gameState.categoryText;
+              document.getElementById('dateDisplay').innerHTML = 
+                '<a href="' + window.location.origin + window.location.pathname + '?skipIntro=true">Today\'s Punzzle</a> · ' +
+                (isPreview ? 'Preview Mode' : 'Bonus Puzzle');
+            } else {
+              hideLoadingState();
+              alert('This bonus puzzle is no longer available.');
+              window.location.href = window.location.origin + window.location.pathname;
+              return;
+            }
+          } else {
+            hideLoadingState();
+            alert('Unable to load bonus puzzle. Please try again later.');
+            window.location.href = window.location.origin + window.location.pathname;
+            return;
+          }
+          
+          hideLoadingState();
+          
+          if (skipIntro === 'true') {
+            startGameDirectly(); // Use the new mobile-optimized function
+          } else {
+            document.getElementById('startModal').style.display = 'flex';
+          }
+          setupCreateForm();
+          return;
+        }
+        
+        // Handle shared custom puzzle
+        if (sharedPuzzle) {
+          isCustomPuzzle = true;
+          
+          var puzzleData = JSON.parse(atob(sharedPuzzle));
+          gameState.puzzleAnswer = puzzleData.answer;
+          gameState.categoryText = puzzleData.categories;
+          gameState.words = puzzleData.words;
+          gameState.customHint = puzzleData.hint || null;
+          
+          const tempId = 'shared-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+          gameState.puzzleId = `custom-${tempId}`;
+          
+          if (optimized !== 'true') {
+            try {
+              const customId = await saveCustomPuzzle(puzzleData);
+              if (customId) {
+                gameState.puzzleId = `custom-${customId}`;
+                trackCustomPuzzleView(customId);
+                trackPunzzleEvent('shared_puzzle_opened', 'user_generated', gameState.categoryText);
+              }
+              
+              const customTitle = `Punzzle: ${gameState.categoryText}`;
+              const customDescription = `Can you solve this custom Punzzle? Categories: ${gameState.categoryText}. Find the pun that connects them!`;
+              updateMetaTags(customTitle, customDescription);
+            } catch (error) {
+              console.error('Error processing shared puzzle:', error);
+            }
+          }
+          
+          // Ensure game container is visible BEFORE we do anything else
+          var gameContainer = document.getElementById('gameContainer');
+          if (gameContainer) {
+            gameContainer.classList.remove('game-hidden');
+            console.log('Making game container visible for shared puzzle...');
+          } else {
+            console.error('Game container not found!');
+          }
+          
+          document.getElementById('categoryText').textContent = gameState.categoryText;
+          document.getElementById('dateDisplay').innerHTML = 
+            '<a href="' + window.location.origin + window.location.pathname + '?skipIntro=true">Today\'s Punzzle</a> · ' + (isPreview ? 'Preview Mode' : 'Shared Puzzle');
+          
+          hideLoadingState();
+          
+          if (skipIntro === 'true') {
+            startGameDirectly(); // Use the new mobile-optimized function
+          } else {
+            document.getElementById('startModal').style.display = 'flex';
+            var hamburgerMenu = document.getElementById('hamburgerMenu');
+            if (hamburgerMenu) {
+              hamburgerMenu.style.display = 'none';
+            }
+          }
+          setupCreateForm();
+          return;
+        }
+        
+        // Load puzzle based on date - try server first, fallback to local
+        var puzzleDate = dateParam ? new Date(dateParam + 'T00:00:00') : new Date();
+        
+        try {
+          await loadPuzzleByDate(puzzleDate);
+          console.log('✓ Puzzle loaded successfully');
+          
+        } catch (error) {
+          console.error('✗ All puzzle loading methods failed:', error);
+          hideLoadingState();
+          
+          // Show the specific error for debugging
+          console.error('Error details:', {
+            message: error.message,
+            stack: error.stack,
+            puzzleDate: puzzleDate,
+            gameState: gameState
+          });
+          
+          alert('Unable to load puzzle: ' + error.message + '. Please refresh the page and try again.');
+          return;
+        }
+        
+        // Ensure game container is visible and properly set up
+        var gameContainer = document.getElementById('gameContainer');
+        if (gameContainer) {
+          console.log('Making game container visible...');
+          gameContainer.classList.remove('game-hidden');
+          console.log('✓ Game container is now visible');
+        } else {
+          console.error('✗ Game container not found!');
+          alert('Game container missing. Please refresh the page.');
+          return;
+        }
+        
+        // Clear loading state after puzzle is loaded
+        hideLoadingState();
+        
+      } catch (error) {
+        console.error('Error during initialization:', error);
+        hideLoadingState();
+        
+        // Show error message instead of silent fallback
+        alert('Error loading puzzle. Please refresh the page and try again.');
+        return;
+      }
+      
+      // Show intro or start game - ENHANCED FOR MOBILE  
+      if (skipIntro === 'true') {
+        console.log('Skipping intro, starting game directly');
+        startGameDirectly(); // Use the new mobile-optimized function
+      } else {
+        console.log('Showing intro modal');
+        document.getElementById('startModal').style.display = 'flex';
+        var hamburgerMenu = document.getElementById('hamburgerMenu');
+        if (hamburgerMenu) {
+          hamburgerMenu.style.display = 'none';
+        }
+        document.body.classList.add('modal-open');
+        document.getElementById('gameContainer').classList.add('content-blur');
+      }
+      
+      setupCreateForm();
+    });
+
+    testPreviewImage();
+
+    // NEW MOBILE-OPTIMIZED GAME START FUNCTION - This is the key fix
+    function startGameDirectly() {
+      console.log('startGameDirectly() called - optimized for mobile');
+      
+      // Clear any loading states first
+      hideLoadingState();
+      
+      // Ensure modal is hidden
+      document.getElementById('startModal').style.display = 'none';
+      
+      // Make sure game container is visible
+      var gameContainer = document.getElementById('gameContainer');
+      gameContainer.classList.remove('game-hidden');
+      
+      // Remove modal classes
+      document.body.classList.remove('modal-open');
+      gameContainer.classList.remove('content-blur');
+      
+      // Add game active class - CRITICAL for mobile
+      document.body.classList.add('game-active');
+      
+      hasStartedGame = true;
+      
+      // Verify we have puzzle data
+      if (!gameState.puzzleAnswer || !gameState.categoryText || !gameState.words.length) {
+        console.error('Missing puzzle data in startGameDirectly:', {
+          answer: gameState.puzzleAnswer,
+          category: gameState.categoryText,
+          words: gameState.words
+        });
+        alert('Puzzle data not loaded. Please refresh the page.');
+        return;
+      }
+      
+      console.log('Building puzzle with data:', {
+        answer: gameState.puzzleAnswer,
+        category: gameState.categoryText,
+        words: gameState.words
+      });
+      
+      // Build puzzle if not already built
+      if (gameState.letterTiles.length === 0) {
+        buildPuzzle();
+        updateScore(0);
+      }
+      
+      startFoxTimer();
+      startTimeTracking();
+      
+      var hamburgerMenu = document.getElementById('hamburgerMenu');
+      if (hamburgerMenu) {
+        hamburgerMenu.style.display = 'block';
+      }
+      var puzzleType = isCustomPuzzle ? 'custom' : 'daily';
+      trackPuzzleStart(puzzleType, gameState.categoryText);
+      
+      // Force mobile layout update
+      if (window.innerWidth <= 768) {
+        console.log('Mobile detected - ensuring mobile controls are visible');
+        setTimeout(() => {
+          const fixedBottomSection = document.getElementById('fixedBottomSection');
+          const mobileKeyboard = document.getElementById('mobileKeyboard');
+          
+          if (fixedBottomSection) {
+            fixedBottomSection.style.display = 'block';
+            console.log('Mobile bottom section shown');
+          }
+          if (mobileKeyboard) {
+            mobileKeyboard.style.display = 'block';
+            console.log('Mobile keyboard shown');
+          }
+        }, 100);
+      }
+      
+      console.log('Game started successfully with mobile optimizations');
+    }
+
+    function startGame() {
+      console.log('startGame() called');
+      
+      // Clear any loading states first
+      hideLoadingState();
+      
+      // Ensure modal is hidden
+      document.getElementById('startModal').style.display = 'none';
+      
+      // Make sure game container is visible
+      var gameContainer = document.getElementById('gameContainer');
+      gameContainer.classList.remove('game-hidden');
+      
+      // Remove modal classes
+      document.body.classList.remove('modal-open');
+      gameContainer.classList.remove('content-blur');
+      
+      // Add game active class
+      document.body.classList.add('game-active');
+      
+      hasStartedGame = true;
+      
+      // Verify we have puzzle data
+      if (!gameState.puzzleAnswer || !gameState.categoryText || !gameState.words.length) {
+        console.error('Missing puzzle data in startGame:', {
+          answer: gameState.puzzleAnswer,
+          category: gameState.categoryText,
+          words: gameState.words
+        });
+        alert('Puzzle data not loaded. Please refresh the page.');
+        return;
+      }
+      
+      console.log('Building puzzle with data:', {
+        answer: gameState.puzzleAnswer,
+        category: gameState.categoryText,
+        words: gameState.words
+      });
+      
+      // Build puzzle if not already built
+      if (gameState.letterTiles.length === 0) {
+        buildPuzzle();
+        updateScore(0);
+      }
+      
+      startFoxTimer();
+      startTimeTracking();
+      
+      var hamburgerMenu = document.getElementById('hamburgerMenu');
+      if (hamburgerMenu) {
+        hamburgerMenu.style.display = 'block';
+      }
+      var puzzleType = isCustomPuzzle ? 'custom' : 'daily';
+      trackPuzzleStart(puzzleType, gameState.categoryText);
+      
+      console.log('Game started successfully');
+    }
+
+    function startFoxTimer() {
+      if (gameState.foxInterval) {
+        clearInterval(gameState.foxInterval);
+      }
+      
+      setTimeout(function() {
+        showFoxPopup();
+        
+        gameState.foxInterval = setInterval(function() {
+          showFoxPopup();
+        }, 40000);
+      }, 15000);
+    }
+
+    function stopFoxTimer() {
+      if (gameState.foxInterval) {
+        clearInterval(gameState.foxInterval);
+        gameState.foxInterval = null;
+      }
+    }
+
+    function showFoxPopup() {
+      if (gameState.completedWithHints || 
+          document.getElementById('scoreCard').style.display === 'flex' ||
+          document.getElementById('startModal').style.display === 'flex') {
+        return;
+      }
+      
+      var emptyTiles = gameState.letterTiles.filter(function(tile) {
+        return tile.classList.contains('hidden') && 
+               !tile.classList.contains('revealed') && 
+               !tile.classList.contains('user-filled');
+      });
+      
+      if (emptyTiles.length === 0) return;
+      
+      if (gameState.currentFoxTile && gameState.currentFoxTile.querySelector('.fox-popup')) {
+        return;
+      }
+      
+      if (gameState.currentFoxTile) {
+        var existingFox = gameState.currentFoxTile.querySelector('.fox-popup');
+        if (existingFox) {
+          existingFox.remove();
+        }
+      }
+      
+      var randomTile = emptyTiles[Math.floor(Math.random() * emptyTiles.length)];
+      gameState.currentFoxTile = randomTile;
+      
+      var foxPopup = document.createElement('div');
+      foxPopup.className = 'fox-popup';
+      foxPopup.innerHTML = '<img src="https://punzzle.com/images/oliversurprise.png" alt="Oliver Fox">';
+      
+      randomTile.appendChild(foxPopup);
+      
+      trackFeatureUse('fox_popup_shown', 1);
+      
+      setTimeout(function() {
+        foxPopup.classList.add('active');
+      }, 50);
+      
+      setTimeout(function() {
+        foxPopup.classList.remove('active');
+        
+        setTimeout(function() {
+          if (foxPopup.parentNode) {
+            foxPopup.remove();
+          }
+          gameState.currentFoxTile = null;
+        }, 800);
+      }, 3350);
+    }
+
+    function buildPuzzle() {
+      console.log('=== buildPuzzle() called ===');
+      console.log('Game state words:', gameState.words);
+      console.log('Game state answer:', gameState.puzzleAnswer);
+      console.log('Game state category:', gameState.categoryText);
+      
+      var container = document.getElementById('puzzleContainer');
+      if (!container) {
+        console.error('✗ Puzzle container not found!');
+        return;
+      }
+      
+      container.innerHTML = '';
+      gameState.letterTiles = [];
+      
+      // Update hint/restart buttons
+      if (!gameState.customHint) {
+        var hintBtn = document.getElementById('hintRestartBtn');
+        var mobileHintBtn = document.getElementById('mobileHintRestartBtn');
+        if (hintBtn) hintBtn.textContent = 'Restart';
+        if (mobileHintBtn) mobileHintBtn.textContent = 'Restart';
+      } else {
+        var hintBtn = document.getElementById('hintRestartBtn');
+        var mobileHintBtn = document.getElementById('mobileHintRestartBtn');
+        if (hintBtn) hintBtn.textContent = 'Hint (-3)';
+        if (mobileHintBtn) mobileHintBtn.textContent = 'Hint (-3)';
+      }
+      
+      // Validate and clean words array
+      if (!gameState.words || !Array.isArray(gameState.words) || gameState.words.length === 0) {
+        console.error('✗ Invalid or missing words array:', gameState.words);
+        
+        // Try to reconstruct words from answer if possible
+        if (gameState.puzzleAnswer) {
+          console.log('Attempting to reconstruct words from answer:', gameState.puzzleAnswer);
+          // For fallback puzzles, we know the word structure
+          if (gameState.puzzleAnswer === "GAME OF SCONES") {
+            gameState.words = ["GAME OF", "SCONES"];
+          } else if (gameState.puzzleAnswer === "NEIL PATRICK CARROTS") {
+            gameState.words = ["NEIL", "PATRICK", "CARROTS"];
+          } else if (gameState.puzzleAnswer === "CELINE DIJON") {
+            gameState.words = ["CELINE", "DIJON"];
+          } else if (gameState.puzzleAnswer === "CRAZY RICH RAISINS") {
+            gameState.words = ["CRAZY", "RICH", "RAISINS"];
+          } else {
+            // Last resort: split by spaces
+            gameState.words = gameState.puzzleAnswer.split(' ');
+          }
+          console.log('Reconstructed words:', gameState.words);
+        } else {
+          console.error('✗ Cannot reconstruct words - no answer available');
+          return;
+        }
+      }
+      
+      // Validate each word
+      var validWords = [];
+      gameState.words.forEach(function(word, index) {
+        if (!word || typeof word !== 'string' || word.trim().length === 0) {
+          console.error('✗ Invalid word at index', index, ':', word);
+        } else {
+          validWords.push(word.trim());
+        }
+      });
+      
+      if (validWords.length === 0) {
+        console.error('✗ No valid words found');
+        return;
+      }
+      
+      gameState.words = validWords;
+      console.log('✓ Using validated words:', gameState.words);
+      
+      var totalLetters = 0;
+      var maxWordLength = 0;
+      gameState.words.forEach(function(word) {
+        totalLetters += word.length;
+        maxWordLength = Math.max(maxWordLength, word.length);
+      });
+      
+      console.log('Puzzle stats:', { totalLetters, maxWordLength });
+      
+      var sizeClass = '';
+      if (totalLetters > 20 || maxWordLength > 8) {
+        sizeClass = 'tiles-small';
+      } else if (totalLetters > 15 || maxWordLength > 6) {
+        sizeClass = 'tiles-medium';
+      }
+      
+      if (sizeClass) {
+        container.classList.add(sizeClass);
+        console.log('Applied size class:', sizeClass);
+      }
+      
+      gameState.words.forEach(function(word, wordIndex) {
+        console.log('Creating word group for word', wordIndex, ':', word);
+        
+        var wordGroup = document.createElement('div');
+        wordGroup.className = 'word-group';
+        
+        for (var i = 0; i < word.length; i++) {
+          var letter = word[i];
+          var tile = document.createElement('div');
+          tile.className = 'tile hidden';
+          tile.textContent = '';
+          tile.dataset.letter = letter;
+          
+          tile.addEventListener('click', function() {
+            if (!this.classList.contains('revealed')) {
+              setActiveTile(this);
+            }
+          });
+          
+          gameState.letterTiles.push(tile);
+          wordGroup.appendChild(tile);
+        }
+        
+        container.appendChild(wordGroup);
+      });
+
+      console.log('✓ Created', gameState.letterTiles.length, 'tiles total');
+
+      setTimeout(function() {
+        console.log('Revealing initial tiles...');
+        var shuffled = gameState.letterTiles.slice().sort(function() { return Math.random() - 0.5; });
+        
+        for (var i = 0; i < Math.min(3, shuffled.length); i++) {
+          var tile = shuffled[i];
+          tile.classList.add('revealed');
+          tile.classList.remove('hidden');
+          tile.textContent = tile.dataset.letter;
+          console.log('Revealed tile:', tile.dataset.letter);
+        }
+        
+        var firstEmpty = gameState.letterTiles.find(function(tile) {
+          return !tile.classList.contains('revealed');
+        });
+        if (firstEmpty) {
+          setActiveTile(firstEmpty);
+          console.log('✓ Set active tile');
+        }
+        
+        console.log('✓ Puzzle built successfully with', gameState.letterTiles.length, 'tiles');
+        console.log('=== buildPuzzle() completed ===');
+      }, 100);
+    }
+
+    function setActiveTile(tile) {
+      if (gameState.currentActiveTile) {
+        gameState.currentActiveTile.classList.remove('active');
+      }
+      gameState.currentActiveTile = tile;
+      tile.classList.add('active');
+    }
+
+    function updateScore(change, reason) {
+      gameState.score += change;
+      
+      document.getElementById('scoreValue').textContent = gameState.score;
+      document.getElementById('mobileScoreValue').textContent = gameState.score;
+      
+      if (gameState.score < 0) {
+        document.getElementById('scoreValue').classList.add('negative');
+        document.getElementById('mobileScoreValue').classList.add('negative');
+      } else {
+        document.getElementById('scoreValue').classList.remove('negative');
+        document.getElementById('mobileScoreValue').classList.remove('negative');
+      }
+      
+      var fillPercentage = Math.max(0, (gameState.score / 10) * 100);
+      document.getElementById('progressFill').style.width = fillPercentage + '%';
+      document.getElementById('mobileProgressFill').style.width = fillPercentage + '%';
+      
+      if (change < 0 && reason) {
+        gameState.penalties.push({ points: change, reason: reason });
+      }
+    }
+
+    function updateMessage(text, className, clueText) {
+      var message = document.getElementById('message');
+      var clue = document.getElementById('clue');
+      
+      message.textContent = text;
+      message.className = 'message ' + (className || '');
+      
+      if (clueText) {
+        clue.textContent = clueText;
+        clue.style.display = 'block';
+      } else {
+        clue.style.display = 'none';
+      }
+      
+      var mobileMessage = document.getElementById('mobileMessage');
+      if (mobileMessage) {
+        var mobileText = clueText || text;
+        if (mobileText.includes('Random letter revealed')) {
+          mobileText = 'Letter revealed (-1)';
+        } else if (mobileText.includes('Random word')) {
+          mobileText = 'Word revealed (-5)';
+        } else if (mobileText.includes('Not quite right')) {
+          mobileText = 'Try again (-2)';
+        } else if (mobileText.includes('Excellent')) {
+          mobileText = 'Correct!';
+        }
+        
+        mobileMessage.textContent = mobileText;
+        mobileMessage.className = 'mobile-inline-message ' + (className || '');
+        
+        setTimeout(function() {
+          mobileMessage.textContent = '';
+        }, 25000);
+      }
+    }
+
+    function handleHintOrRestart() {
+      if (!gameState.customHint) {
+        trackFeatureUse('restart', 1);
+        trackPunzzleEvent('gameplay', 'game_action', 'restart_puzzle');
+        restartGame();
+        return;
+      }
+      
+      if (!gameState.hintUsed) {
+        trackFeatureUse('hint_used', 1);
+        trackPunzzleEvent('gameplay', 'hint_used', 'custom_hint');
+        giveHint();
+        gameState.hintUsed = true;
+        
+        document.getElementById('hintRestartBtn').classList.add('hint-used');
+        document.getElementById('mobileHintRestartBtn').classList.add('hint-used');
+      } else {
+        trackFeatureUse('restart', 1);
+        trackPunzzleEvent('gameplay', 'game_action', 'restart_after_hint');
+        restartGame();
+      }
+    }
+
+    function giveHint() {
+      updateScore(-3, 'Hint');
+      updateMessage('', '', gameState.customHint);
+    }
+
+    function revealRandomLetter() {
+      var hiddenTiles = gameState.letterTiles.filter(function(tile) {
+        return !tile.classList.contains('revealed') && !tile.classList.contains('user-filled');
+      });
+      
+      if (hiddenTiles.length > 0) {
+        var randomTile = hiddenTiles[Math.floor(Math.random() * hiddenTiles.length)];
+        randomTile.classList.add('revealed');
+        randomTile.classList.remove('hidden');
+        randomTile.textContent = randomTile.dataset.letter;
+        
+        updateMessage('', '', 'Random letter revealed (-1 point)');
+        updateScore(-1, 'Random letter');
+        
+        trackFeatureUse('random_letter', 1);
+        trackPunzzleEvent('gameplay', 'hint_used', 'random_letter');
+        
+        checkPuzzleComplete();
+      }
+    }
+
+    function revealRandomWord() {
+      var wordGroups = document.querySelectorAll('.word-group');
+      var availableWords = [];
+      
+      wordGroups.forEach(function(wordGroup, index) {
+        var tiles = Array.from(wordGroup.querySelectorAll('.tile'));
+        var hasHidden = tiles.some(function(tile) {
+          return !tile.classList.contains('revealed') && !tile.classList.contains('user-filled');
+        });
+        
+        if (hasHidden) {
+          availableWords.push({ element: wordGroup, tiles: tiles, word: gameState.words[index] });
+        }
+      });
+      
+      if (availableWords.length > 0) {
+        var randomWord = availableWords[Math.floor(Math.random() * availableWords.length)];
+        
+        randomWord.tiles.forEach(function(tile, index) {
+          if (!tile.classList.contains('revealed')) {
+            setTimeout(function() {
+              tile.classList.add('revealed');
+              tile.classList.remove('hidden', 'user-filled');
+              tile.textContent = tile.dataset.letter;
+            }, index * 100);
+          }
+        });
+        
+        updateMessage('', '', 'Random word "' + randomWord.word + '" revealed (-5 points)');
+        updateScore(-5, 'Random word');
+        
+        trackFeatureUse('random_word', 1);
+        trackPunzzleEvent('gameplay', 'hint_used', 'random_word');
+        
+        setTimeout(function() {
+          var remainingHiddenTiles = gameState.letterTiles.filter(function(tile) {
+            return !tile.classList.contains('revealed') && !tile.classList.contains('user-filled');
+          });
+            
+          if (remainingHiddenTiles.length === 0) {
+            updateMessage('', '', 'Puzzle completed with hints');
+            
+            gameState.completedWithHints = true;
+            
+            gameState.letterTiles.forEach(function(tile) {
+              tile.classList.add('hint-completed');
+              tile.classList.remove('user-filled', 'active');
+            });
+            
+            if (gameState.currentActiveTile) {
+              gameState.currentActiveTile.classList.remove('active');
+              gameState.currentActiveTile = null;
+            }
+            
+            stopFoxTimer();
+            
+            var puzzleType = isCustomPuzzle ? 'custom' : 'daily';
+            trackPuzzleComplete(puzzleType, gameState.score, getElapsedTime(), false);
+            
+            setTimeout(function() {
+              showScoreCard(false);
+            }, 1000);
+          } else {
+            checkPuzzleComplete();
+          }
+        }, randomWord.tiles.length * 100 + 200);
+      }
+    }
+
+    function checkPuzzleComplete() {
+      if (gameState.completedWithHints) {
+        return;
+      }
+      
+      var allFilled = gameState.letterTiles.every(function(tile) {
+        return tile.classList.contains('revealed') || 
+               (tile.classList.contains('user-filled') && tile.textContent.trim() !== '');
+      });
+      
+      if (allFilled) {
+        var userAnswer = gameState.letterTiles.map(function(tile) {
+          if (tile.classList.contains('revealed')) {
+            return tile.dataset.letter.toUpperCase();
+          } else if (tile.classList.contains('user-filled')) {
+            return tile.textContent.toUpperCase();
+          } else {
+            return tile.dataset.letter.toUpperCase();
+          }
+        }).join('');
+        
+        var correctAnswer = gameState.puzzleAnswer.replace(/\s/g, '').toUpperCase();
+        
+        if (userAnswer === correctAnswer) {
+          updateMessage('Excellent! You solved the puzzle.', 'success');
+          
+          gameState.letterTiles.forEach(function(tile, index) {
+            setTimeout(function() {
+              tile.classList.add('revealed', 'correct');
+              tile.classList.remove('user-filled', 'active');
+              tile.textContent = tile.dataset.letter;
+            }, index * 50);
+          });
+          
+          stopFoxTimer();
+          
+          var puzzleType = isCustomPuzzle ? 'custom' : 'daily';
+          trackPuzzleComplete(puzzleType, gameState.score, getElapsedTime(), true);
+          
+          setTimeout(function() {
+            showScoreCard(true);
+          }, gameState.letterTiles.length * 50 + 1000);
+          
+        } else {
+          updateMessage('Not quite right. Try again! (-2 points)', 'error');
+          updateScore(-2, 'Incorrect answer');
+          trackFeatureUse('incorrect_guess', 1);
+        }
+      }
+    }
+
+    function showScoreCard(isSuccess) {
+      var scoreCardTitle = document.getElementById('scoreCardTitle');
+      var scoreCardCategories = document.getElementById('scoreCardCategories');
+      var penaltiesContainer = document.getElementById('penaltiesContainer');
+      var finalScoreDisplay = document.getElementById('finalScoreDisplay');
+      
+      document.body.classList.remove('game-active');
+      
+      if (gameState.completedWithHints) {
+        isSuccess = false;
+      }
+      
+      var title = '';
+      if (gameState.score === 10) {
+        title = 'A hole in pun!';
+      } else if (gameState.score >= 1 && gameState.score <= 9) {
+        title = 'You got it!';
+      } else if (gameState.score === 0) {
+        title = 'You broke even!';
+      } else if (gameState.score < 0) {
+        title = 'Thank you for<br>not using AI.';
+      }
+      
+      scoreCardTitle.innerHTML = title;
+      scoreCardCategories.textContent = gameState.categoryText;
+      
+      penaltiesContainer.innerHTML = '';
+      var penaltiesByReason = {};
+      var penaltyCounts = {};
+      
+      gameState.penalties.forEach(function(penalty) {
+        if (!penaltiesByReason[penalty.reason]) {
+          penaltiesByReason[penalty.reason] = 0;
+          penaltyCounts[penalty.reason] = 0;
+        }
+        penaltiesByReason[penalty.reason] += penalty.points;
+        penaltyCounts[penalty.reason] += 1;
+      });
+      
+      for (var reason in penaltiesByReason) {
+        var row = document.createElement('div');
+        row.style.cssText = 'display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;';
+        var count = penaltyCounts[reason];
+        var displayReason = count > 1 ? reason + ' (x' + count + ')' : reason;
+        var penaltyValue = penaltiesByReason[reason];
+        var penaltyStyle = penaltyValue < 0 ? 'color: #c9372c; font-weight: 600;' : 'font-weight: 600;';
+        row.innerHTML = '<span style="font-size: 0.875rem; color: #666;">' + displayReason + '</span><span style="font-size: 0.875rem; ' + penaltyStyle + '">' + penaltyValue + '</span>';
+        penaltiesContainer.appendChild(row);
+      }
+      
+      if (gameState.penalties.length === 0) {
+        var row = document.createElement('div');
+        row.style.cssText = 'display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;';
+        row.innerHTML = '<span style="font-size: 0.875rem; color: #666;">Perfect! No hints</span><span style="font-size: 0.875rem; font-weight: 600;">0</span>';
+        penaltiesContainer.appendChild(row);
+      }
+      
+      finalScoreDisplay.textContent = gameState.score;
+      
+      if (gameState.completedWithHints || gameState.score < 0) {
+        finalScoreDisplay.style.color = '#c9372c';
+      } else {
+        finalScoreDisplay.style.color = '#1a1a1a';
+      }
+      
+      document.getElementById('scoreCard').style.display = 'flex';
+      
+      var hamburgerMenu = document.getElementById('hamburgerMenu');
+      if (hamburgerMenu) {
+        hamburgerMenu.style.display = 'none';
+      }
+      
+      document.getElementById('gameContainer').classList.add('content-blur');
+    }
+
+    function closeScoreModal() {
+      // Navigate immediately without showing loading state - let the new page handle it
+      var baseUrl = window.location.origin + window.location.pathname;
+      window.location.href = baseUrl + '?skipIntro=true';
+    }
+
+    function restartGame() {
+      gameState.score = 10;
+      gameState.penalties = [];
+      gameState.completedWithHints = false;
+      gameState.hintUsed = false;
+      
+      if (!gameState.customHint) {
+        document.getElementById('hintRestartBtn').textContent = 'Restart';
+        document.getElementById('mobileHintRestartBtn').textContent = 'Restart';
+      } else {
+        document.getElementById('hintRestartBtn').textContent = 'Hint (-3)';
+        document.getElementById('mobileHintRestartBtn').textContent = 'Hint (-3)';
+      }
+      
+      if (gameState.currentActiveTile) {
+        gameState.currentActiveTile.classList.remove('active');
+        gameState.currentActiveTile = null;
+      }
+      
+      var container = document.getElementById('puzzleContainer');
+      container.classList.remove('tiles-small', 'tiles-medium');
+      
+      updateMessage('');
+      
+      var hamburgerMenu = document.getElementById('hamburgerMenu');
+      if (hamburgerMenu) {
+        hamburgerMenu.style.display = 'block';
+      }
+      
+      var scoreCard = document.getElementById('scoreCard');
+      if (scoreCard.style.display === 'flex') {
+        scoreCard.style.display = 'none';
+        document.getElementById('gameContainer').classList.remove('content-blur');
+        document.body.classList.add('game-active');
+        buildPuzzle();
+        updateScore(0);
+        startFoxTimer();
+      } else {
+        buildPuzzle();
+        updateScore(0);
+      }
+    }
+
+    function processDesktopKeyInput(inputKey) {
+      if (!gameState.currentActiveTile) return;
+      
+      if (/^[A-Za-z]$/.test(inputKey)) {
+        if (!gameState.currentActiveTile.classList.contains('revealed')) {
+          gameState.currentActiveTile.textContent = inputKey.toUpperCase();
+          gameState.currentActiveTile.classList.add('user-filled');
+          gameState.currentActiveTile.classList.remove('hidden');
+          
+          var puzzleComplete = gameState.letterTiles.every(function(tile) {
+            return tile.classList.contains('revealed') || 
+                   (tile.classList.contains('user-filled') && tile.textContent.trim() !== '');
+          });
+          
+          if (puzzleComplete) {
+            setTimeout(checkPuzzleComplete, 50);
+          } else {
+            var emptyTiles = gameState.letterTiles.filter(function(tile) {
+              return !tile.classList.contains('revealed');
+            });
+            var currentPosition = emptyTiles.indexOf(gameState.currentActiveTile);
+            var nextAvailable = emptyTiles[currentPosition + 1];
+            
+            if (nextAvailable) {
+              setActiveTile(nextAvailable);
+            }
+          }
+        }
+      } else if (inputKey === 'Backspace') {
+        processDesktopBackspace();
+      }
+    }
+
+    function processDesktopBackspace() {
+      if (!gameState.currentActiveTile) return;
+      
+      var editableTiles = gameState.letterTiles.filter(function(tile) {
+        return !tile.classList.contains('revealed');
+      });
+      
+      if (gameState.currentActiveTile.classList.contains('user-filled')) {
+        gameState.currentActiveTile.textContent = '';
+        gameState.currentActiveTile.classList.remove('user-filled');
+        gameState.currentActiveTile.classList.add('hidden');
+      } else {
+        var currentPosition = editableTiles.indexOf(gameState.currentActiveTile);
+        var previousTile = editableTiles[currentPosition - 1];
+        
+        if (previousTile && previousTile.classList.contains('user-filled')) {
+          setActiveTile(previousTile);
+          previousTile.textContent = '';
+          previousTile.classList.remove('user-filled');
+          previousTile.classList.add('hidden');
+        }
+      }
+    }
+
+    function handleKey(key) {
+      if (key === 'Backspace') {
+        trackPunzzleEvent('mobile_keyboard', 'interaction', 'backspace');
+      } else if (/^[A-Za-z]$/.test(key)) {
+        trackPunzzleEvent('mobile_keyboard', 'interaction', 'letter_key');
+      }
+      
+      if (!gameState.currentActiveTile) return;
+
+      if (/^[A-Za-z]$/.test(key)) {
+        if (!gameState.currentActiveTile.classList.contains('revealed')) {
+          gameState.currentActiveTile.textContent = key.toUpperCase();
+          gameState.currentActiveTile.classList.add('user-filled');
+          gameState.currentActiveTile.classList.remove('hidden');
+          
+          var allFilled = gameState.letterTiles.every(function(tile) {
+            return tile.classList.contains('revealed') || 
+                   (tile.classList.contains('user-filled') && tile.textContent.trim() !== '');
+          });
+          
+          if (allFilled) {
+            setTimeout(checkPuzzleComplete, 50);
+          } else {
+            var availableTiles = gameState.letterTiles.filter(function(tile) {
+              return !tile.classList.contains('revealed');
+            });
+            var currentIndex = availableTiles.indexOf(gameState.currentActiveTile);
+            var nextTile = availableTiles[currentIndex + 1];
+            
+            if (nextTile) {
+              setActiveTile(nextTile);
+            }
+          }
+        }
+      } else if (key === 'Backspace') {
+        handleBackspace();
+      }
+    }
+
+    function handleBackspace() {
+      if (!gameState.currentActiveTile) return;
+      
+      var availableTiles = gameState.letterTiles.filter(function(tile) {
+        return !tile.classList.contains('revealed');
+      });
+      
+      if (gameState.currentActiveTile.classList.contains('user-filled')) {
+        gameState.currentActiveTile.textContent = '';
+        gameState.currentActiveTile.classList.remove('user-filled');
+        gameState.currentActiveTile.classList.add('hidden');
+      } else {
+        var currentIndex = availableTiles.indexOf(gameState.currentActiveTile);
+        var prevTile = availableTiles[currentIndex - 1];
+        
+        if (prevTile && prevTile.classList.contains('user-filled')) {
+          setActiveTile(prevTile);
+          prevTile.textContent = '';
+          prevTile.classList.remove('user-filled');
+          prevTile.classList.add('hidden');
+        }
+      }
+    }
+
+    // Desktop keyboard toggle functionality
+    function toggleDesktopKeyboard() {
+      var body = document.body;
+      var toggleBtn = document.getElementById('desktopKeyboardToggle');
+      
+      if (body.classList.contains('desktop-keyboard-active')) {
+        body.classList.remove('desktop-keyboard-active');
+        toggleBtn.textContent = 'Show Keyboard';
+        trackFeatureUse('desktop_keyboard_hidden', 1);
+      } else {
+        body.classList.add('desktop-keyboard-active');
+        toggleBtn.textContent = 'Hide Keyboard';
+        trackFeatureUse('desktop_keyboard_shown', 1);
+      }
+    }
+    
+    // Handle desktop keyboard button clicks
+    function handleDesktopKey(key) {
+      processDesktopKeyInput(key);
+      trackFeatureUse('desktop_keyboard_key', 1);
+    }
+
+    document.addEventListener('keydown', function(event) {
+      var createModal = document.getElementById('createWrapper');
+      var feedbackModal = document.getElementById('feedbackWrapper');
+      var faqModal = document.getElementById('faqWrapper');
+      var startModal = document.getElementById('startModal');
+      var scoreCard = document.getElementById('scoreCard');
+      
+      var modalOpen = (createModal && createModal.classList.contains('active')) ||
+                      (feedbackModal && feedbackModal.classList.contains('active')) ||
+                      (faqModal && faqModal.classList.contains('active')) ||
+                      (startModal && startModal.style.display === 'flex') ||
+                      (scoreCard && scoreCard.style.display === 'flex');
+      
+      if (!modalOpen) {
+        processDesktopKeyInput(event.key);
+      }
+    });
+
+
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Escape') {
+        var createModal = document.getElementById('createWrapper');
+        var feedbackModal = document.getElementById('feedbackWrapper');
+        var faqModal = document.getElementById('faqWrapper');
+        if (createModal && createModal.classList.contains('active')) {
+          showMainGame();
+        } else if (feedbackModal && feedbackModal.classList.contains('active')) {
+          closeFeedbackForm();
+        } else if (faqModal && faqModal.classList.contains('active')) {
+          closeFAQ();
+        }
+      }
+    });
+
+    async function shareCompletedPuzzle() {
+      if (gameState.puzzleId) {
+        try {
+          if (typeof db !== 'undefined' && db.collection) {
+            await db.collection('gameStats').add({
+              puzzleId: gameState.puzzleId,
+              action: 'shared',
+              timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            
+            if (gameState.puzzleId.startsWith('custom-')) {
+              const customId = gameState.puzzleId.replace('custom-', '');
+              const docRef = db.collection('customPuzzleStats').doc(customId);
+              await docRef.update({
+                shares: firebase.firestore.FieldValue.increment(1)
+              });
+            }
+          }
+        } catch (error) {
+          console.error('Error tracking share:', error);
+        }
+      }
+      
+      trackFeatureUse('share_completed', gameState.score);
+      
+      const shareType = isCustomPuzzle ? 'custom_puzzle_shared' : 'daily_puzzle_shared';
+      trackPunzzleEvent('share', shareType, gameState.categoryText);
+      
+      var shareUrl = window.location.href;
+      
+      if (!window.location.search.includes('puzzle=')) {
+        shareUrl = window.location.origin + window.location.pathname;
+      }
+      
+      var shareText = 'I just solved this Punzzle!\n\n' + gameState.categoryText + '\n\nCan you solve it too?\n\n' + shareUrl;
+      
+      if (navigator.share) {
+        navigator.share({
+          title: 'Punzzle Challenge',
+          text: shareText,
+          url: shareUrl
+        });
+      } else if (navigator.clipboard) {
+        navigator.clipboard.writeText(shareText).then(function() {
+          alert('Puzzle challenge copied to clipboard!');
+        });
+      } else {
+        var textArea = document.createElement('textarea');
+        textArea.value = shareText;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        alert('Puzzle challenge copied to clipboard!');
+      }
+    }
+
+    // Make Your Own functionality
+    var savedFormData = null;
+    
+    function showMakeYourOwn() {
+      trackNavigation('make_your_own');
+      
+      closeHamburgerMenu();
+      
+      document.getElementById('createWrapper').classList.add('active');
+      document.body.classList.add('modal-open');
+
+      document.getElementById('createWrapper').classList.add('active');
+      document.body.classList.add('modal-open');
+      
+      var gameContainer = document.getElementById('gameContainer');
+      if (!gameContainer.classList.contains('game-hidden')) {
+        gameContainer.classList.add('content-blur');
+      }
+      
+      var scoreCard = document.getElementById('scoreCard');
+      if (scoreCard.style.display === 'flex') {
+        scoreCard.classList.add('content-blur');
+      }
+      
+      stopFoxTimer();
+      
+      if (savedFormData) {
+        restoreFormData();
+      } else {
+        resetCreateForm();
+      }
+    }
+    
+    function closeCreateModal(event) {
+      if (event && event.target !== event.currentTarget) {
+        return;
+      }
+      showMainGame();
+    }
+
+    function restoreFormData() {
+      if (!savedFormData) return;
+      
+      document.getElementById('category1Input').value = savedFormData.category1;
+      document.getElementById('category2Input').value = savedFormData.category2;
+      
+      if (savedFormData.hint) {
+        document.getElementById('hintInput').value = savedFormData.hint;
+      }
+      
+      var wordInputs = document.getElementById('wordInputs');
+      wordInputs.innerHTML = '';
+      
+      savedFormData.words.forEach(function(word, index) {
+        var newGroup = document.createElement('div');
+        newGroup.className = 'word-input-group';
+        var placeholder = getOrdinalWord(index + 1);
+        
+        newGroup.innerHTML = 
+          '<input type="text" class="word-input" placeholder="' + placeholder + '" maxlength="12" required value="' + word + '">';
+        
+        wordInputs.appendChild(newGroup);
+        
+        newGroup.querySelector('.word-input').addEventListener('input', function() {
+          if (typeof validateAndPreview === 'function') {
+            validateAndPreview();
+          }
+        });
+      });
+      
+      updateAddWordButton();
+      if (typeof validateAndPreview === 'function') {
+        validateAndPreview();
+      }
+      
+      savedFormData = null;
+    }
+    
+    function showMainGame() {
+      document.getElementById('createWrapper').classList.remove('active');
+      document.body.classList.remove('modal-open');
+      
+      // Remove custom preview class when returning to main game
+      removeCustomPreviewClass();
+      
+      document.getElementById('gameContainer').classList.remove('content-blur');
+      
+      savedFormData = null;
+      
+      if (!hasStartedGame) {
+        document.getElementById('startModal').style.display = 'flex';
+        document.body.classList.add('modal-open');
+        document.getElementById('gameContainer').classList.add('content-blur');
+        var hamburgerMenu = document.getElementById('hamburgerMenu');
+        if (hamburgerMenu) {
+          hamburgerMenu.style.display = 'none';
+        }
+      } else {
+        document.getElementById('gameContainer').classList.remove('game-hidden');
+        document.body.classList.add('game-active');
+        var hamburgerMenu = document.getElementById('hamburgerMenu');
+        if (hamburgerMenu) {
+          hamburgerMenu.style.display = 'block';
+        }
+        startFoxTimer();
+      }
+    }
+
+    function setupCreateForm() {
+      var form = document.getElementById('createForm');
+      
+      form.addEventListener('input', function() {
+        validateAndPreview();
+      });
+      
+      document.querySelectorAll('.word-input').forEach(function(input) {
+        input.addEventListener('input', function() {
+          if (typeof validateAndPreview === 'function') {
+            validateAndPreview();
+          }
+        });
+      });
+      
+      document.getElementById('category1Input').addEventListener('input', function() {
+        if (typeof validateAndPreview === 'function') {
+          validateAndPreview();
+        }
+      });
+      
+      document.getElementById('category2Input').addEventListener('input', function() {
+        if (typeof validateAndPreview === 'function') {
+          validateAndPreview();
+        }
+      });
+      
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        previewPuzzle();
+      });
+      
+      updateAddWordButton();
+    }
+
+    function resetCreateForm() {
+      var form = document.getElementById('createForm');
+      form.reset();
+      
+      var wordInputs = document.getElementById('wordInputs');
+      wordInputs.innerHTML = 
+        '<div class="word-input-group">' +
+          '<input type="text" class="word-input" placeholder="First word" maxlength="12" required>' +
+        '</div>' +
+        '<div class="word-input-group">' +
+          '<input type="text" class="word-input" placeholder="Second word" maxlength="12" required>' +
+        '</div>';
+      
+      wordInputs.querySelectorAll('.word-input').forEach(function(input) {
+        input.addEventListener('input', function() {
+          if (typeof validateAndPreview === 'function') {
+            validateAndPreview();
+          }
+        });
+      });
+      
+      document.getElementById('previewSection').classList.remove('active');
+      
+      document.getElementById('categoriesError').style.display = 'none';
+      document.getElementById('wordsError').style.display = 'none';
+      
+      document.getElementById('createBtn').disabled = true;
+      var copyBtn = document.getElementById('copyBtn');
+      copyBtn.disabled = true;
+      copyBtn.style.opacity = '0.5';
+      copyBtn.style.cursor = 'not-allowed';
+      
+      var shareBtn = document.getElementById('shareBtn');
+      shareBtn.disabled = true;
+      shareBtn.style.opacity = '0.5';
+      shareBtn.style.cursor = 'not-allowed';
+      
+      updateAddWordButton();
+    }
+
+    function addWordInput() {
+      var wordInputs = document.getElementById('wordInputs');
+      var currentInputs = wordInputs.querySelectorAll('.word-input-group');
+      
+      if (currentInputs.length < 5) {
+        var newGroup = document.createElement('div');
+        newGroup.className = 'word-input-group';
+        var placeholder = getOrdinalWord(currentInputs.length + 1);
+        newGroup.innerHTML = 
+          '<input type="text" class="word-input" placeholder="' + placeholder + '" maxlength="12" required>';
+        
+        wordInputs.appendChild(newGroup);
+        
+        newGroup.querySelector('.word-input').addEventListener('input', function() {
+          if (typeof validateAndPreview === 'function') {
+            validateAndPreview();
+          }
+        });
+        
+        updateAddWordButton();
+        if (typeof validateAndPreview === 'function') {
+          validateAndPreview();
+        }
+      }
+    }
+
+    function removeLastWord() {
+      var wordInputs = document.getElementById('wordInputs');
+      var currentInputs = wordInputs.querySelectorAll('.word-input-group');
+      
+      if (currentInputs.length > 2) {
+        currentInputs[currentInputs.length - 1].remove();
+        updateAddWordButton();
+        if (typeof validateAndPreview === 'function') {
+          validateAndPreview();
+        }
+      }
+    }
+
+    function getOrdinalWord(num) {
+      var ordinals = ['First', 'Second', 'Third', 'Fourth', 'Fifth'];
+      return ordinals[num - 1] + ' word';
+    }
+
+    function updateAddWordButton() {
+      var wordInputs = document.getElementById('wordInputs');
+      var currentInputs = wordInputs.querySelectorAll('.word-input-group');
+      var addBtn = document.getElementById('addWordBtn');
+      var removeBtn = document.getElementById('removeWordBtn');
+      
+      if (currentInputs.length >= 5) {
+        addBtn.disabled = true;
+        addBtn.textContent = 'Maximum 5 words';
+      } else {
+        addBtn.disabled = false;
+        addBtn.textContent = 'Add Word';
+      }
+      
+      if (currentInputs.length <= 2) {
+        removeBtn.disabled = true;
+      } else {
+        removeBtn.disabled = false;
+      }
+      
+      currentInputs.forEach(function(group, index) {
+        var input = group.querySelector('.word-input');
+        if (input && !input.value) {
+          input.placeholder = getOrdinalWord(index + 1);
+        }
+      });
+    }
+
+    function validateAndPreview() {
+      var category1Input = document.getElementById('category1Input');
+      var category2Input = document.getElementById('category2Input');
+      var wordInputs = document.querySelectorAll('.word-input');
+      var previewSection = document.getElementById('previewSection');
+      var createBtn = document.getElementById('createBtn');
+      var copyBtn = document.getElementById('copyBtn');
+      
+      var category1 = category1Input.value.trim();
+      var category2 = category2Input.value.trim();
+      var categories = category1 && category2 ? category1 + ' + ' + category2 : '';
+      
+      var words = Array.from(wordInputs).map(function(input) {
+        return input.value.trim().toUpperCase();
+      }).filter(function(word) {
+        return word.length > 0;
+      });
+      
+      var isValid = categories.length > 0 && words.length >= 2 && 
+                   words.every(function(word) { 
+                     var cleanWord = word.replace(/\s+/g, '');
+                     return cleanWord.length > 0 && /^[A-Z\s]+$/.test(word); 
+                   });
+      
+      if (isValid) {
+        updatePreview(categories, words);
+        previewSection.classList.add('active');
+        
+        createBtn.disabled = false;
+        copyBtn.disabled = false;
+        copyBtn.style.opacity = '1';
+        copyBtn.style.cursor = 'pointer';
+        
+        var shareBtn = document.getElementById('shareBtn');
+        shareBtn.disabled = false;
+        shareBtn.style.opacity = '1';
+        shareBtn.style.cursor = 'pointer';
+        
+        var hintText = document.getElementById('hintInput').value.trim();
+        var puzzleData = {
+          categories: categories.toUpperCase(),
+          words: words,
+          answer: words.join(' '),
+          hint: hintText
+        };
+        var encodedPuzzle = btoa(JSON.stringify(puzzleData));
+        var shareUrl = window.location.origin + window.location.pathname + '?puzzle=' + encodedPuzzle;
+        document.getElementById('shareUrlInput').value = shareUrl;
+        
+      } else {
+        previewSection.classList.remove('active');
+        createBtn.disabled = true;
+        
+        copyBtn.disabled = true;
+        copyBtn.style.opacity = '0.5';
+        copyBtn.style.cursor = 'not-allowed';
+        
+        var shareBtn = document.getElementById('shareBtn');
+        shareBtn.disabled = true;
+        shareBtn.style.opacity = '0.5';
+        shareBtn.style.cursor = 'not-allowed';
+      }
+      
+      document.getElementById('categoriesError').style.display = 'none';
+      document.getElementById('wordsError').style.display = 'none';
+    }
+
+    function updatePreview(categories, words) {
+      var previewCategories = document.getElementById('previewCategories');
+      var previewPuzzle = document.getElementById('previewPuzzle');
+      
+      previewCategories.textContent = categories.toUpperCase();
+      
+      previewPuzzle.innerHTML = '';
+      words.forEach(function(word) {
+        var cleanWord = word.replace(/\s+/g, '');
+        if (cleanWord.length > 0) {
+          var wordDiv = document.createElement('div');
+          wordDiv.className = 'preview-word';
+          
+          for (var i = 0; i < cleanWord.length; i++) {
+            var tile = document.createElement('div');
+            tile.className = 'preview-tile';
+            tile.textContent = cleanWord[i];
+            wordDiv.appendChild(tile);
+          }
+          
+          previewPuzzle.appendChild(wordDiv);
+        }
+      });
+    }
+
+    function previewPuzzle() {
+      var shareUrlInput = document.getElementById('shareUrlInput');
+      var shareUrl = shareUrlInput.value;
+      
+      if (shareUrl) {
+        // Add preview parameter to the URL
+        var previewUrl = shareUrl + '&preview=true';
+        
+        trackCustomPuzzle('previewed');
+        
+        // Open in same tab/window
+        window.location.href = previewUrl;
+      }
+    }
+
+    async function createPuzzle() {
+      var category1Input = document.getElementById('category1Input');
+      var category2Input = document.getElementById('category2Input');
+      var wordInputs = document.querySelectorAll('.word-input');
+      var categoriesError = document.getElementById('categoriesError');
+      var wordsError = document.getElementById('wordsError');
+      
+      var category1 = category1Input.value.trim();
+      var category2 = category2Input.value.trim();
+      var categories = category1 && category2 ? category1 + ' + ' + category2 : '';
+      
+      var words = Array.from(wordInputs).map(function(input) {
+        return input.value.trim().toUpperCase().replace(/\s+/g, ' ');
+      }).filter(function(word) {
+        return word.length > 0;
+      });
+      
+      words = words.map(function(word) {
+        return word.replace(/\s+/g, ' ').trim();
+      });
+      
+      var hasErrors = false;
+      
+      if (!category1 || !category2) {
+        categoriesError.textContent = 'Both categories are required';
+        categoriesError.style.display = 'block';
+        hasErrors = true;
+      } else if (category1.length > 25 || category2.length > 25) {
+        categoriesError.textContent = 'Each category must be 25 characters or less';
+        categoriesError.style.display = 'block';
+        hasErrors = true;
+      }
+      
+      if (words.length < 2) {
+        wordsError.textContent = 'At least 2 words are required';
+        wordsError.style.display = 'block';
+        hasErrors = true;
+      } else if (words.some(function(word) { 
+        var cleanWord = word.replace(/\s+/g, '');
+        return !cleanWord || !/^[A-Z\s]+$/.test(word); 
+      })) {
+        wordsError.textContent = 'Words can only contain letters and spaces';
+        wordsError.style.display = 'block';
+        hasErrors = true;
+      } else if (words.some(function(word) { return word.length > 12; })) {
+        wordsError.textContent = 'Each word must be 12 characters or less';
+        wordsError.style.display = 'block';
+        hasErrors = true;
+      }
+      
+      if (hasErrors) {
+        return;
+      }
+      
+      savedFormData = {
+        category1: category1,
+        category2: category2,
+        words: Array.from(wordInputs).map(function(input) {
+          return input.value.trim();
+        }).filter(function(word) {
+          return word.length > 0;
+        }),
+        hint: document.getElementById('hintInput').value.trim()
+      };
+      
+      var hintText = document.getElementById('hintInput').value.trim();
+      var puzzleData = {
+        categories: categories.toUpperCase(),
+        words: words,
+        answer: words.join(' '),
+        hint: hintText
+      };
+      
+      isCustomPuzzle = true;
+      
+      trackCustomPuzzle('created');
+      
+      gameState.puzzleAnswer = puzzleData.answer;
+      gameState.categoryText = puzzleData.categories;
+      gameState.words = puzzleData.words;
+      gameState.customHint = hintText || null;
+      gameState.score = 10;
+      gameState.penalties = [];
+      gameState.letterTiles = [];
+      gameState.currentActiveTile = null;
+      gameState.hintUsed = false;
+      gameState.puzzleId = `custom-shared-${Date.now()}`;
+      
+      // Add mobile preview class for proper layout
+      if (window.innerWidth <= 768 || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+        document.body.classList.add('custom-puzzle-preview');
+        console.log('Added custom-puzzle-preview class for mobile layout');
+      }
+      
+      const customId = await saveCustomPuzzle(puzzleData);
+      if (customId) {
+        gameState.puzzleId = `custom-${customId}`;
+        
+        trackPunzzleEvent('custom_puzzle_created', 'user_generated', gameState.categoryText);
+        
+        try {
+          if (typeof AnalyticsDB !== 'undefined' && AnalyticsDB && AnalyticsDB.trackCompletion) {
+            await AnalyticsDB.trackCompletion({
+              puzzleId: gameState.puzzleId,
+              puzzleType: 'custom_created',
+              categories: gameState.categoryText,
+              answer: gameState.puzzleAnswer,
+              date: new Date().toISOString().split('T')[0],
+              completed: false,
+              score: 0,
+              timeSpent: 0
+            });
+          }
+        } catch (error) {
+          console.error('Error tracking custom puzzle creation:', error);
+        }
+      }
+      
+      var encodedPuzzle = btoa(JSON.stringify(puzzleData));
+      var shareUrl = window.location.origin + window.location.pathname + '?puzzle=' + encodedPuzzle;
+      document.getElementById('shareUrlInput').value = shareUrl;
+      
+      document.getElementById('categoryText').textContent = gameState.categoryText;
+      
+      document.getElementById('dateDisplay').innerHTML = 
+        'Custom Punzzle · <a href="#" onclick="copyPuzzleUrl(); return false;">Copy link</a>';
+
+      if (!gameState.customHint) {
+        document.getElementById('hintRestartBtn').textContent = 'Restart';
+        document.getElementById('mobileHintRestartBtn').textContent = 'Restart';
+      } else {
+        document.getElementById('hintRestartBtn').textContent = 'Hint (3)';
+        document.getElementById('mobileHintRestartBtn').textContent = 'Hint (-)';
+      }
+      
+      document.getElementById('createWrapper').classList.remove('active');
+      document.body.classList.remove('modal-open');
+      document.getElementById('gameContainer').classList.remove('game-hidden', 'content-blur');
+      
+      // Add game-active class to show mobile controls
+      document.body.classList.add('game-active');
+      
+      if (!hasStartedGame) {
+        document.getElementById('startModal').style.display = 'flex';
+      } else {
+        startGame();
+      }
+      
+      var hamburgerMenu = document.getElementById('hamburgerMenu');
+      if (hamburgerMenu) {
+        hamburgerMenu.style.display = 'none';
+      }
+    }
+
+    function removeCustomPreviewClass() {
+      document.body.classList.remove('custom-puzzle-preview');
+      console.log('Removed custom-puzzle-preview class');
+    }
+
+    function copyPuzzleUrl() {
+      var shareUrlInput = document.getElementById('shareUrlInput');
+      var shareUrl = shareUrlInput.value;
+      
+      trackCustomPuzzle('shared');
+      
+      var tempInput = document.createElement('input');
+      tempInput.value = shareUrl;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      tempInput.setSelectionRange(0, 99999);
+      
+      try {
+        document.execCommand('copy');
+        alert('Punzzle link copied to clipboard!');
+      } catch (err) {
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(shareUrl).then(function() {
+            alert('Punzzle link copied to clipboard!');
+          }).catch(function() {
+            alert('Please copy the link manually: ' + shareUrl);
+          });
+        } else {
+          alert('Please copy the link manually: ' + shareUrl);
+        }
+      }
+      
+      document.body.removeChild(tempInput);
+    }
+
+    function shareCreatedPuzzle() {
+      var shareUrlInput = document.getElementById('shareUrlInput');
+      var shareUrl = shareUrlInput.value;
+      var category1 = document.getElementById('category1Input').value.trim();
+      var category2 = document.getElementById('category2Input').value.trim();
+      var categories = category1 + ' + ' + category2;
+      
+      trackCustomPuzzle('shared_native');
+      
+      var shareText = 'Can you solve my Punzzle?\n\n' + categories.toUpperCase() + '\n\n' + shareUrl;
+      
+      if (navigator.share) {
+        navigator.share({
+          title: 'Custom Punzzle Challenge',
+          text: shareText,
+          url: shareUrl
+        }).catch(function(err) {
+          // User cancelled share, do nothing
+        });
+      } else {
+        copyPuzzleUrl();
+      }
+    }
+
+    // Hamburger menu functionality
+    function toggleHamburgerMenu() {
+      var button = document.getElementById('hamburgerButton');
+      var dropdown = document.getElementById('hamburgerDropdown');
+      
+      button.classList.toggle('active');
+      dropdown.classList.toggle('active');
+      
+      if (button.classList.contains('active')) {
+        trackPunzzleEvent('hamburger_menu_opened', 'navigation', 'menu');
+      } else {
+        trackPunzzleEvent('hamburger_menu_closed', 'navigation', 'menu');
+      }
+    }
+    
+    function closeHamburgerMenu() {
+      var button = document.getElementById('hamburgerButton');
+      var dropdown = document.getElementById('hamburgerDropdown');
+      
+      button.classList.remove('active');
+      dropdown.classList.remove('active');
+    }
+    
+    document.addEventListener('click', function(event) {
+      var hamburgerMenu = document.getElementById('hamburgerMenu');
+      var hamburgerButton = document.getElementById('hamburgerButton');
+      var hamburgerDropdown = document.getElementById('hamburgerDropdown');
+      
+      if (hamburgerMenu && !hamburgerMenu.contains(event.target)) {
+        hamburgerButton.classList.remove('active');
+        hamburgerDropdown.classList.remove('active');
+      }
+    });
+
+    // Feedback form functions
+    function showFeedbackForm() {
+      trackNavigation('feedback_form');
+      
+      closeHamburgerMenu();
+      
+      document.getElementById('feedbackWrapper').classList.add('active');
+      document.body.classList.add('modal-open');
+      
+      var gameContainer = document.getElementById('gameContainer');
+      if (!gameContainer.classList.contains('game-hidden')) {
+        gameContainer.classList.add('content-blur');
+      }
+      
+      var scoreCard = document.getElementById('scoreCard');
+      if (scoreCard.style.display === 'flex') {
+        scoreCard.classList.add('content-blur');
+      }
+    }
+
+    function closeFeedbackModal(event) {
+      if (event && event.target !== event.currentTarget) {
+        return;
+      }
+      closeFeedbackForm();
+    }
+
+    function closeFeedbackForm() {
+      document.getElementById('feedbackWrapper').classList.remove('active');
+      document.body.classList.remove('modal-open');
+      
+      document.getElementById('gameContainer').classList.remove('content-blur');
+      document.getElementById('scoreCard').classList.remove('content-blur');
+      
+      var form = document.getElementById('feedbackForm');
+      if (form) {
+        form.reset();
+      }
+    }
+
+    // FAQ functions
+    function showFAQ() {
+      trackNavigation('faq');
+      
+      closeHamburgerMenu();
+      
+      document.getElementById('faqWrapper').classList.add('active');
+      document.body.classList.add('modal-open');
+      
+      var gameContainer = document.getElementById('gameContainer');
+      if (!gameContainer.classList.contains('game-hidden')) {
+        gameContainer.classList.add('content-blur');
+      }
+      
+      var scoreCard = document.getElementById('scoreCard');
+      if (scoreCard.style.display === 'flex') {
+        scoreCard.classList.add('content-blur');
+      }
+    }
+
+    function closeFAQModal(event) {
+      if (event && event.target !== event.currentTarget) {
+        return;
+      }
+      closeFAQ();
+    }
+
+    function closeFAQ() {
+      document.getElementById('faqWrapper').classList.remove('active');
+      document.body.classList.remove('modal-open');
+      
+      document.getElementById('gameContainer').classList.remove('content-blur');
+      document.getElementById('scoreCard').classList.remove('content-blur');
+    }
+
+    function handleFeedbackSubmit(event) {
+      event.preventDefault();
+      
+      var name = document.getElementById('userName').value;
+      var email = document.getElementById('userEmail').value;
+      var category = document.getElementById('category').value;
+      var message = document.getElementById('message').value;
+      
+      if (!name || !email || !category || !message) {
+        alert('Please fill in all fields');
+        return false;
+      }
+      
+      if (typeof trackPunzzleEvent === 'function') {
+        trackPunzzleEvent('contact_form_submitted', 'engagement', category);
+      }
+      
+      var submitBtn = event.target.querySelector('button[type="submit"]');
+      var originalText = submitBtn.textContent;
+      submitBtn.textContent = 'Sending...';
+      submitBtn.disabled = true;
+      
+      var formData = new FormData(event.target);
+      
+      fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        body: formData
+      })
+      .then(function(response) {
+        return response.json();
+      })
+      .then(function(data) {
+        if (data.success) {
+          alert('Thank you for your message! We\'ll get back to you soon.');
+          closeFeedbackForm();
+        } else {
+          alert('Sorry, there was an error sending your message. Please try again.');
+        }
+      })
+      .catch(function(error) {
+        console.error('Error:', error);
+        alert('Sorry, there was an error sending your message. Please try again.');
+      })
+      .finally(function() {
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+      });
+      
+      return false;
+    }
+
+    // Helper function to save custom puzzle
+    async function saveCustomPuzzle(puzzleData) {
+      try {
+        if (typeof db !== 'undefined' && db.collection) {
+          const docRef = await db.collection('customPuzzles').add({
+            ...puzzleData,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            views: 0,
+            plays: 0,
+            completed: 0
+          });
+          return docRef.id;
+        } else {
+          console.warn('Firebase db not available, puzzle not saved to database');
+          return null;
+        }
+      } catch (error) {
+        console.error('Error saving custom puzzle:', error);
+        return null;
+      }
+    }
+  </script>
+
+</body>
+</html>
