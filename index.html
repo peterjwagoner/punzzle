@@ -3431,6 +3431,18 @@
       margin: 0.5rem;
       flex: 1;
     }
+
+    .modal-button.secondary {
+  background-color: transparent;
+  color: #666666;
+  border: 1px solid #d0d0d0;
+}
+
+.modal-button.secondary:hover {
+  background-color: #f8fafc;
+  color: #333333;
+  border-color: #999999;
+}
     
     
     .modal-button:hover {
@@ -4464,7 +4476,7 @@ body.game-active .tile {
         
         <div style="display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 1rem;">
           <button class="modal-button" onclick="shareCompletedPuzzle()">Share</button>
-          <button class="modal-button" onclick="showMakeYourOwn()">Make your own</button>
+          <button class="modal-button secondary" onclick="showMakeYourOwn()">Make your own</button>
         </div>
         
       </div>
