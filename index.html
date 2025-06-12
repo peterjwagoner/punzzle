@@ -1661,34 +1661,32 @@
     var savedFormData = null;
     
     function showMakeYourOwn() {
-      trackNavigation('make_your_own');
-      
-      closeHamburgerMenu();
-      
-      document.getElementById('createWrapper').classList.add('active');
-      document.body.classList.add('modal-open');
-
-      document.getElementById('createWrapper').classList.add('active');
-      document.body.classList.add('modal-open');
-      
-      var gameContainer = document.getElementById('gameContainer');
-      if (!gameContainer.classList.contains('game-hidden')) {
-        gameContainer.classList.add('content-blur');
-      }
-      
-      var scoreCard = document.getElementById('scoreCard');
-      if (scoreCard.style.display === 'flex') {
-        scoreCard.classList.add('content-blur');
-      }
-      
-      stopFoxTimer();
-      
-      if (savedFormData) {
-        restoreFormData();
-      } else {
-        resetCreateForm();
-      }
-    }
+  trackNavigation('make_your_own');
+  
+  closeHamburgerMenu();
+  
+  // Hide the scorecard if it's open
+  var scoreCard = document.getElementById('scoreCard');
+  if (scoreCard.style.display === 'flex') {
+    scoreCard.style.display = 'none';
+  }
+  
+  document.getElementById('createWrapper').classList.add('active');
+  document.body.classList.add('modal-open');
+  
+  var gameContainer = document.getElementById('gameContainer');
+  if (!gameContainer.classList.contains('game-hidden')) {
+    gameContainer.classList.add('content-blur');
+  }
+  
+  stopFoxTimer();
+  
+  if (savedFormData) {
+    restoreFormData();
+  } else {
+    resetCreateForm();
+  }
+}
     
     function closeCreateModal(event) {
       if (event && event.target !== event.currentTarget) {
