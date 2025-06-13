@@ -122,22 +122,33 @@
       return Math.abs(daysDiff) % puzzleDatabase.length;
     }
 
-    // Enhanced puzzle loading with robust fallback
-    async function loadPuzzleFromServer(date) {
-      console.log('Attempting to load puzzle from server for date:', date.toISOString().split('T')[0]);
-      
-      // Check if Firebase is available
-      if (typeof PuzzleDB === 'undefined' || !PuzzleDB || !PuzzleDB.getDailyPuzzle) {
-        console.log('PuzzleDB not available');
-        throw new Error('PuzzleDB not available');
+    // Main keyboard event listener for game input
+    document.addEventListener('keydown', function(event) {
+      // Don't process if typing in form fields
+      if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
+        return;
       }
       
-      try {
-        const puzzle = await Promise.race([
-          PuzzleDB.getDailyPuzzle(date),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Server request timeout')), 5000))
-        ]);
-        
+      // Check if any modal is open
+      var createModal = document.getElementById('createWrapper');
+      var feedbackModal = document.getElementById('feedbackWrapper');
+      var faqModal = document.getElementById('faqWrapper');
+      var startModal = document.getElementById('startModal');
+      var scoreCard = document.getElementById('scoreCard');
+      
+      var modalOpen = (createModal && createModal.classList.contains('active')) ||
+                      (feedbackModal && feedbackModal.classList.contains('active')) ||
+                      (faqModal && faqModal.classList.contains('active')) ||
+                      (startModal && startModal.style.display === 'flex') ||
+                      (scoreCard && scoreCard.style.display === 'flex');
+      
+      if (!modalOpen && hasStartedGame) {
+        processDesktopKeyInput(event.key);
+      }
+    });
+
+
+    document.addEventListener('keydown', function(event) {
         if (!puzzle) {
           throw new Error('No puzzle found on server for this date');
         }
