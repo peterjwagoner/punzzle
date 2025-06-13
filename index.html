@@ -1466,6 +1466,46 @@
       trackFeatureUse('desktop_keyboard_key', 1);
     }
 
+    // Debug keyboard events
+    document.addEventListener('keydown', function(event) {
+      console.log('Raw keydown event:', event.key, 'Target:', event.target.tagName);
+    });
+
+    document.addEventListener('keydown', function(event) {
+      var createModal = document.getElementById('createWrapper');
+      var feedbackModal = document.getElementById('feedbackWrapper');
+      var faqModal = document.getElementById('faqWrapper');
+      var startModal = document.getElementById('startModal');
+      var scoreCard = document.getElementById('scoreCard');
+      
+      var modalOpen = (createModal && createModal.classList.contains('active')) ||
+                      (feedbackModal && feedbackModal.classList.contains('active')) ||
+                      (faqModal && faqModal.classList.contains('active')) ||
+                      (startModal && startModal.style.display === 'flex') ||
+                      (scoreCard && scoreCard.style.display === 'flex');
+      
+      console.log('Game keydown check:', event.key, 'modalOpen:', modalOpen, 'hasStartedGame:', hasStartedGame);
+      if (!modalOpen && hasStartedGame) {
+        console.log('Processing key input:', event.key);
+        processDesktopKeyInput(event.key);
+      }
+    });
+        body.classList.remove('desktop-keyboard-active');
+        toggleBtn.textContent = 'Show Keyboard';
+        trackFeatureUse('desktop_keyboard_hidden', 1);
+      } else {
+        body.classList.add('desktop-keyboard-active');
+        toggleBtn.textContent = 'Hide Keyboard';
+        trackFeatureUse('desktop_keyboard_shown', 1);
+      }
+    }
+    
+    // Handle desktop keyboard button clicks
+    function handleDesktopKey(key) {
+      processDesktopKeyInput(key);
+      trackFeatureUse('desktop_keyboard_key', 1);
+    }
+
     document.addEventListener('keydown', function(event) {
       var createModal = document.getElementById('createWrapper');
       var feedbackModal = document.getElementById('feedbackWrapper');
