@@ -1466,46 +1466,6 @@
       trackFeatureUse('desktop_keyboard_key', 1);
     }
 
-    // Debug keyboard events
-    document.addEventListener('keydown', function(event) {
-      console.log('Raw keydown event:', event.key, 'Target:', event.target.tagName);
-    });
-
-    document.addEventListener('keydown', function(event) {
-      var createModal = document.getElementById('createWrapper');
-      var feedbackModal = document.getElementById('feedbackWrapper');
-      var faqModal = document.getElementById('faqWrapper');
-      var startModal = document.getElementById('startModal');
-      var scoreCard = document.getElementById('scoreCard');
-      
-      var modalOpen = (createModal && createModal.classList.contains('active')) ||
-                      (feedbackModal && feedbackModal.classList.contains('active')) ||
-                      (faqModal && faqModal.classList.contains('active')) ||
-                      (startModal && startModal.style.display === 'flex') ||
-                      (scoreCard && scoreCard.style.display === 'flex');
-      
-      console.log('Game keydown check:', event.key, 'modalOpen:', modalOpen, 'hasStartedGame:', hasStartedGame);
-      if (!modalOpen && hasStartedGame) {
-        console.log('Processing key input:', event.key);
-        processDesktopKeyInput(event.key);
-      }
-    });
-        body.classList.remove('desktop-keyboard-active');
-        toggleBtn.textContent = 'Show Keyboard';
-        trackFeatureUse('desktop_keyboard_hidden', 1);
-      } else {
-        body.classList.add('desktop-keyboard-active');
-        toggleBtn.textContent = 'Hide Keyboard';
-        trackFeatureUse('desktop_keyboard_shown', 1);
-      }
-    }
-    
-    // Handle desktop keyboard button clicks
-    function handleDesktopKey(key) {
-      processDesktopKeyInput(key);
-      trackFeatureUse('desktop_keyboard_key', 1);
-    }
-
     document.addEventListener('keydown', function(event) {
       var createModal = document.getElementById('createWrapper');
       var feedbackModal = document.getElementById('feedbackWrapper');
@@ -2719,10 +2679,31 @@
       touch-action: manipulation;
     }
     
+    /* Desktop banner styles */
+    .desktop-banner {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background-color: #f59e0b;
+      color: white;
+      text-align: center;
+      padding: 0.75rem 1rem;
+      font-weight: 600;
+      z-index: 3000;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    @media (min-width: 769px) {
+      .desktop-banner {
+        display: block;
+      }
+    }
+    
     body {
       font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
       background-color: #fafafa;
-      color: #1a1a1a;
       margin: 0;
       padding: 0;
       height: 100vh;
@@ -4441,10 +4422,13 @@ body.game-active .tile {
   </script>
 </head>
 <body>
+  <!-- Desktop Banner -->
+  <div class="desktop-banner">
+    Desktop version is down, please try on mobile.
+  </div>
+  
   <!-- Hamburger Menu -->
   <div id="hamburgerMenu" class="hamburger-menu">
-    <button id="hamburgerButton" class="hamburger-button" onclick="toggleHamburgerMenu()">
-      <span class="hamburger-line"></span>
       <span class="hamburger-line"></span>
       <span class="hamburger-line"></span>
     </button>
