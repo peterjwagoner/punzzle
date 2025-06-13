@@ -1478,7 +1478,7 @@
                       (startModal && startModal.style.display === 'flex') ||
                       (scoreCard && scoreCard.style.display === 'flex');
       
-      if (!modalOpen) {
+      if (!modalOpen && hasStartedGame) {
         processDesktopKeyInput(event.key);
       }
     });
