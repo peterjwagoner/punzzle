@@ -2792,9 +2792,15 @@
       text-align: center;
     }
     
-    .gameplay-example-section {
-      background-color: #f8fafc;
-      border: 1px solid #e5e5e5;
+    @media (max-width: 768px) {
+      .desktop-keyboard-toggle {
+        display: none;
+      }
+    }
+    
+    .desktop-keyboard-toggle button {
+      background-color: #ffffff;
+      color: #666666;
       border-radius: 6px;
       padding: 0.75rem 1rem 1rem 1rem;
       text-align: center;
@@ -3064,7 +3070,7 @@
     
     /* Desktop keyboard toggle button */
     .desktop-keyboard-toggle {
-      display: none;
+      display: block;
       margin-top: 0.75rem;
       text-align: center;
     }
@@ -3081,9 +3087,9 @@
 body.desktop-keyboard-active .game-container {
   max-height: none !important;
   height: auto !important;
+  overflow-y: auto; /* Allow scrolling if needed */
 }
-
-  /* When keyboard is active, ensure container stretches */
+}
   body.desktop-keyboard-active .game-container {
     max-height: none !important;
     height: auto !important;
@@ -3093,10 +3099,9 @@ body.desktop-keyboard-active .game-container {
       /* Override max-height when keyboard is active */
       body.desktop-keyboard-active .game-container {
         max-height: none !important;
-        height: auto !important;
+        height: auto;
       }
     }
-    
     .desktop-keyboard-toggle button {
       background-color: #ffffff;
       color: #666666;
