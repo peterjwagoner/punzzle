@@ -629,6 +629,7 @@
       document.body.classList.add('game-active');
       
       hasStartedGame = true;
+      console.log('Game started, hasStartedGame =', hasStartedGame);
       
       // Verify we have puzzle data
       if (!gameState.puzzleAnswer || !gameState.categoryText || !gameState.words.length) {
@@ -1477,7 +1478,8 @@
                       (faqModal && faqModal.classList.contains('active')) ||
                       (startModal && startModal.style.display === 'flex') ||
                       (scoreCard && scoreCard.style.display === 'flex');
-      
+                      
+      console.log('Keydown:', event.key, 'modalOpen:', modalOpen, 'hasStartedGame:', hasStartedGame);
       if (!modalOpen && hasStartedGame) {
         processDesktopKeyInput(event.key);
       }
