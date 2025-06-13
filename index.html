@@ -2792,15 +2792,9 @@
       text-align: center;
     }
     
-    @media (max-width: 768px) {
-      .desktop-keyboard-toggle {
-        display: none;
-      }
-    }
-    
-    .desktop-keyboard-toggle button {
-      background-color: #ffffff;
-      color: #666666;
+    .gameplay-example-section {
+      background-color: #f8fafc;
+      border: 1px solid #e5e5e5;
       border-radius: 6px;
       padding: 0.75rem 1rem 1rem 1rem;
       text-align: center;
@@ -3070,7 +3064,7 @@
     
     /* Desktop keyboard toggle button */
     .desktop-keyboard-toggle {
-      display: block;
+      display: none;
       margin-top: 0.75rem;
       text-align: center;
     }
@@ -3087,9 +3081,9 @@
 body.desktop-keyboard-active .game-container {
   max-height: none !important;
   height: auto !important;
-  overflow-y: auto; /* Allow scrolling if needed */
 }
-}
+
+  /* When keyboard is active, ensure container stretches */
   body.desktop-keyboard-active .game-container {
     max-height: none !important;
     height: auto !important;
@@ -3099,9 +3093,10 @@ body.desktop-keyboard-active .game-container {
       /* Override max-height when keyboard is active */
       body.desktop-keyboard-active .game-container {
         max-height: none !important;
-        height: auto;
+        height: auto !important;
       }
     }
+    
     .desktop-keyboard-toggle button {
       background-color: #ffffff;
       color: #666666;
@@ -4789,5 +4784,5 @@ body.game-active .tile {
   <!-- Copyright Footer (Desktop Only) -->
   <div class="copyright-footer">Copyright Lowercase Studios</div>
 
-  <script> 
+  <script>
         
