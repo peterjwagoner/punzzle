@@ -2691,10 +2691,9 @@
       text-align: center;
       padding: 0.75rem 1rem;
       font-weight: 600;
-      z-index: 3000;
+      z-index: 1000;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
-    
     @media (min-width: 769px) {
       .desktop-banner {
         display: block;
@@ -3253,11 +3252,11 @@ body.desktop-keyboard-active .game-container {
       z-index: 2000;
     }
     
-    .hamburger-button {
-      background: white;
-      border: none;
-      border-radius: 6px;
-      width: 44px;
+    @media (min-width: 769px) {
+      .hamburger-menu {
+        top: calc(1rem + 50px);
+      }
+    }
       height: 44px;
       padding: 8px;
       cursor: pointer;
